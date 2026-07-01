@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Domain Shortlist+",
+  "version": "0.1.0",
+  "description": "Sort your Domain shortlist, rate properties, and see your notes on the shortlist and map.",
+  "permissions": ["storage"],
+  "host_permissions": ["*://www.domain.com.au/*"],
+  "content_scripts": [
+    {
+      "matches": ["*://www.domain.com.au/user/shortlist*"],
+      "js": ["src/lib.js", "src/storage.js", "src/nextdata.js", "src/graphql.js", "src/shortlist.js"],
+      "css": ["src/styles.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://www.domain.com.au/*"],
+      "js": ["src/lib.js", "src/storage.js", "src/map.js"],
+      "css": ["src/styles.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
