@@ -60,11 +60,62 @@ async function ensureNotesToggle() {
   bar.appendChild(btn);
 }
 
+async function renderStars(ratings) {
+  for (const card of findCards()) {
+    const id = cardListingId(card);
+    if (id == null) continue;
+    let wrap = card.querySelector('.dsp-stars[data-dsp="stars"]');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.className = 'dsp-stars';
+      wrap.setAttribute('data-dsp', 'stars');
+      for (let i = 1; i <= 5; i++) {
+        const s = document.createElement('span');
+        s.className = 'dsp-star';
+        s.textContent = '★';
+        s.dataset.value = String(i);
+        s.addEventListener('click', async (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const current = await DSP.get('ratings', {});
+          const val = Number(s.dataset.value);
+          current[id] = current[id] === val ? 0 : val; // click same star again clears
+          await DSP.set('ratings', current);
+          paintStars(wrap, current[id]);
+        });
+        wrap.appendChild(s);
+      }
+      // insert stars above notes
+      const notes = card.querySelector('.dsp-notes[data-dsp="notes"]');
+      notes ? card.insertBefore(wrap, notes) : card.appendChild(wrap);
+    }
+    paintStars(wrap, ratings[id] || 0);
+  }
+}
+
+function paintStars(wrap, value) {
+  wrap.querySelectorAll('.dsp-star').forEach(s => {
+    s.classList.toggle('on', Number(s.dataset.value) <= value);
+  });
+}
+
+async function cacheNotes(map) {
+  const cache = await DSP.get('notesCache', {});
+  let changed = false;
+  for (const [id, item] of map) {
+    if (item.notes) { if (cache[id] !== item.notes) { cache[id] = item.notes; changed = true; } }
+    else if (cache[id]) { delete cache[id]; changed = true; }
+  }
+  if (changed) await DSP.set('notesCache', cache);
+}
+
 async function runShortlist() {
   const map = getShortlistMap();
   if (!map.size) return;
   await ensureNotesToggle();
   renderNotes(map);
+  const ratings = await DSP.get('ratings', {});
+  await renderStars(ratings);
+  await cacheNotes(map);
 }
 
 runShortlist();
