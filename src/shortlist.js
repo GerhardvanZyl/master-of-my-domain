@@ -108,14 +108,115 @@ async function cacheNotes(map) {
   if (changed) await DSP.set('notesCache', cache);
 }
 
+var sortKeys = [
+  { value: 'dateShortlisted', label: 'Date shortlisted' },
+  { value: 'datePlaced',      label: 'Date listed' },
+  { value: 'price',           label: 'Price' },
+  { value: 'rating',          label: 'My rating' },
+  // 'reduction' appended in Task 7
+];
+
+function enrichForSort(map, ratings, priceChanges) {
+  const out = new Map();
+  for (const [id, item] of map) {
+    out.set(id, {
+      ...item,
+      rating: ratings[id] || 0,
+      priceChange: priceChanges[id] || null,
+    });
+  }
+  return out;
+}
+
+function currentOrderIds() {
+  return findCards().map(cardListingId);
+}
+
+function applySort(items, key, dir) {
+  const sorted = sortListings(Array.from(items.values()), key, dir);
+  const desired = sorted.map(x => x.id);
+  const current = currentOrderIds();
+  // idempotent: only touch DOM if order differs (prevents observer loop)
+  if (desired.length === current.length && desired.every((id, i) => id === current[i])) return;
+
+  const cards = findCards();
+  const byId = new Map(cards.map(c => [cardListingId(c), c]));
+  const parent = cards[0] && cards[0].parentElement;
+  if (!parent) return;
+  for (const id of desired) {
+    const card = byId.get(id);
+    if (card) parent.appendChild(card); // re-append in sorted order
+  }
+}
+
+async function ensureSortControl() {
+  const bar = getToolbar();
+  if (bar.querySelector('[data-dsp="sort"]')) return;
+  const pref = await DSP.get('sortPref', { key: 'dateShortlisted', dir: 'desc' });
+
+  const sel = document.createElement('select');
+  sel.setAttribute('data-dsp', 'sort');
+  for (const k of sortKeys) {
+    const o = document.createElement('option');
+    o.value = k.value; o.textContent = k.label;
+    if (k.value === pref.key) o.selected = true;
+    sel.appendChild(o);
+  }
+  const dirBtn = document.createElement('button');
+  dirBtn.setAttribute('data-dsp', 'sort-dir');
+  const dirLabel = () => (pref.dir === 'asc' ? '↑ Asc' : '↓ Desc');
+  dirBtn.textContent = dirLabel();
+
+  const commit = async () => { await DSP.set('sortPref', pref); runShortlist(); };
+  sel.addEventListener('change', () => { pref.key = sel.value; commit(); });
+  dirBtn.addEventListener('click', () => { pref.dir = pref.dir === 'asc' ? 'desc' : 'asc'; dirBtn.textContent = dirLabel(); commit(); });
+
+  bar.prepend(dirBtn);
+  bar.prepend(sel);
+}
+
+let dspObserver = null;
+function startObserver() {
+  if (dspObserver) return;
+  const target = document.querySelector('main') || document.body;
+  let scheduled = false;
+  dspObserver = new MutationObserver(() => {
+    if (scheduled) return;
+    scheduled = true;
+    setTimeout(() => { scheduled = false; runShortlist(); }, 150); // debounce
+  });
+  dspObserver.observe(target, { childList: true, subtree: true });
+}
+
+// Detect SPA navigation so we re-run when returning to the shortlist route.
+function hookSpaNav() {
+  const fire = () => setTimeout(runShortlist, 200);
+  for (const m of ['pushState', 'replaceState']) {
+    const orig = history[m];
+    history[m] = function (...a) { const r = orig.apply(this, a); fire(); return r; };
+  }
+  window.addEventListener('popstate', fire);
+}
+
+let dspBootstrapped = false;
 async function runShortlist() {
+  if (!location.pathname.startsWith('/user/shortlist')) return;
   const map = getShortlistMap();
   if (!map.size) return;
+
   await ensureNotesToggle();
+  await ensureSortControl();
   renderNotes(map);
+
   const ratings = await DSP.get('ratings', {});
   await renderStars(ratings);
   await cacheNotes(map);
+
+  const priceChanges = await DSP.get('priceChangeCache', {}); // {} until Task 7
+  const pref = await DSP.get('sortPref', { key: 'dateShortlisted', dir: 'desc' });
+  applySort(enrichForSort(map, ratings, priceChanges), pref.key, pref.dir);
+
+  if (!dspBootstrapped) { dspBootstrapped = true; startObserver(); hookSpaNav(); }
 }
 
 runShortlist();
