@@ -113,7 +113,7 @@ var sortKeys = [
   { value: 'datePlaced',      label: 'Date listed' },
   { value: 'price',           label: 'Price' },
   { value: 'rating',          label: 'My rating' },
-  // 'reduction' appended in Task 7
+  { value: 'reduction',       label: 'Price reduced' },
 ];
 
 function enrichForSort(map, ratings, priceChanges) {
@@ -212,7 +212,7 @@ async function runShortlist() {
   await renderStars(ratings);
   await cacheNotes(map);
 
-  const priceChanges = await DSP.get('priceChangeCache', {}); // {} until Task 7
+  const priceChanges = await ensurePriceChanges(map); // local snapshots
   const pref = await DSP.get('sortPref', { key: 'dateShortlisted', dir: 'desc' });
   applySort(enrichForSort(map, ratings, priceChanges), pref.key, pref.dir);
 
