@@ -1,0 +1,45 @@
+/* Domain Shortlist+ */
+.dsp-notes {
+  font-size: 13px;
+  line-height: 1.35;
+  color: #333;
+  margin: 6px 0 2px;
+  white-space: pre-wrap;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;         /* default: 4 lines */
+  cursor: help;
+}
+/* collapsed = hidden entirely */
+body.dsp-notes-collapsed .dsp-notes { display: none; }
+/* hover reveals full note regardless of clamp */
+.dsp-notes:hover {
+  -webkit-line-clamp: unset;
+  display: block;
+  background: #fffbe6;
+  border-radius: 4px;
+  padding: 4px 6px;
+  position: relative;
+  z-index: 5;
+}
+.dsp-notes:empty { display: none; }
+
+.dsp-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+  font-size: 13px;
+}
+.dsp-toolbar button, .dsp-toolbar select {
+  font: inherit;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+.dsp-stars { display: inline-flex; gap: 2px; margin: 4px 0; }
+.dsp-star { cursor: pointer; font-size: 16px; line-height: 1; color: #ccc; }
+.dsp-star.on { color: #f5a623; }
