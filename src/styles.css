@@ -29,8 +29,18 @@ body.dsp-notes-collapsed .dsp-notes { display: none; }
   display: flex;
   gap: 8px;
   align-items: center;
-  margin: 8px 0;
+  margin: 12px 0;
+  padding: 8px 12px;
+  background: #f6f7f9;
+  border: 1px solid #e3e6ea;
+  border-radius: 8px;
   font-size: 13px;
+}
+.dsp-toolbar::before {
+  content: "Shortlist+";
+  font-weight: 600;
+  color: #6b7280;
+  margin-right: 4px;
 }
 .dsp-toolbar button, .dsp-toolbar select {
   font: inherit;
@@ -40,6 +50,6 @@ body.dsp-notes-collapsed .dsp-notes { display: none; }
   background: #fff;
   cursor: pointer;
 }
-.dsp-stars { display: inline-flex; gap: 2px; margin: 4px 0; }
-.dsp-star { cursor: pointer; font-size: 16px; line-height: 1; color: #ccc; }
-.dsp-star.on { color: #f5a623; }
+.dsp-stars { display: flex; gap: 3px; margin: 6px 0 2px; }
+.dsp-star { cursor: pointer; font-size: 18px; line-height: 1; color: #f5a623; }
+.dsp-star:hover { transform: scale(1.15); }

@@ -7,14 +7,21 @@ function dspMapActive() {
   return new URLSearchParams(location.search).get('displaymap') === '1';
 }
 
-// ponytail: same card testid as search/shortlist. If the map ever uses a
-// different container, no cards match => no notes shown, no errors. Verify the
-// selector on a live displaymap=1 page and adjust here if empty.
+// Card container varies by view:
+//   shortlist            -> [data-testid="listing-card-container"]
+//   search/map rail      -> <li data-testid="listing-{id}">
+//   map marker popup     -> [data-testid="listing-popup"] (id only in its <a href>)
 function mapFindCards() {
-  return Array.from(document.querySelectorAll('[data-testid="listing-card-container"]'));
+  return Array.from(document.querySelectorAll('[data-testid="listing-card-container"], [data-testid^="listing-"]'))
+    .filter(el => {
+      const t = el.getAttribute('data-testid');
+      return t === 'listing-card-container' || t === 'listing-popup' || /^listing-\d{5,}$/.test(t);
+    });
 }
 
 function mapCardListingId(card) {
+  const fromTestid = listingIdFromTestid(card.getAttribute('data-testid'));
+  if (fromTestid != null) return fromTestid;
   const a = card.querySelector('a[href*="domain.com.au/"], a[href^="/"]');
   return a ? parseListingId(a.getAttribute('href')) : null;
 }
@@ -30,7 +37,9 @@ async function renderMapNotes() {
       el = document.createElement('div');
       el.className = 'dsp-notes';
       el.setAttribute('data-dsp', 'notes');
-      card.appendChild(el);
+      const feat = card.querySelector('[data-testid="listing-card-features-wrapper"]');
+      if (feat) feat.parentElement.insertBefore(el, feat.nextSibling);
+      else card.appendChild(el); // ponytail: fallback if Domain changes card markup
     }
     if (el.textContent !== note) el.textContent = note; // idempotent
     el.title = note;

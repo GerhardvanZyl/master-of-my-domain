@@ -1,12 +1,18 @@
 // test/lib.test.js
 const assert = require('node:assert');
-const { parseListingId, sortListings, isReduced } = require('../src/lib.js');
+const { parseListingId, listingIdFromTestid, sortListings, isReduced } = require('../src/lib.js');
 
 // parseListingId
 assert.strictEqual(parseListingId('https://www.domain.com.au/20-villiers-drive-point-cook-vic-3030-2020820314'), 2020820314);
 assert.strictEqual(parseListingId('/87-tom-roberts-parade-point-cook-vic-3030-2020791659'), 2020791659);
 assert.strictEqual(parseListingId('https://www.domain.com.au/user/shortlist'), null);
 assert.strictEqual(parseListingId(''), null);
+
+// listingIdFromTestid — search/map result <li data-testid="listing-{id}">
+assert.strictEqual(listingIdFromTestid('listing-2020963078'), 2020963078);
+assert.strictEqual(listingIdFromTestid('listing-card-container'), null); // not an id
+assert.strictEqual(listingIdFromTestid('listing-card-wrapper-premiumplus'), null);
+assert.strictEqual(listingIdFromTestid(null), null);
 
 // isReduced
 assert.strictEqual(isReduced({ current: 850000, previous: 900000 }), true);

@@ -5,6 +5,12 @@ function parseListingId(url) {
   return m ? Number(m[1]) : null;
 }
 
+// Search/map result cards carry the id directly: <li data-testid="listing-2020820314">.
+function listingIdFromTestid(testid) {
+  const m = String(testid || '').match(/^listing-(\d{5,})$/);
+  return m ? Number(m[1]) : null;
+}
+
 function isReduced(pc) {
   return !!(pc && typeof pc.current === 'number' && typeof pc.previous === 'number' && pc.current < pc.previous);
 }
@@ -43,5 +49,5 @@ function sortListings(items, key, dir) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { parseListingId, isReduced, compareListings, sortListings, sortValue };
+  module.exports = { parseListingId, listingIdFromTestid, isReduced, compareListings, sortListings, sortValue };
 }

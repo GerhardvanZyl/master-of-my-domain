@@ -8,6 +8,15 @@ function cardListingId(card) {
   return a ? parseListingId(a.getAttribute('href')) : null;
 }
 
+// wrapper-tall is the flex column that grows with content; appending here
+// expands the tile and pushes the bottom-pinned (position:absolute) footer
+// down. The inner details column is fixed-height + overflow:hidden, so
+// inserting there clips our note and collides with the footer.
+// ponytail: falls back to the card if Domain changes the markup.
+function tileBody(card) {
+  return card.querySelector('[data-testid="listing-card-wrapper-tall"]') || card;
+}
+
 function getToolbar() {
   let bar = document.querySelector('.dsp-toolbar[data-dsp="toolbar"]');
   if (bar) return bar;
@@ -31,7 +40,7 @@ function renderNotes(map) {
       el = document.createElement('div');
       el.className = 'dsp-notes';
       el.setAttribute('data-dsp', 'notes');
-      card.appendChild(el);
+      tileBody(card).appendChild(el);
     }
     if (el.textContent !== notes) el.textContent = notes; // idempotent
     el.title = notes; // native tooltip fallback
@@ -72,7 +81,7 @@ async function renderStars(ratings) {
       for (let i = 1; i <= 5; i++) {
         const s = document.createElement('span');
         s.className = 'dsp-star';
-        s.textContent = '★';
+        s.textContent = '☆';
         s.dataset.value = String(i);
         s.addEventListener('click', async (e) => {
           e.preventDefault(); e.stopPropagation();
@@ -84,9 +93,10 @@ async function renderStars(ratings) {
         });
         wrap.appendChild(s);
       }
-      // insert stars above notes
+      // stars go just above the notes (renderNotes runs first, so notes exist).
+      const body = tileBody(card);
       const notes = card.querySelector('.dsp-notes[data-dsp="notes"]');
-      notes ? card.insertBefore(wrap, notes) : card.appendChild(wrap);
+      notes ? body.insertBefore(wrap, notes) : body.appendChild(wrap);
     }
     paintStars(wrap, ratings[id] || 0);
   }
@@ -94,7 +104,9 @@ async function renderStars(ratings) {
 
 function paintStars(wrap, value) {
   wrap.querySelectorAll('.dsp-star').forEach(s => {
-    s.classList.toggle('on', Number(s.dataset.value) <= value);
+    const on = Number(s.dataset.value) <= value;
+    s.textContent = on ? '★' : '☆'; // filled vs hollow so an empty rating still reads as 5 stars
+    s.classList.toggle('on', on);
   });
 }
 
