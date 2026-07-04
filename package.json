@@ -1,0 +1,39 @@
+{
+  "name": "property-compare",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "tsx test/adapters.test.ts && tsx test/pipeline.test.ts",
+    "db:migrate": "tsx scripts/db-migrate.ts",
+    "scrape": "tsx scripts/scrape.ts",
+    "tag:list": "tsx scripts/tag-list.ts",
+    "tag:set": "tsx scripts/tag-set.ts",
+    "tag:status": "tsx scripts/tag-status.ts",
+    "group:ensure": "tsx scripts/group-ensure.ts",
+    "group:add": "tsx scripts/group-add.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "drizzle-orm": "^0.38.3",
+    "next": "^15.1.4",
+    "playwright-core": "^1.49.1",
+    "probe-image-size": "^7.2.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.5",
+    "@types/probe-image-size": "^7.2.5",
+    "@types/react": "^19.0.4",
+    "@types/react-dom": "^19.0.2",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
