@@ -35,3 +35,15 @@ export interface ExtractResult {
   property: NormalizedProperty;
   images: NormalizedImage[];
 }
+
+/** Everything normalize() needs, gathered either from a Playwright page
+ *  (CLI, via readRawFromPage) or from the browser extension (in-page DOM). */
+export interface RawPageData {
+  url: string;
+  nextData?: unknown;
+  jsonLd?: unknown[];
+  globals?: unknown;
+  imgUrls?: string[];
+  title?: string;
+  ogTitle?: string;
+}

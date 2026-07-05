@@ -1,13 +1,12 @@
-import type { Page } from "playwright-core";
-import type { Adapter, } from "./base";
+import type { Adapter } from "./base";
 import { ScrapeError, firstInt, parsePrice } from "./base";
-import type { ExtractResult, NormalizedImage, NormalizedProperty } from "../types";
-import {
-  readNextData,
-  readJsonLd,
-  collectImageUrls,
-  firstDeep,
-} from "../extract";
+import type {
+  ExtractResult,
+  NormalizedImage,
+  NormalizedProperty,
+  RawPageData,
+} from "../types";
+import { collectImageUrls, firstDeep } from "../extract";
 
 const DOMAIN_IMG_HOST = /(domainstatic\.com\.au|bucket-api\.domain\.com\.au)/i;
 
@@ -16,7 +15,6 @@ function asRecord(v: unknown): Record<string, unknown> | null {
     ? (v as Record<string, unknown>)
     : null;
 }
-
 function str(v: unknown): string | null {
   if (typeof v === "string") return v.trim() || null;
   if (typeof v === "number") return String(v);
@@ -28,30 +26,21 @@ export const DomainAdapter: Adapter = {
   matches(hostname) {
     return /(^|\.)domain\.com\.au$/i.test(hostname);
   },
-  async extract(page: Page, url: string): Promise<ExtractResult> {
-    // Detect bot/consent walls early.
-    const title = (await page.title().catch(() => "")) || "";
-    if (/access denied|are you a robot|verify you are human/i.test(title)) {
-      throw new ScrapeError(`Blocked by anti-bot wall (title: "${title}")`, true);
-    }
-
-    const nextData = await readNextData(page);
-    const jsonLd = await readJsonLd(page);
-
+  normalize(raw: RawPageData): ExtractResult {
+    const nextData = raw.nextData ?? null;
+    const jsonLd = raw.jsonLd ?? [];
     if (!nextData && jsonLd.length === 0) {
       throw new ScrapeError(
         "No __NEXT_DATA__ or JSON-LD found — page shape may have changed or was blocked.",
       );
     }
 
-    // --- Address / geo (prefer JSON-LD RealEstateListing/Residence) ---
     const ld = jsonLd.map(asRecord).find((o) => o !== null) as
       | Record<string, unknown>
       | undefined;
     const ldAddress = asRecord(ld?.address);
     const ldGeo = asRecord(ld?.geo);
 
-    // --- Deep values from __NEXT_DATA__ ---
     const root = nextData ?? {};
     const beds = firstInt(firstDeep(root, ["bedrooms", "beds"]));
     const baths = firstInt(firstDeep(root, ["bathrooms", "baths"]));
@@ -74,16 +63,10 @@ export const DomainAdapter: Adapter = {
     const address =
       str(ld?.name) ??
       str(firstDeep(root, ["displayAddress", "fullAddress", "address"])) ??
-      (await page
-        .$eval('meta[property="og:title"]', (el) =>
-          el.getAttribute("content"),
-        )
-        .catch(() => null));
+      str(raw.ogTitle);
 
     const suburb = str(ldAddress?.addressLocality ?? firstDeep(root, ["suburb"]));
-    const state = str(
-      ldAddress?.addressRegion ?? firstDeep(root, ["state"]),
-    );
+    const state = str(ldAddress?.addressRegion ?? firstDeep(root, ["state"]));
     const postcode = str(
       ldAddress?.postalCode ?? firstDeep(root, ["postcode", "postCode"]),
     );
@@ -93,18 +76,12 @@ export const DomainAdapter: Adapter = {
     );
     const externalId = str(firstDeep(root, ["listingId", "adId", "id"]));
 
-    // --- Images: harvest from __NEXT_DATA__, then JSON-LD, then <img> DOM ---
     let urls = collectImageUrls(root, DOMAIN_IMG_HOST);
     if (urls.length === 0) urls = collectImageUrls(jsonLd, DOMAIN_IMG_HOST);
     if (urls.length === 0) {
-      urls = await page
-        .$$eval("img", (imgs) =>
-          imgs
-            .map((i) => (i as HTMLImageElement).src)
-            .filter((s) => /domainstatic\.com\.au/i.test(s)),
-        )
-        .catch(() => [] as string[]);
-      urls = [...new Set(urls)];
+      urls = [
+        ...new Set((raw.imgUrls ?? []).filter((s) => DOMAIN_IMG_HOST.test(s))),
+      ];
     }
 
     const images: NormalizedImage[] = urls.map((sourceUrl, ordinal) => ({
@@ -114,7 +91,7 @@ export const DomainAdapter: Adapter = {
 
     const property: NormalizedProperty = {
       sourceSite: "domain",
-      listingUrl: url,
+      listingUrl: raw.url,
       externalId,
       address,
       suburb,

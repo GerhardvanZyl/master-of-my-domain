@@ -1,4 +1,6 @@
 import type { Page } from "playwright-core";
+import type { RawPageData } from "./types";
+import { ScrapeError } from "./adapters/base";
 
 /** Parse the `#__NEXT_DATA__` script tag, or null if absent/unparseable. */
 export async function readNextData(page: Page): Promise<unknown | null> {
@@ -103,4 +105,52 @@ export function firstDeep(
     if (v !== null && v !== undefined && v !== "") return v;
   }
   return undefined;
+}
+
+const WALL_RE =
+  /access denied|are you a robot|verify you are (a )?human|unusual traffic|pardon our interruption/i;
+
+/**
+ * The ONLY Playwright-coupled extraction step. Gathers embedded JSON, window
+ * globals, image srcs and titles from a live page, and throws ScrapeError
+ * (wall=true) on anti-bot/consent interstitials. normalize() stays pure and is
+ * shared with the browser-extension ingest path.
+ */
+export async function readRawFromPage(
+  page: Page,
+  url: string,
+): Promise<RawPageData> {
+  const title = (await page.title().catch(() => "")) || "";
+  const bodyText = await page
+    .$eval("body", (el) => (el as HTMLElement).innerText.slice(0, 400))
+    .catch(() => "");
+  if (WALL_RE.test(`${title}\n${bodyText}`)) {
+    throw new ScrapeError(
+      `Blocked by anti-bot/consent wall (title: "${title}")`,
+      true,
+    );
+  }
+  const nextData = await readNextData(page);
+  const jsonLd = await readJsonLd(page);
+  const globals = await page
+    .evaluate(() => {
+      const w = window as unknown as Record<string, unknown>;
+      return (w.__INITIAL_STATE__ ?? w.ArgonautExchange ?? w.REA) ?? null;
+    })
+    .catch(() => null);
+  const imgUrls = await page
+    .$$eval("img", (imgs) => imgs.map((i) => (i as HTMLImageElement).src))
+    .catch(() => [] as string[]);
+  const ogTitle = await page
+    .$eval('meta[property="og:title"]', (el) => el.getAttribute("content"))
+    .catch(() => null);
+  return {
+    url,
+    nextData: nextData ?? undefined,
+    jsonLd,
+    globals: globals ?? undefined,
+    imgUrls: [...new Set(imgUrls)],
+    title,
+    ogTitle: ogTitle ?? undefined,
+  };
 }

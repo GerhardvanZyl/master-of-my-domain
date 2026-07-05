@@ -1,19 +1,21 @@
 /**
- * Offline unit tests for the REAL Domain/REA adapters. Uses page.setContent()
- * with site-shaped fixtures (no network — this sandbox blocks the live sites),
- * exercising the adapters' embedded-JSON parsing, image-host regexes, and
- * anti-bot wall detection.
+ * Offline unit tests for the REAL Domain/REA adapters. The data path is now a
+ * pure normalize(raw) — tested with raw fixtures, no browser. The anti-bot wall
+ * check lives in readRawFromPage, tested with page.setContent().
  */
 import assert from "node:assert";
 import { chromium, type Browser } from "playwright-core";
 import { DomainAdapter } from "../src/scrape/adapters/domain";
 import { ReaAdapter } from "../src/scrape/adapters/rea";
 import { ScrapeError } from "../src/scrape/adapters/base";
+import { readRawFromPage } from "../src/scrape/extract";
+import type { RawPageData } from "../src/scrape/types";
 
 const CHROMIUM = process.env.CHROMIUM_PATH ?? "/opt/pw-browsers/chromium";
 
-function domainHtml(): string {
-  const nextData = {
+const domainRaw: RawPageData = {
+  url: "https://www.domain.com.au/5-domain-rd-suburbia-nsw-2000-2019555111",
+  nextData: {
     props: {
       pageProps: {
         componentProps: {
@@ -40,23 +42,23 @@ function domainHtml(): string {
         },
       },
     },
-  };
-  const ld = {
-    "@type": "Residence",
-    name: "5 Domain Rd, Suburbia NSW 2000",
-    address: {
-      addressLocality: "Suburbia",
-      addressRegion: "NSW",
-      postalCode: "2000",
+  },
+  jsonLd: [
+    {
+      "@type": "Residence",
+      name: "5 Domain Rd, Suburbia NSW 2000",
+      address: {
+        addressLocality: "Suburbia",
+        addressRegion: "NSW",
+        postalCode: "2000",
+      },
     },
-  };
-  return `<!doctype html><html><head><title>5 Domain Rd</title>
-<script type="application/ld+json">${JSON.stringify(ld)}</script></head>
-<body><script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script></body></html>`;
-}
+  ],
+};
 
-function reaHtml(): string {
-  const nextData = {
+const reaRaw: RawPageData = {
+  url: "https://www.realestate.com.au/property-house-qld-metroville-146000111",
+  nextData: {
     props: {
       pageProps: {
         listing: {
@@ -78,12 +80,55 @@ function reaHtml(): string {
         },
       },
     },
-  };
-  return `<!doctype html><html><head><title>9 Rea St</title></head>
-<body><script id="__NEXT_DATA__" type="application/json">${JSON.stringify(nextData)}</script></body></html>`;
-}
+  },
+  jsonLd: [],
+};
 
 async function main() {
+  // --- Domain normalize (pure, no browser) ---
+  {
+    const { property, images } = DomainAdapter.normalize(domainRaw);
+    assert.equal(property.sourceSite, "domain");
+    assert.equal(property.beds, 3, "domain beds");
+    assert.equal(property.baths, 2, "domain baths");
+    assert.equal(property.parking, 1, "domain parking");
+    assert.equal(property.priceNumeric, 900000, "domain price parsed");
+    assert.match(String(property.address), /Domain Rd/, "domain address");
+    assert.equal(property.postcode, "2000", "domain postcode");
+    assert.equal(images.length, 2, "domain images harvested by host regex");
+    assert.ok(
+      images[0].sourceUrl.includes("domainstatic.com.au"),
+      "domain image host",
+    );
+  }
+
+  // --- REA normalize (pure, no browser) ---
+  {
+    const { property, images } = ReaAdapter.normalize(reaRaw);
+    assert.equal(property.sourceSite, "rea");
+    assert.equal(property.beds, 4, "rea beds");
+    assert.equal(property.baths, 3, "rea baths");
+    assert.equal(property.parking, 2, "rea parking");
+    assert.equal(property.priceNumeric, 1100000, "rea price parsed");
+    assert.match(String(property.address), /Rea St/, "rea address");
+    assert.equal(images.length, 3, "rea images harvested");
+  }
+
+  // --- DOM img fallback via raw.imgUrls (no embedded gallery) ---
+  {
+    const { images } = DomainAdapter.normalize({
+      url: "https://www.domain.com.au/x-123456",
+      nextData: {},
+      jsonLd: [{ "@type": "Residence", name: "X" }],
+      imgUrls: [
+        "https://rimh2.domainstatic.com.au/zzz/1.jpg",
+        "https://example.com/not-a-listing.jpg",
+      ],
+    });
+    assert.equal(images.length, 1, "only CDN-host imgs kept from DOM fallback");
+  }
+
+  // --- Anti-bot wall detection (readRawFromPage, needs a browser) ---
   const browser: Browser = await chromium.launch({
     executablePath: CHROMIUM,
     headless: true,
@@ -91,48 +136,6 @@ async function main() {
   });
   const ctx = await browser.newContext();
   try {
-    // --- Domain adapter ---
-    {
-      const page = await ctx.newPage();
-      await page.setContent(domainHtml());
-      const { property, images } = await DomainAdapter.extract(
-        page,
-        "https://www.domain.com.au/5-domain-rd-suburbia-nsw-2000-2019555111",
-      );
-      assert.equal(property.sourceSite, "domain");
-      assert.equal(property.beds, 3, "domain beds");
-      assert.equal(property.baths, 2, "domain baths");
-      assert.equal(property.parking, 1, "domain parking");
-      assert.equal(property.priceNumeric, 900000, "domain price parsed");
-      assert.match(String(property.address), /Domain Rd/, "domain address");
-      assert.equal(property.postcode, "2000", "domain postcode");
-      assert.equal(images.length, 2, "domain images harvested by host regex");
-      assert.ok(
-        images[0].sourceUrl.includes("domainstatic.com.au"),
-        "domain image host",
-      );
-      await page.close();
-    }
-
-    // --- REA adapter ---
-    {
-      const page = await ctx.newPage();
-      await page.setContent(reaHtml());
-      const { property, images } = await ReaAdapter.extract(
-        page,
-        "https://www.realestate.com.au/property-house-qld-metroville-146000111",
-      );
-      assert.equal(property.sourceSite, "rea");
-      assert.equal(property.beds, 4, "rea beds");
-      assert.equal(property.baths, 3, "rea baths");
-      assert.equal(property.parking, 2, "rea parking");
-      assert.equal(property.priceNumeric, 1100000, "rea price parsed");
-      assert.match(String(property.address), /Rea St/, "rea address");
-      assert.equal(images.length, 3, "rea images harvested");
-      await page.close();
-    }
-
-    // --- Anti-bot wall detection ---
     {
       const page = await ctx.newPage();
       await page.setContent(
@@ -140,7 +143,7 @@ async function main() {
       );
       let threw: unknown;
       try {
-        await DomainAdapter.extract(page, "https://www.domain.com.au/x");
+        await readRawFromPage(page, "https://www.domain.com.au/x");
       } catch (e) {
         threw = e;
       }
@@ -157,14 +160,16 @@ async function main() {
       );
       let threw: unknown;
       try {
-        await ReaAdapter.extract(page, "https://www.realestate.com.au/x");
+        await readRawFromPage(page, "https://www.realestate.com.au/x");
       } catch (e) {
         threw = e;
       }
-      assert.ok(threw instanceof ScrapeError && threw.wall, "rea wall detected");
+      assert.ok(
+        threw instanceof ScrapeError && threw.wall,
+        "rea wall detected",
+      );
       await page.close();
     }
-
     console.log("✓ adapters.test: all assertions passed");
   } finally {
     await browser.close();

@@ -1,5 +1,4 @@
-import type { Page } from "playwright-core";
-import type { ExtractResult } from "../types";
+import type { ExtractResult, RawPageData } from "../types";
 
 export class ScrapeError extends Error {
   constructor(
@@ -15,12 +14,9 @@ export class ScrapeError extends Error {
 export interface Adapter {
   readonly site: "domain" | "rea";
   matches(hostname: string): boolean;
-  /**
-   * Load-agnostic extraction: the page is already navigated. Adapter reads
-   * embedded JSON (and DOM fallbacks) and returns a normalized result.
-   * Throws ScrapeError (with wall=true for anti-bot pages).
-   */
-  extract(page: Page, url: string): Promise<ExtractResult>;
+  /** Pure, synchronous normalization from a raw payload. May throw ScrapeError.
+   *  Shared by the CLI (via readRawFromPage) and the browser-extension ingest. */
+  normalize(raw: RawPageData): ExtractResult;
 }
 
 /** Parse the first integer out of a string, or null. */

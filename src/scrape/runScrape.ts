@@ -1,6 +1,7 @@
 import { newContext } from "./browser";
 import { pickAdapter, ScrapeError } from "./adapters";
 import type { Adapter } from "./adapters/base";
+import { readRawFromPage } from "./extract";
 import { upsertProperty } from "./persist";
 import { syncImages, type ImageSyncResult } from "./images";
 import type { NormalizedProperty } from "./types";
@@ -40,7 +41,8 @@ export async function runScrape(
     // Give client-side hydration a moment to populate embedded state.
     await page.waitForTimeout(1200);
 
-    const { property, images } = await adapter.extract(page, url);
+    const raw = await readRawFromPage(page, url);
+    const { property, images } = adapter.normalize(raw);
     const propertyId = upsertProperty(property, {
       status: property.status ?? "ok",
     });

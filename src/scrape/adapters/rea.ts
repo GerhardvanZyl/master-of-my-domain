@@ -1,13 +1,12 @@
-import type { Page } from "playwright-core";
 import type { Adapter } from "./base";
 import { ScrapeError, firstInt, parsePrice } from "./base";
-import type { ExtractResult, NormalizedImage, NormalizedProperty } from "../types";
-import {
-  readNextData,
-  readJsonLd,
-  collectImageUrls,
-  firstDeep,
-} from "../extract";
+import type {
+  ExtractResult,
+  NormalizedImage,
+  NormalizedProperty,
+  RawPageData,
+} from "../types";
+import { collectImageUrls, firstDeep } from "../extract";
 
 const REA_IMG_HOST = /reastatic\.net/i;
 
@@ -27,34 +26,10 @@ export const ReaAdapter: Adapter = {
   matches(hostname) {
     return /(^|\.)realestate\.com\.au$/i.test(hostname);
   },
-  async extract(page: Page, url: string): Promise<ExtractResult> {
-    const title = (await page.title().catch(() => "")) || "";
-    const bodyText = await page
-      .$eval("body", (el) => el.innerText.slice(0, 400))
-      .catch(() => "");
-    if (
-      /access denied|are you a robot|verify you are (a )?human|unusual traffic|pardon our interruption/i.test(
-        `${title}\n${bodyText}`,
-      )
-    ) {
-      throw new ScrapeError(
-        `Blocked by anti-bot/consent wall (title: "${title}")`,
-        true,
-      );
-    }
-
-    const nextData = await readNextData(page);
-    // REA sometimes exposes state on a window global rather than __NEXT_DATA__.
-    const globalState = await page
-      .evaluate(() => {
-        const w = window as unknown as Record<string, unknown>;
-        return (w.__INITIAL_STATE__ ?? w.ArgonautExchange ?? w.REA) ?? null;
-      })
-      .catch(() => null);
-    const jsonLd = await readJsonLd(page);
-
-    const root = nextData ?? globalState ?? {};
-    if (!nextData && !globalState && jsonLd.length === 0) {
+  normalize(raw: RawPageData): ExtractResult {
+    const jsonLd = raw.jsonLd ?? [];
+    const root = raw.nextData ?? raw.globals ?? {};
+    if (!raw.nextData && !raw.globals && jsonLd.length === 0) {
       throw new ScrapeError(
         "No embedded JSON found for realestate.com.au — likely blocked or shape changed.",
       );
@@ -82,12 +57,11 @@ export const ReaAdapter: Adapter = {
       str(firstDeep(root, ["description"])) ?? str(ld?.description);
     const address =
       str(ld?.name) ??
-      str(firstDeep(root, ["fullAddress", "displayAddress", "address"]));
+      str(firstDeep(root, ["fullAddress", "displayAddress", "address"])) ??
+      str(raw.ogTitle);
     const suburb = str(ldAddress?.addressLocality ?? firstDeep(root, ["suburb"]));
     const state = str(ldAddress?.addressRegion ?? firstDeep(root, ["state"]));
-    const postcode = str(
-      ldAddress?.postalCode ?? firstDeep(root, ["postcode"]),
-    );
+    const postcode = str(ldAddress?.postalCode ?? firstDeep(root, ["postcode"]));
     const latitude = Number(ldGeo?.latitude ?? firstDeep(root, ["latitude"]));
     const longitude = Number(
       ldGeo?.longitude ?? firstDeep(root, ["longitude"]),
@@ -97,14 +71,9 @@ export const ReaAdapter: Adapter = {
     let urls = collectImageUrls(root, REA_IMG_HOST);
     if (urls.length === 0) urls = collectImageUrls(jsonLd, REA_IMG_HOST);
     if (urls.length === 0) {
-      urls = await page
-        .$$eval("img", (imgs) =>
-          imgs
-            .map((i) => (i as HTMLImageElement).src)
-            .filter((s) => /reastatic\.net/i.test(s)),
-        )
-        .catch(() => [] as string[]);
-      urls = [...new Set(urls)];
+      urls = [
+        ...new Set((raw.imgUrls ?? []).filter((s) => REA_IMG_HOST.test(s))),
+      ];
     }
 
     const images: NormalizedImage[] = urls.map((sourceUrl, ordinal) => ({
@@ -114,7 +83,7 @@ export const ReaAdapter: Adapter = {
 
     const property: NormalizedProperty = {
       sourceSite: "rea",
-      listingUrl: url,
+      listingUrl: raw.url,
       externalId,
       address,
       suburb,
@@ -132,7 +101,14 @@ export const ReaAdapter: Adapter = {
       description,
       latitude: Number.isFinite(latitude) ? latitude : null,
       longitude: Number.isFinite(longitude) ? longitude : null,
-      raw: { address, priceDisplay, beds, baths, parking, imageCount: images.length },
+      raw: {
+        address,
+        priceDisplay,
+        beds,
+        baths,
+        parking,
+        imageCount: images.length,
+      },
       status: address || priceDisplay || images.length > 0 ? "ok" : "partial",
     };
 

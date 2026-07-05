@@ -82,7 +82,7 @@ async function main() {
   const { runScrape } = await import("../src/scrape/runScrape");
   const { closeBrowser } = await import("../src/scrape/browser");
   const { sqlite } = await import("../src/db/client");
-  const { collectImageUrls, readNextData, firstDeep } = await import(
+  const { collectImageUrls, firstDeep } = await import(
     "../src/scrape/extract"
   );
   const { firstInt, parsePrice } = await import("../src/scrape/adapters/base");
@@ -92,13 +92,13 @@ async function main() {
   const LocalAdapter = {
     site: "domain" as const,
     matches: (h: string) => LOCAL_HOST.test(h),
-    async extract(page: import("playwright-core").Page, url: string) {
-      const root = (await readNextData(page)) ?? {};
+    normalize(raw: import("../src/scrape/types").RawPageData) {
+      const root = raw.nextData ?? {};
       const urls = collectImageUrls(root, LOCAL_HOST);
       return {
         property: {
           sourceSite: "domain" as const,
-          listingUrl: url,
+          listingUrl: raw.url,
           address: String(firstDeep(root, ["displayAddress"]) ?? ""),
           suburb: String(firstDeep(root, ["suburb"]) ?? ""),
           state: String(firstDeep(root, ["state"]) ?? ""),
