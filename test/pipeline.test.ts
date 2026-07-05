@@ -177,11 +177,19 @@ async function main() {
       .get(imgRows[0].id) as Record<string, unknown> | undefined;
     assert.ok(tag && tag.room_type === "kitchen", "tag survived re-scrape");
 
-    await closeBrowser();
     console.log("✓ pipeline.test: all assertions passed");
   } finally {
+    // Release every OS handle BEFORE removing the temp dir. On Windows an open
+    // browser process or SQLite (WAL: .db/.db-wal/.db-shm) handle makes rmSync
+    // fail with EPERM — and a throw here would mask a real assertion failure.
+    await closeBrowser();
+    sqlite.close();
     server.close();
-    fs.rmSync(tmp, { recursive: true, force: true });
+    try {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    } catch {
+      /* best-effort: OS may still hold a handle briefly; temp dir is disposable */
+    }
   }
 }
 

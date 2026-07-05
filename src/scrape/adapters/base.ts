@@ -36,7 +36,8 @@ export function parsePrice(s: unknown): number | null {
   if (typeof s === "number" && Number.isFinite(s)) return Math.trunc(s);
   if (typeof s !== "string") return null;
   const lower = s.toLowerCase();
-  const m = lower.match(/\$?\s*([\d,.]+)\s*(m|k)?/);
+  // (?![a-z]) so a trailing word ("$550,000 median") isn't read as a multiplier.
+  const m = lower.match(/\$?\s*([\d,.]+)(?:\s*(m|k)(?![a-z]))?/);
   if (!m) return null;
   const num = parseFloat(m[1].replace(/,/g, ""));
   if (!Number.isFinite(num)) return null;

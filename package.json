@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx test/adapters.test.ts && tsx test/pipeline.test.ts",
+    "test": "tsx test/units.test.ts && tsx test/adapters.test.ts && tsx test/pipeline.test.ts",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "scrape": "tsx scripts/scrape.ts",
     "tag:list": "tsx scripts/tag-list.ts",
