@@ -37,21 +37,10 @@ export default function PropertyGrid({
     router.refresh();
   }
 
-  async function rescrape(url: string) {
-    setBusy(url);
-    await fetch("/api/scrape", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ text: url }),
-    });
-    setBusy(null);
-    router.refresh();
-  }
-
   if (properties.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-neutral-300 p-8 text-center text-neutral-500 dark:border-neutral-700">
-        No properties yet. Paste some listing links above to get started.
+        No properties yet. Browse a Domain or realestate.com.au listing with the capture extension installed to add one.
       </p>
     );
   }
@@ -111,13 +100,6 @@ export default function PropertyGrid({
                 {bedBathCar(p.beds, p.baths, p.parking)} · {p.imageCount} photos
               </div>
               <div className="flex gap-3 pt-1 text-xs text-neutral-500">
-                <button
-                  onClick={() => rescrape(p.listingUrl)}
-                  disabled={busy === p.listingUrl}
-                  className="hover:text-neutral-900 hover:underline dark:hover:text-neutral-100"
-                >
-                  re-scrape
-                </button>
                 <button
                   onClick={() => remove(p.id)}
                   disabled={busy === p.id}
