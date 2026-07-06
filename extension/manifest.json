@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Master of my Domain — Capture",
+  "version": "1.0.0",
+  "description": "Captures Domain/REA listing data from the page you're viewing and sends it to the local Property Compare app.",
+  "host_permissions": ["http://localhost:3000/*"],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["*://www.domain.com.au/*", "*://www.realestate.com.au/*"],
+      "js": ["injected.js"],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["*://www.domain.com.au/*", "*://www.realestate.com.au/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
