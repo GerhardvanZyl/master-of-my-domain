@@ -43,15 +43,16 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
+  let propertyId: string | null = null;
   try {
     const { property, images } = adapter.normalize(raw);
-    const propertyId = upsertProperty(property, { status: property.status ?? "ok" });
+    propertyId = upsertProperty(property, { status: property.status ?? "ok" });
     const imgResult = await syncImages(propertyId, images, raw.url);
     logIngest(raw.url, propertyId, null);
     return NextResponse.json({ ok: true, propertyId, images: imgResult });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    logIngest(raw.url, null, message);
+    logIngest(raw.url, propertyId, message);
     return NextResponse.json(
       { ok: false, error: message },
       { status: err instanceof ScrapeError ? 422 : 500 },
