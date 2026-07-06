@@ -12,9 +12,5 @@ export const DB_PATH = resolveFromRoot(process.env.DB_PATH ?? "./data/app.db");
 export const IMAGES_DIR = resolveFromRoot(
   process.env.IMAGES_DIR ?? "./data/images",
 );
-export const SCRAPE_CONCURRENCY = Math.max(
-  1,
-  Number(process.env.SCRAPE_CONCURRENCY ?? "1") || 1,
-);
 export const CHROMIUM_PATH =
   process.env.CHROMIUM_PATH ?? "/opt/pw-browsers/chromium";

@@ -128,6 +128,32 @@ async function main() {
     assert.equal(images.length, 1, "only CDN-host imgs kept from DOM fallback");
   }
 
+  // --- Image sources are UNIONED (embedded gallery + DOM carousel) ---
+  {
+    const { images } = DomainAdapter.normalize({
+      url: "https://www.domain.com.au/y-234567",
+      nextData: {
+        props: {
+          pageProps: {
+            componentProps: {
+              media: [
+                { url: "https://rimh2.domainstatic.com.au/aaa/2000x1500/1.jpg" },
+              ],
+            },
+          },
+        },
+      },
+      jsonLd: [],
+      // A carousel image that only appears in the DOM, not in nextData:
+      imgUrls: ["https://rimh2.domainstatic.com.au/bbb/2000x1500/2.jpg"],
+    });
+    assert.equal(
+      images.length,
+      2,
+      "embedded gallery + DOM carousel images are unioned",
+    );
+  }
+
   // --- Anti-bot wall detection (readRawFromPage, needs a browser) ---
   const browser: Browser = await chromium.launch({
     executablePath: CHROMIUM,

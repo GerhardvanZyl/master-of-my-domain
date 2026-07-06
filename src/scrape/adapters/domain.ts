@@ -76,13 +76,16 @@ export const DomainAdapter: Adapter = {
     );
     const externalId = str(firstDeep(root, ["listingId", "adId", "id"]));
 
-    let urls = collectImageUrls(root, DOMAIN_IMG_HOST);
-    if (urls.length === 0) urls = collectImageUrls(jsonLd, DOMAIN_IMG_HOST);
-    if (urls.length === 0) {
-      urls = [
-        ...new Set((raw.imgUrls ?? []).filter((s) => DOMAIN_IMG_HOST.test(s))),
-      ];
-    }
+    // Union of embedded gallery + JSON-LD + DOM <img> srcs (deduped, host-filtered).
+    // The extension re-sends as on-demand carousel images load, and syncImages
+    // appends new source_urls, so unioning here tops up the gallery over time.
+    const urls = [
+      ...new Set([
+        ...collectImageUrls(root, DOMAIN_IMG_HOST),
+        ...collectImageUrls(jsonLd, DOMAIN_IMG_HOST),
+        ...(raw.imgUrls ?? []).filter((s) => DOMAIN_IMG_HOST.test(s)),
+      ]),
+    ];
 
     const images: NormalizedImage[] = urls.map((sourceUrl, ordinal) => ({
       sourceUrl,

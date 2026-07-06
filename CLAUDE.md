@@ -12,6 +12,10 @@ in this repo.
   · `scripts/` CLI helpers · `data/` runtime DB + images (gitignored).
 - Run: `npm run dev`. Migrate: `npm run db:migrate`. Scrape from CLI:
   `npm run scrape -- <url>`.
+- `extension/` — a Chrome MV3 capture extension: while you browse a Domain/REA
+  listing it POSTs the page's embedded data to `POST /api/ingest`, which saves
+  it to the same DB. This is the primary ingest path; `npm run scrape` (Playwright
+  CLI) still works for one-off URL scrapes.
 
 ## Photo-tagging job (this is your main interactive task)
 

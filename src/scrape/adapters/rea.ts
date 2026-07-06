@@ -68,13 +68,14 @@ export const ReaAdapter: Adapter = {
     );
     const externalId = str(firstDeep(root, ["listingId", "id"]));
 
-    let urls = collectImageUrls(root, REA_IMG_HOST);
-    if (urls.length === 0) urls = collectImageUrls(jsonLd, REA_IMG_HOST);
-    if (urls.length === 0) {
-      urls = [
-        ...new Set((raw.imgUrls ?? []).filter((s) => REA_IMG_HOST.test(s))),
-      ];
-    }
+    // Union of embedded gallery + JSON-LD + DOM <img> srcs (deduped, host-filtered).
+    const urls = [
+      ...new Set([
+        ...collectImageUrls(root, REA_IMG_HOST),
+        ...collectImageUrls(jsonLd, REA_IMG_HOST),
+        ...(raw.imgUrls ?? []).filter((s) => REA_IMG_HOST.test(s)),
+      ]),
+    ];
 
     const images: NormalizedImage[] = urls.map((sourceUrl, ordinal) => ({
       sourceUrl,
