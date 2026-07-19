@@ -10,6 +10,8 @@
     "test": "tsx test/units.test.ts && tsx test/adapters.test.ts && tsx test/pipeline.test.ts && tsx test/ingest.test.ts",
     "db:migrate": "tsx scripts/db-migrate.ts",
     "scrape": "tsx scripts/scrape.ts",
+    "load": "tsx scripts/load-properties.ts",
+    "load:images": "tsx scripts/load-images.ts",
     "tag:list": "tsx scripts/tag-list.ts",
     "tag:set": "tsx scripts/tag-set.ts",
     "tag:status": "tsx scripts/tag-status.ts",

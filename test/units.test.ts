@@ -8,6 +8,7 @@ import { deepCollect, collectImageUrls, firstDeep } from "../src/scrape/extract"
 import { parseFlags } from "../src/lib/args";
 import { imageUrl } from "../src/lib/images";
 import { formatPrice, bedBathCar, fmtNum } from "../src/lib/format";
+import { priorityScore } from "../src/lib/priority";
 
 // --- firstInt ---
 assert.equal(firstInt(4), 4);
@@ -103,5 +104,24 @@ assert.equal(bedBathCar(null, null, null), "—");
 assert.equal(bedBathCar(0, null, null), "0 bed", "zero is a real value, not missing");
 assert.equal(fmtNum(650, " m²"), "650 m²");
 assert.equal(fmtNum(null), "—");
+
+// --- priorityScore (ranking: $850k proximity dominates, beds boosts) ---
+assert.ok(
+  priorityScore(4, 850000) > priorityScore(4, 950000),
+  "closer to $850k ranks higher at equal beds",
+);
+assert.ok(
+  priorityScore(5, 850000) > priorityScore(3, 850000),
+  "more beds ranks higher at equal price",
+);
+assert.ok(
+  priorityScore(3, 850000) > priorityScore(5, 950000),
+  "$100k off outweighs +2 beds (price leads)",
+);
+assert.equal(priorityScore(4, null), -Infinity, "missing price sinks to bottom");
+assert.ok(
+  priorityScore(4, 900000) > priorityScore(4, null),
+  "any priced listing beats an unpriced one",
+);
 
 console.log("✓ units.test: all assertions passed");

@@ -34,7 +34,8 @@ export async function GET(
   return new Response(new Uint8Array(buf), {
     headers: {
       "content-type": type,
-      "cache-control": "public, max-age=3600",
+      // Files are content-unique (id-named, never rewritten) — safe to cache forever.
+      "cache-control": "public, max-age=31536000, immutable",
     },
   });
 }

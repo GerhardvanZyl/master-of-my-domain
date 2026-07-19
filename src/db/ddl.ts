@@ -26,6 +26,34 @@ CREATE TABLE IF NOT EXISTS properties (
   description    TEXT,
   latitude       REAL,
   longitude      REAL,
+  nearest_station         TEXT,
+  station_distance_m      INTEGER,
+  second_station          TEXT,
+  second_station_distance_m INTEGER,
+  pt_minutes_to_flinders  INTEGER,
+  pt_route_summary        TEXT,
+  pt_steps                TEXT,
+  adv_price_current           TEXT,
+  adv_price_previous          TEXT,
+  adv_price_previous_label    TEXT,
+  green_cross_distance_m      INTEGER,
+  coles_distance_m            INTEGER,
+  coles_name                  TEXT,
+  playgrounds_500m            INTEGER,
+  domain_notes                TEXT,
+  ai_comment                  TEXT,
+  has_eaves                   INTEGER,
+  altitude_m                  REAL,
+  flood_overlay               INTEGER,
+  bushfire_overlay            INTEGER,
+  master_bed_sqm              REAL,
+  avg_other_bed_sqm           REAL,
+  common_areas_count          INTEGER,
+  balcony_sqm                 REAL,
+  back_garden_sqm             REAL,
+  pergola_covered             INTEGER,
+  has_lawn                    INTEGER,
+  lawn_type                   TEXT,
   raw_json       TEXT,
   scraped_at     TEXT NOT NULL,
   created_at     TEXT NOT NULL,
@@ -73,6 +101,26 @@ CREATE TABLE IF NOT EXISTS similarity_group_members (
   PRIMARY KEY (group_id, image_id)
 );
 
+CREATE TABLE IF NOT EXISTS property_ratings (
+  property_id    TEXT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  profile        TEXT NOT NULL,
+  vibe           TEXT,
+  look           TEXT,
+  kitchen        TEXT,
+  updated_at     TEXT NOT NULL,
+  PRIMARY KEY (property_id, profile)
+);
+
+CREATE TABLE IF NOT EXISTS price_history (
+  id             TEXT PRIMARY KEY,
+  property_id    TEXT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  date           TEXT,
+  event          TEXT,
+  price_display  TEXT,
+  price_numeric  INTEGER,
+  created_at     TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS scrape_jobs (
   id             TEXT PRIMARY KEY,
   url            TEXT NOT NULL,
@@ -88,4 +136,52 @@ CREATE INDEX IF NOT EXISTS idx_images_hash ON images(content_hash);
 CREATE INDEX IF NOT EXISTS idx_image_tags_room ON image_tags(room_type);
 CREATE INDEX IF NOT EXISTS idx_group_members_group ON similarity_group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_image ON similarity_group_members(image_id);
+CREATE INDEX IF NOT EXISTS idx_price_history_property ON price_history(property_id);
 `;
+
+/**
+ * Add columns that CREATE TABLE IF NOT EXISTS can't retrofit onto an existing
+ * DB. SQLite has no `ADD COLUMN IF NOT EXISTS`, so check table_info first.
+ * Idempotent; safe to run on every connect.
+ */
+export function migrateColumns(db: {
+  pragma: (s: string) => Array<{ name: string }>;
+  exec: (s: string) => void;
+}): void {
+  const cols = new Set(
+    db.pragma("table_info(properties)").map((c) => c.name),
+  );
+  const add: Record<string, string> = {
+    nearest_station: "TEXT",
+    station_distance_m: "INTEGER",
+    second_station: "TEXT",
+    second_station_distance_m: "INTEGER",
+    pt_minutes_to_flinders: "INTEGER",
+    pt_route_summary: "TEXT",
+    pt_steps: "TEXT",
+    adv_price_current: "TEXT",
+    adv_price_previous: "TEXT",
+    adv_price_previous_label: "TEXT",
+    green_cross_distance_m: "INTEGER",
+    coles_distance_m: "INTEGER",
+    coles_name: "TEXT",
+    playgrounds_500m: "INTEGER",
+    domain_notes: "TEXT",
+    ai_comment: "TEXT",
+    has_eaves: "INTEGER",
+    altitude_m: "REAL",
+    flood_overlay: "INTEGER",
+    bushfire_overlay: "INTEGER",
+    master_bed_sqm: "REAL",
+    avg_other_bed_sqm: "REAL",
+    common_areas_count: "INTEGER",
+    balcony_sqm: "REAL",
+    back_garden_sqm: "REAL",
+    pergola_covered: "INTEGER",
+    has_lawn: "INTEGER",
+    lawn_type: "TEXT",
+  };
+  for (const [name, type] of Object.entries(add)) {
+    if (!cols.has(name)) db.exec(`ALTER TABLE properties ADD COLUMN ${name} ${type}`);
+  }
+}

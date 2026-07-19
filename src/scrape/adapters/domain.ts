@@ -10,6 +10,39 @@ import { collectImageUrls, firstDeep } from "../extract";
 
 const DOMAIN_IMG_HOST = /(domainstatic\.com\.au|bucket-api\.domain\.com\.au)/i;
 
+/**
+ * Domain's listing gallery (props.pageProps.componentProps.galleryV2.photos)
+ * stores each photo as {mobileUrl,tabletUrl,desktopUrl}, each a {"1x","2x"}
+ * pair. These signed rimh2 URLs are EXTENSIONLESS (…-w1448-h1086), so the
+ * generic collectImageUrls (which requires a .jpg/png/webp suffix) skips them.
+ * Deep-walk for those photo objects and take the best (2x desktop) URL.
+ */
+function galleryUrls(root: unknown): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  const visited = new Set<unknown>();
+  const stack: unknown[] = [root];
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== "object") continue;
+    if (visited.has(node)) continue;
+    visited.add(node);
+    if (!Array.isArray(node)) {
+      const rec = node as Record<string, unknown>;
+      const d = rec.desktopUrl ?? rec.tabletUrl ?? rec.mobileUrl;
+      const dd = asRecord(d);
+      const u = dd ? (dd["2x"] ?? dd["1x"]) : null;
+      if (typeof u === "string" && DOMAIN_IMG_HOST.test(u) && !seen.has(u)) {
+        seen.add(u);
+        out.push(u);
+      }
+    }
+    const values = Array.isArray(node) ? node : Object.values(node as object);
+    for (const v of values) stack.push(v);
+  }
+  return out;
+}
+
 function asRecord(v: unknown): Record<string, unknown> | null {
   return v && typeof v === "object" && !Array.isArray(v)
     ? (v as Record<string, unknown>)
@@ -81,6 +114,7 @@ export const DomainAdapter: Adapter = {
     // appends new source_urls, so unioning here tops up the gallery over time.
     const urls = [
       ...new Set([
+        ...galleryUrls(root),
         ...collectImageUrls(root, DOMAIN_IMG_HOST),
         ...collectImageUrls(jsonLd, DOMAIN_IMG_HOST),
         ...(raw.imgUrls ?? []).filter((s) => DOMAIN_IMG_HOST.test(s)),

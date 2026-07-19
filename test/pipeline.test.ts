@@ -177,6 +177,34 @@ async function main() {
       .get(imgRows[0].id) as Record<string, unknown> | undefined;
     assert.ok(tag && tag.room_type === "kitchen", "tag survived re-scrape");
 
+    // --- Delete: works even with a scrape_jobs row referencing the property,
+    // cascades DB rows, and removes image files from disk ---
+    const { deleteProperty } = await import("../src/db/queries/properties");
+    sqlite
+      .prepare(
+        "INSERT INTO scrape_jobs (id, url, status, property_id, created_at, updated_at) VALUES ('job_t', ?, 'done', ?, ?, ?)",
+      )
+      .run(listingUrl, prop.id, new Date().toISOString(), new Date().toISOString());
+    deleteProperty(String(prop.id));
+    assert.equal(
+      (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c,
+      0,
+      "property deleted despite job row referencing it",
+    );
+    assert.equal(
+      (sqlite.prepare("SELECT COUNT(*) c FROM images").get() as { c: number }).c,
+      0,
+      "image rows cascade-deleted",
+    );
+    const job = sqlite
+      .prepare("SELECT property_id FROM scrape_jobs WHERE id = 'job_t'")
+      .get() as { property_id: string | null };
+    assert.equal(job.property_id, null, "history row kept, link nulled");
+    assert.ok(
+      !fs.existsSync(path.join(tmp, "images", String(prop.id))),
+      "image files removed from disk",
+    );
+
     console.log("✓ pipeline.test: all assertions passed");
   } finally {
     // Release every OS handle BEFORE removing the temp dir. On Windows an open

@@ -28,3 +28,17 @@ export function bedBathCar(
 export function fmtNum(n: number | null, suffix = ""): string {
   return n == null ? "—" : `${n}${suffix}`;
 }
+
+/** Metres → "850 m" / "1.4 km". */
+export function fmtDistance(m: number | null): string {
+  if (m == null) return "—";
+  return m < 1000 ? `${m} m` : `${(m / 1000).toFixed(1)} km`;
+}
+
+/** Minutes → "18 min" / "1h 05m". */
+export function fmtMinutes(min: number | null): string {
+  if (min == null) return "—";
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return h ? `${h}h ${String(m).padStart(2, "0")}m` : `${m} min`;
+}

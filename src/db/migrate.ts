@@ -1,5 +1,5 @@
 import { sqlite } from "./client";
-import { DDL } from "./ddl";
+import { DDL, migrateColumns } from "./ddl";
 
 /**
  * Idempotent schema creation via `CREATE TABLE IF NOT EXISTS` (executed through
@@ -9,4 +9,5 @@ import { DDL } from "./ddl";
  */
 export function migrate(): void {
   sqlite.exec(DDL);
+  migrateColumns(sqlite);
 }

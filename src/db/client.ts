@@ -4,7 +4,7 @@ import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { DATA_DIR, DB_PATH, IMAGES_DIR } from "@/lib/env";
 import * as schema from "./schema";
-import { DDL } from "./ddl";
+import { DDL, migrateColumns } from "./ddl";
 
 function ensureDirs() {
   for (const dir of [DATA_DIR, IMAGES_DIR, path.dirname(DB_PATH)]) {
@@ -25,6 +25,7 @@ function createConnection(): Database.Database {
   db.pragma("synchronous = NORMAL");
   db.pragma("busy_timeout = 5000");
   db.exec(DDL); // ensure schema exists on every fresh connection
+  migrateColumns(db); // retrofit added columns onto older DBs
   return db;
 }
 
