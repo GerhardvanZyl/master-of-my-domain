@@ -1,0 +1,1738 @@
+[
+  {
+    "listingUrl": "https://www.domain.com.au/20-villiers-drive-point-cook-vic-3030-2020820314",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2454,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2579
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-sassafras-close-point-cook-vic-3030-2020913534",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 2619,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2754
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/1-boathaven-road-point-cook-vic-3030-2020293779",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4423,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 4748
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/1-frankie-way-point-cook-vic-3030-2020910355",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1761,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3249
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/1-hasluck-gardens-point-cook-vic-3030-2020943318",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2979,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3185
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/1-peppertree-drive-point-cook-vic-3030-2020944426",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 2351,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2383
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/1-tattler-court-point-cook-vic-3030-2020862697",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3567,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4223
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-andaman-place-point-cook-vic-3030-2020910762",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2571,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4040
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-balfour-close-point-cook-vic-3030-2020947861",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 990,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 1221
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-bandler-parkway-point-cook-vic-3030-2021003970",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3125,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3324
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-corporate-drive-point-cook-vic-3030-2020926852",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4473,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5368
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-dodson-drive-point-cook-vic-3030-2020934326",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4122,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5042
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-fairwater-drive-point-cook-vic-3030-2020594776",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2951,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4862
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-grebe-way-williams-landing-vic-3027-2020909188",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1439,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2640
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-lachie-grove-point-cook-vic-3030-2020603293",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5157,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5820
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-sidney-nolan-walk-point-cook-vic-3030-2020956675",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3047,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3118
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-tamborine-avenue-point-cook-vic-3030-2020923647",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3696,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 3936
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-toddington-avenue-williams-landing-vic-3027-2020928847",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1181,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 1286
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-truscott-grove-point-cook-vic-3030-2020909572",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2260,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3422
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/104-jamieson-way-point-cook-vic-3030-2020789193",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2607,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2999
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/105-williams-landing-boulevard-williams-landing-vic-3027-2020861597",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 607,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1416
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/109-alamanda-boulevard-point-cook-vic-3030-2020869071",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4295,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4793
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-clarion-avenue-williams-landing-vic-3027-2020596964",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 651,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1821
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-coronat-drive-williams-landing-vic-3027-2020987221",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1148,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 1559
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-creston-street-point-cook-vic-3030-2020566851",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1232,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3544
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-dusty-drive-point-cook-vic-3030-2020952947",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5530,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 6205
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-hanover-street-point-cook-vic-3030-2019954553",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1781,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4081
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-opperman-place-point-cook-vic-3030-2020864598",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2817,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3697
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-solo-street-point-cook-vic-3030-2020857449",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2943,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4474
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-stokes-court-point-cook-vic-3030-2020944476",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1064,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1350
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-stoneyfell-road-point-cook-vic-3030-2020957267",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4336,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5115
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-wetlands-boulevard-williams-landing-vic-3027-2020721476",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1524,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2638
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/12-beckett-way-williams-landing-vic-3027-2020816434",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1082,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2239
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/12-carrick-street-point-cook-vic-3030-2020611963",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4255,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5158
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/12-east-cornhill-drive-point-cook-vic-3030-2019025012",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2143,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2554
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/12-sorrenberg-street-point-cook-vic-3030-2020892952",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5348,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 6056
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/12-wildcherry-place-point-cook-vic-3030-2020998813",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3536,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4644
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/126-evesham-drive-point-cook-vic-3030-2019467338",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3065,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3872
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/13-aldinga-avenue-point-cook-vic-3030-2019975391",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5323,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5942
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/13-barwick-gardens-point-cook-vic-3030-2020894401",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3112,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 3297
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/13-bendel-street-point-cook-vic-3030-2018626894",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1504,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2982
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/13-carnival-place-point-cook-vic-3030-2020939720",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3617,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4147
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/13-hartwood-avenue-williams-landing-vic-3027-2020519232",
+    "nearestStation": "Laverton Station",
+    "stationDistanceM": 1069,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 1080
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/13-seacoast-street-point-cook-vic-3030-2021004012",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5185,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5925
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/14-amboy-walk-point-cook-vic-3030-2020933489",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1809,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4230
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/14-carlisle-terrace-point-cook-vic-3030-2020998528",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 1718,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2427
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/14-grosset-way-point-cook-vic-3030-2020955834",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5405,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 6098
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/14-isaacs-walk-point-cook-vic-3030-2020490661",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3212,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3392
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/14-newminster-way-point-cook-vic-3030-2020926222",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 1752,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2528
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/14-tanner-mews-point-cook-vic-3030-2020842584",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2900,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3060
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/15-biscay-street-point-cook-vic-3030-2020806480",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4237,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 4315
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/15-merryfield-circuit-williams-landing-vic-3027-2020719277",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 626,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1828
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/16-constantine-drive-point-cook-vic-3030-2020685222",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4223,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4895
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/16-flight-drive-williams-landing-vic-3027-2020808187",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1025,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 1074
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/16-grasso-avenue-point-cook-vic-3030-2020674660",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4644,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5561
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/16-lindholme-way-williams-landing-vic-3027-2020939785",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1154,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2118
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/16-maidenhair-drive-point-cook-vic-3030-2020861136",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3734,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4384
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/16-winterberry-road-point-cook-vic-3030-2020932860",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3131,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4946
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/161-citybay-drive-point-cook-vic-3030-2020983048",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4140,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 4865
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/17-bruckner-drive-point-cook-vic-3030-2020893580",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1575,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4316
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/17-carnegie-road-point-cook-vic-3030-2020733365",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4465,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5371
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/17-east-cornhill-drive-point-cook-vic-3030-2020946874",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2195,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2466
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/17-hydrangea-drive-point-cook-vic-3030-2020879464",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3501,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4041
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/17-manna-way-point-cook-vic-3030-2020616535",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 4057,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4328
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/17-nassau-road-point-cook-vic-3030-2020758181",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1370,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3191
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/17-orpheus-street-point-cook-vic-3030-2020836554",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3691,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4569
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/176-saltwater-promenade-point-cook-vic-3030-2020867248",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4425,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5322
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/18-arrowgrass-drive-point-cook-vic-3030-2021002633",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3673,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4963
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/18-coolum-street-point-cook-vic-3030-2020781919",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4535,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 4659
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/18-horatio-street-point-cook-vic-3030-2020940086",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1294,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3922
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/18-jemma-avenue-point-cook-vic-3030-2020888517",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4439,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5213
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/18-tattersalls-lane-point-cook-vic-3030-2019433893",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4095,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4940
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/18-trapani-avenue-point-cook-vic-3030-2020985996",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2524,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2717
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/18-tristania-drive-point-cook-vic-3030-2020958277",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3511,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4277
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/18-villiers-drive-point-cook-vic-3030-2020854551",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2454,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2599
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/19-halycon-street-point-cook-vic-3030-2020766260",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3059,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4512
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/19-martaban-crescent-point-cook-vic-3030-2020704843",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2450,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4450
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/196-waterhaven-boulevard-point-cook-vic-3030-2020955109",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1310,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1963
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/2-balfour-close-point-cook-vic-3030-2020905893",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 1084,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 1199
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/2-polaris-circuit-williams-landing-vic-3027-2021000544",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 644,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 986
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/2-ribbon-close-point-cook-vic-3030-2020945421",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3298,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3837
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/2-sakura-walk-point-cook-vic-3030-2020890836",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1556,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3082
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/2-sincere-drive-point-cook-vic-3030-2020997642",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3675,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4007
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/20-battery-road-point-cook-vic-3030-2020928787",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1136,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3663
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/20-caspian-circuit-point-cook-vic-3030-2020922270",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3120,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3633
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/20-coleridge-circuit-williams-landing-vic-3027-2020879623",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 837,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1993
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/20-dexter-grove-point-cook-vic-3030-2020941213",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2948,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 3408
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/20-shepherd-street-williams-landing-vic-3027-2020649325",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 902,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1208
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/203-haze-drive-point-cook-vic-3030-2020999120",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3869,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4789
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/207-haze-drive-point-cook-vic-3030-2020959399",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3858,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4773
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/21-mirka-way-point-cook-vic-3030-2020329843",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4327,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5183
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/21-tobago-avenue-point-cook-vic-3030-2020951662",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4427,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 4899
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/22-niland-crescent-point-cook-vic-3030-2020862706",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2308,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2915
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/22-yacht-road-point-cook-vic-3030-2020854562",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4976,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5678
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/224-saltwater-promenade-point-cook-vic-3030-2019980217",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4423,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5252
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/23-alverton-drive-point-cook-vic-3030-2020387187",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4434,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5057
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/24-coleridge-circuit-williams-landing-vic-3027-2020800148",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 811,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1964
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/24-lutine-circuit-point-cook-vic-3030-2020841146",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4573,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5255
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/24-maldive-grove-point-cook-vic-3030-2020941685",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3244,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3771
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/24-nest-place-point-cook-vic-3030-2020992730",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3080,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4096
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/24-sorrenberg-street-point-cook-vic-3030-2020953505",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5414,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 6131
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/24-tahitian-terrace-point-cook-vic-3030-2020363145",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3228,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3717
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/24-tropic-circuit-point-cook-vic-3030-2021001546",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4009,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 4112
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/25-aruba-avenue-point-cook-vic-3030-2020897071",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4164,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4668
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/25-freya-drive-williams-landing-vic-3027-2020986370",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 972,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 1653
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/25-shiraz-crescent-point-cook-vic-3030-2020925403",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4527,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5330
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/25-waiben-crescent-point-cook-vic-3030-2020879539",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3641,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4421
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/252-boardwalk-boulevard-point-cook-vic-3030-2020517520",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3114,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 3908
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/26-florey-avenue-point-cook-vic-3030-2020720755",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2219,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3645
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/26-kittyhawk-road-point-cook-vic-3030-2020476815",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4465,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5322
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/26-machair-drive-point-cook-vic-3030-2020686014",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 1198,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 1890
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/26-pepperjack-way-point-cook-vic-3030-2020856275",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4612,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5473
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/27-shiraz-crescent-point-cook-vic-3030-2020843352",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4512,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5316
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/27-toledo-crescent-point-cook-vic-3030-2020999830",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2984,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3542
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/28-appleby-street-williams-landing-vic-3027-2020947534",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1044,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 1313
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/28-creswick-drive-point-cook-vic-3030-2020930480",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 1522,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 1536
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/28-hanworth-avenue-williams-landing-vic-3027-2020787365",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 573,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1633
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/28-lancaster-drive-point-cook-vic-3030-2020795911",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1380,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1650
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/28-may-gibbs-circle-point-cook-vic-3030-2020956900",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 2513,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2731
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/28-waves-drive-point-cook-vic-3030-2020980740",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5039,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5795
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/280-boardwalk-boulevard-point-cook-vic-3030-2020654589",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3187,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4076
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/289-dunnings-road-point-cook-vic-3030-2020926903",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1305,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3391
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/29-bruckner-drive-point-cook-vic-3030-2020902940",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1640,
+    "secondStation": "Werribee Station",
+    "secondStationDistanceM": 4309
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/29-neighbourhood-grove-point-cook-vic-3030-2020744568",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3610,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 3689
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/29-sumner-crescent-point-cook-vic-3030-2020915386",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 938,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1152
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/3-freshet-avenue-point-cook-vic-3030-2020861680",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2020,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2572
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/3-grosset-way-point-cook-vic-3030-2020911802",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5420,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 6090
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/3-lindsay-gardens-point-cook-vic-3030-2020984975",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2845,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2902
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/3-marbella-waters-point-cook-vic-3030-2020856630",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2900,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3266
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/3-oliver-place-point-cook-vic-3030-2020582544",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3243,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 3380
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/30-tristania-drive-point-cook-vic-3030-2020931178",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3524,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4317
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/31-kerford-crescent-point-cook-vic-3030-2020879720",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1790,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2333
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/32-bowral-avenue-point-cook-vic-3030-2020856274",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3250,
+    "secondStation": "Werribee Station",
+    "secondStationDistanceM": 4837
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/32-yuruga-boulevard-point-cook-vic-3030-2020771008",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3661,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4301
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/33-astoria-drive-point-cook-vic-3030-2020303246",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1197,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3773
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/33-seafarer-way-point-cook-vic-3030-2020478632",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3049,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 3669
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/34-constantine-drive-point-cook-vic-3030-2020926867",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4372,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5043
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/34-umbrella-way-point-cook-vic-3030-2020987268",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3432,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4825
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/35-juniper-avenue-point-cook-vic-3030-2020888293",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2364,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2479
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/36-middle-park-drive-point-cook-vic-3030-2020678210",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2888,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3709
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/37-oceanwave-parade-point-cook-vic-3030-2020870783",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3580,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4024
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/37-tamar-avenue-point-cook-vic-3030-2020823805",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1780,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2856
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/387-boardwalk-boulevard-point-cook-vic-3030-2020748746",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3924,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4799
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/39-baycrest-drive-point-cook-vic-3030-2020819494",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4048,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 4826
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/39-hartwood-avenue-williams-landing-vic-3027-2020578919",
+    "nearestStation": "Laverton Station",
+    "stationDistanceM": 999,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 1045
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/39-zeta-crescent-point-cook-vic-3030-2020909517",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2013,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2017
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-airfield-grove-point-cook-vic-3030-2020946654",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2459,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4318
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-citronella-circuit-point-cook-vic-3030-2020956335",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 2374,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2384
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-cresswell-avenue-williams-landing-vic-3027-2020997716",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1292,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 2142
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-dalkeith-drive-point-cook-vic-3030-2020913606",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2086,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2769
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-goolwa-road-point-cook-vic-3030-2020815726",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3893,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 4729
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-jasper-street-point-cook-vic-3030-2020633107",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1072,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1252
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-living-crescent-point-cook-vic-3030-2020928827",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4166,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5092
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-luxe-terrace-point-cook-vic-3030-2020873258",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1914,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1970
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-275-point-cook-road-point-cook-vic-3030-2020677726",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2061,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2896
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/41-carnegie-road-point-cook-vic-3030-2020862309",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4696,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5590
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/42-coastwatch-road-point-cook-vic-3030-2020872649",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4635,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5341
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/42-waldorf-avenue-point-cook-vic-3030-2020941137",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1596,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2885
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/43-lincolnheath-boulevard-point-cook-vic-3030-2020909978",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3359,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3999
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/45-penshurst-avenue-williams-landing-vic-3027-2021005393",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 720,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1861
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/45-spindrift-way-point-cook-vic-3030-2018491603",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 1478,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2103
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/46-astoria-drive-point-cook-vic-3030-2020745547",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1128,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3829
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/47-parkwood-terrace-point-cook-vic-3030-2020955625",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4000,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4677
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/47-waterways-boulevard-williams-landing-vic-3027-2020761862",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1343,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2518
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/47-yacht-road-point-cook-vic-3030-2019501372",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5154,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5805
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/48-lindsay-gardens-point-cook-vic-3030-2020956623",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2982,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3062
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-aldinga-avenue-point-cook-vic-3030-2020926451",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5341,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5975
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-bleecker-way-point-cook-vic-3030-2020813427",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1493,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3254
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-findon-court-point-cook-vic-3030-2018898989",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1716,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1738
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-gramercy-boulevard-point-cook-vic-3030-2020857401",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3128,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3887
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-grandpark-circuit-point-cook-vic-3030-2020906159",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4010,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 4284
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-ionian-way-point-cook-vic-3030-2020978254",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3682,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 3985
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-lafayette-cres-point-cook-vic-3030-2020840405",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1488,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3089
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-mallard-close-williams-landing-vic-3027-2020977816",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1255,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2431
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-reef-walk-point-cook-vic-3030-2020838504",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 4679,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4684
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-winton-grange-point-cook-vic-3030-2020844438",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2577,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2866
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/51-fogarty-street-williams-landing-vic-3027-2021001766",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 722,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 952
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/51-the-strand-point-cook-vic-3030-2020959133",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1507,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1600
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/53-baycrest-drive-point-cook-vic-3030-2020616443",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4130,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 4918
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/53-glastonbury-circuit-point-cook-vic-3030-2020992676",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 1977,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2604
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/53-kirkstone-road-point-cook-vic-3030-2020999018",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2078,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2771
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/55-stoneyfell-road-point-cook-vic-3030-2020138340",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4055,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 4795
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/55-wincott-crescent-point-cook-vic-3030-2020828599",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4972,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5594
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/56-umbrella-way-point-cook-vic-3030-2020705096",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3330,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4904
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/58-dingo-street-point-cook-vic-3030-2020823454",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4617,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5539
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/6-gillian-place-point-cook-vic-3030-2020864609",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3954,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4003
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/6-leadbeater-street-point-cook-vic-3030-2020927494",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3938,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4783
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/6-pepperjack-way-point-cook-vic-3030-2020825290",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4703,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5587
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/6-rocket-road-williams-landing-vic-3027-2020925713",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1004,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 1144
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/60-evesham-drive-point-cook-vic-3030-2021002470",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3132,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4036
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/61-barnstormer-boulevard-point-cook-vic-3030-2020861054",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2724,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4041
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/61-murphy-street-point-cook-vic-3030-2020910588",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1632,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4250
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/61-pilatus-crescent-point-cook-vic-3030-2020981847",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1312,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1909
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/62-harlem-circuit-point-cook-vic-3030-2018338643",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1030,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3455
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/62-terrene-terrace-point-cook-vic-3030-2020963078",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3988,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4042
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/65-innisfail-drive-point-cook-vic-3030-2020897244",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2770,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3023
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/67-mulloway-drive-point-cook-vic-3030-2020878377",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4730,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5636
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/69-fongeo-drive-point-cook-vic-3030-2020423922",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4458,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 4636
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/7-aruba-avenue-point-cook-vic-3030-2020870341",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4287,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4793
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/7-beacon-avenue-point-cook-vic-3030-2020996061",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 2292,
+    "secondStation": "Hoppers Crossing Station",
+    "secondStationDistanceM": 2622
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/7-diadem-way-williams-landing-vic-3027-2020572401",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1221,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 1541
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/7-greenfinch-court-williams-landing-vic-3027-2020802581",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1420,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2544
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/7-mowbray-drive-point-cook-vic-3030-2020996037",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3355,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 3419
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/7-mulloway-drive-point-cook-vic-3030-2020816409",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4575,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5432
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/7-whitestone-road-point-cook-vic-3030-2020982246",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1341,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3268
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/72-breasley-parkway-point-cook-vic-3030-2020926390",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1962,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3421
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/74-lancaster-drive-point-cook-vic-3030-2020826997",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1145,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1213
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/74-yuruga-boulevard-point-cook-vic-3030-2020954401",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3649,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4183
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/75-seagrass-crescent-point-cook-vic-3030-2020974369",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3424,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 5113
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/76-ambassador-crescent-point-cook-vic-3030-2020948203",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1055,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3631
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/76-breasley-parkway-point-cook-vic-3030-2020806572",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1936,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3438
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/79-murnong-street-point-cook-vic-3030-2020934197",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 2021,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2052
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-design-drive-point-cook-vic-3030-2020942796",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4093,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5019
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-jolimont-road-point-cook-vic-3030-2020695136",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4586,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5415
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-lure-avenue-point-cook-vic-3030-2020487905",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3334,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 5115
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-neptune-drive-point-cook-vic-3030-2020810531",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1659,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2086
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-oberon-street-point-cook-vic-3030-2020747879",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3637,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 5056
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-pangana-drive-point-cook-vic-3030-2020898983",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3079,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4038
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-pasadena-circuit-point-cook-vic-3030-2020593377",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2673,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3919
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-selleck-drive-point-cook-vic-3030-2020970300",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4031,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 4920
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-tarango-drive-point-cook-vic-3030-2021002631",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1801,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3251
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-trieste-way-point-cook-vic-3030-2020992731",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2570,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2803
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/81-terrene-terrace-point-cook-vic-3030-2018900512",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 4048,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4068
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/82-ashcroft-avenue-williams-landing-vic-3027-2020795101",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 711,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 1892
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/83-kingsford-drive-point-cook-vic-3030-2020930165",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2825,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4643
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/85-astoria-drive-point-cook-vic-3030-2020768002",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1054,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3741
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/87-evesham-drive-point-cook-vic-3030-2021004843",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3100,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3908
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/87-tom-roberts-parade-point-cook-vic-3030-2020791659",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2320,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3532
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/89-sayers-road-williams-landing-vic-3027-2020956604",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1445,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 2371
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-benuad-way-point-cook-vic-3030-2016341775",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5291,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5954
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-dusty-drive-point-cook-vic-3030-2020855958",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5517,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 6193
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-faro-street-point-cook-vic-3030-2020927495",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1456,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2086
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-florentino-parade-point-cook-vic-3030-2020883925",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 4247,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 5091
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-pier-way-point-cook-vic-3030-2020747553",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 5126,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 5881
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-tamworth-grove-point-cook-vic-3030-2020693569",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3455,
+    "secondStation": "Werribee Station",
+    "secondStationDistanceM": 4965
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-walgett-street-point-cook-vic-3030-2020852578",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 3403,
+    "secondStation": "Werribee Station",
+    "secondStationDistanceM": 4981
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-wylie-way-point-cook-vic-3030-2020909494",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 2529,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3854
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-yarkon-way-point-cook-vic-3030-2020944626",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 3341,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 4171
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/93-shaftsbury-bvd-point-cook-vic-3030-2020926221",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2107,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 2398
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/95-urban-drive-williams-landing-vic-3027-2020908924",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1408,
+    "secondStation": "Laverton Station",
+    "secondStationDistanceM": 2320
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/95-waterways-blvd-williams-landing-vic-3027-2020781592",
+    "nearestStation": "Williams Landing Station",
+    "stationDistanceM": 1611,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 2812
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/96-fongeo-drive-point-cook-vic-3030-2020945798",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 4474,
+    "secondStation": "Aircraft Station",
+    "secondStationDistanceM": 4484
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2017145352",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2985,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3732
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184038",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2983,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3730
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2020736595",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2983,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3730
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2020736637",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2983,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3730
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2020852886",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2983,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3730
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/titled-turnkey-421-boardwalk-terrene-terrace-point-cook-vic-3030-2020885918",
+    "nearestStation": "Aircraft Station",
+    "stationDistanceM": 2983,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3730
+  }
+]

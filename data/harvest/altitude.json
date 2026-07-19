@@ -1,0 +1,994 @@
+[
+ {
+  "listingUrl": "https://www.domain.com.au/20-villiers-drive-point-cook-vic-3030-2020820314",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-sassafras-close-point-cook-vic-3030-2020913534",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/1-boathaven-road-point-cook-vic-3030-2020293779",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/1-frankie-way-point-cook-vic-3030-2020910355",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/1-hasluck-gardens-point-cook-vic-3030-2020943318",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/1-peppertree-drive-point-cook-vic-3030-2020944426",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/1-tattler-court-point-cook-vic-3030-2020862697",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-andaman-place-point-cook-vic-3030-2020910762",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-balfour-close-point-cook-vic-3030-2020947861",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-bandler-parkway-point-cook-vic-3030-2021003970",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-corporate-drive-point-cook-vic-3030-2020926852",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-dodson-drive-point-cook-vic-3030-2020934326",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-fairwater-drive-point-cook-vic-3030-2020594776",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-grebe-way-williams-landing-vic-3027-2020909188",
+  "altitudeM": 20
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-lachie-grove-point-cook-vic-3030-2020603293",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-sidney-nolan-walk-point-cook-vic-3030-2020956675",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-tamborine-avenue-point-cook-vic-3030-2020923647",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-toddington-avenue-williams-landing-vic-3027-2020928847",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-truscott-grove-point-cook-vic-3030-2020909572",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/104-jamieson-way-point-cook-vic-3030-2020789193",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/105-williams-landing-boulevard-williams-landing-vic-3027-2020861597",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/109-alamanda-boulevard-point-cook-vic-3030-2020869071",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-clarion-avenue-williams-landing-vic-3027-2020596964",
+  "altitudeM": 17
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-coronat-drive-williams-landing-vic-3027-2020987221",
+  "altitudeM": 16
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-creston-street-point-cook-vic-3030-2020566851",
+  "altitudeM": 17
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-dusty-drive-point-cook-vic-3030-2020952947",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-hanover-street-point-cook-vic-3030-2019954553",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-opperman-place-point-cook-vic-3030-2020864598",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-solo-street-point-cook-vic-3030-2020857449",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-stokes-court-point-cook-vic-3030-2020944476",
+  "altitudeM": 9
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-stoneyfell-road-point-cook-vic-3030-2020957267",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/11-wetlands-boulevard-williams-landing-vic-3027-2020721476",
+  "altitudeM": 20
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/12-beckett-way-williams-landing-vic-3027-2020816434",
+  "altitudeM": 16
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/12-carrick-street-point-cook-vic-3030-2020611963",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/12-east-cornhill-drive-point-cook-vic-3030-2019025012",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/12-sorrenberg-street-point-cook-vic-3030-2020892952",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/12-wildcherry-place-point-cook-vic-3030-2020998813",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/126-evesham-drive-point-cook-vic-3030-2019467338",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/13-aldinga-avenue-point-cook-vic-3030-2019975391",
+  "altitudeM": 3
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/13-barwick-gardens-point-cook-vic-3030-2020894401",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/13-bendel-street-point-cook-vic-3030-2018626894",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/13-carnival-place-point-cook-vic-3030-2020939720",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/13-hartwood-avenue-williams-landing-vic-3027-2020519232",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/13-seacoast-street-point-cook-vic-3030-2021004012",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/14-amboy-walk-point-cook-vic-3030-2020933489",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/14-carlisle-terrace-point-cook-vic-3030-2020998528",
+  "altitudeM": 9
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/14-grosset-way-point-cook-vic-3030-2020955834",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/14-isaacs-walk-point-cook-vic-3030-2020490661",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/14-newminster-way-point-cook-vic-3030-2020926222",
+  "altitudeM": 9
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/14-tanner-mews-point-cook-vic-3030-2020842584",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/15-biscay-street-point-cook-vic-3030-2020806480",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/15-merryfield-circuit-williams-landing-vic-3027-2020719277",
+  "altitudeM": 16
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/16-constantine-drive-point-cook-vic-3030-2020685222",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/16-flight-drive-williams-landing-vic-3027-2020808187",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/16-grasso-avenue-point-cook-vic-3030-2020674660",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/16-lindholme-way-williams-landing-vic-3027-2020939785",
+  "altitudeM": 18
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/16-maidenhair-drive-point-cook-vic-3030-2020861136",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/16-winterberry-road-point-cook-vic-3030-2020932860",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/161-citybay-drive-point-cook-vic-3030-2020983048",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/17-bruckner-drive-point-cook-vic-3030-2020893580",
+  "altitudeM": 16
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/17-carnegie-road-point-cook-vic-3030-2020733365",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/17-east-cornhill-drive-point-cook-vic-3030-2020946874",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/17-hydrangea-drive-point-cook-vic-3030-2020879464",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/17-manna-way-point-cook-vic-3030-2020616535",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/17-nassau-road-point-cook-vic-3030-2020758181",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/17-orpheus-street-point-cook-vic-3030-2020836554",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/176-saltwater-promenade-point-cook-vic-3030-2020867248",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/18-arrowgrass-drive-point-cook-vic-3030-2021002633",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/18-coolum-street-point-cook-vic-3030-2020781919",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/18-horatio-street-point-cook-vic-3030-2020940086",
+  "altitudeM": 18
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/18-jemma-avenue-point-cook-vic-3030-2020888517",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/18-tattersalls-lane-point-cook-vic-3030-2019433893",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/18-trapani-avenue-point-cook-vic-3030-2020985996",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/18-tristania-drive-point-cook-vic-3030-2020958277",
+  "altitudeM": 9
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/18-villiers-drive-point-cook-vic-3030-2020854551",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/19-halycon-street-point-cook-vic-3030-2020766260",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/19-martaban-crescent-point-cook-vic-3030-2020704843",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/196-waterhaven-boulevard-point-cook-vic-3030-2020955109",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/2-balfour-close-point-cook-vic-3030-2020905893",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/2-polaris-circuit-williams-landing-vic-3027-2021000544",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/2-ribbon-close-point-cook-vic-3030-2020945421",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/2-sakura-walk-point-cook-vic-3030-2020890836",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/2-sincere-drive-point-cook-vic-3030-2020997642",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/20-battery-road-point-cook-vic-3030-2020928787",
+  "altitudeM": 18
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/20-caspian-circuit-point-cook-vic-3030-2020922270",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/20-coleridge-circuit-williams-landing-vic-3027-2020879623",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/20-dexter-grove-point-cook-vic-3030-2020941213",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/20-shepherd-street-williams-landing-vic-3027-2020649325",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/203-haze-drive-point-cook-vic-3030-2020999120",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/207-haze-drive-point-cook-vic-3030-2020959399",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/21-mirka-way-point-cook-vic-3030-2020329843",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/21-tobago-avenue-point-cook-vic-3030-2020951662",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/22-niland-crescent-point-cook-vic-3030-2020862706",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/22-yacht-road-point-cook-vic-3030-2020854562",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/224-saltwater-promenade-point-cook-vic-3030-2019980217",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/23-alverton-drive-point-cook-vic-3030-2020387187",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/24-coleridge-circuit-williams-landing-vic-3027-2020800148",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/24-lutine-circuit-point-cook-vic-3030-2020841146",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/24-maldive-grove-point-cook-vic-3030-2020941685",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/24-nest-place-point-cook-vic-3030-2020992730",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/24-sorrenberg-street-point-cook-vic-3030-2020953505",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/24-tahitian-terrace-point-cook-vic-3030-2020363145",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/24-tropic-circuit-point-cook-vic-3030-2021001546",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/25-aruba-avenue-point-cook-vic-3030-2020897071",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/25-freya-drive-williams-landing-vic-3027-2020986370",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/25-shiraz-crescent-point-cook-vic-3030-2020925403",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/25-waiben-crescent-point-cook-vic-3030-2020879539",
+  "altitudeM": 9
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/252-boardwalk-boulevard-point-cook-vic-3030-2020517520",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/26-florey-avenue-point-cook-vic-3030-2020720755",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/26-kittyhawk-road-point-cook-vic-3030-2020476815",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/26-machair-drive-point-cook-vic-3030-2020686014",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/26-pepperjack-way-point-cook-vic-3030-2020856275",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/27-shiraz-crescent-point-cook-vic-3030-2020843352",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/27-toledo-crescent-point-cook-vic-3030-2020999830",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/28-appleby-street-williams-landing-vic-3027-2020947534",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/28-creswick-drive-point-cook-vic-3030-2020930480",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/28-hanworth-avenue-williams-landing-vic-3027-2020787365",
+  "altitudeM": 17
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/28-lancaster-drive-point-cook-vic-3030-2020795911",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/28-may-gibbs-circle-point-cook-vic-3030-2020956900",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/28-waves-drive-point-cook-vic-3030-2020980740",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/280-boardwalk-boulevard-point-cook-vic-3030-2020654589",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/289-dunnings-road-point-cook-vic-3030-2020926903",
+  "altitudeM": 17
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/29-bruckner-drive-point-cook-vic-3030-2020902940",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/29-neighbourhood-grove-point-cook-vic-3030-2020744568",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/29-sumner-crescent-point-cook-vic-3030-2020915386",
+  "altitudeM": 9
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/3-freshet-avenue-point-cook-vic-3030-2020861680",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/3-grosset-way-point-cook-vic-3030-2020911802",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/3-lindsay-gardens-point-cook-vic-3030-2020984975",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/3-marbella-waters-point-cook-vic-3030-2020856630",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/3-oliver-place-point-cook-vic-3030-2020582544",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/30-tristania-drive-point-cook-vic-3030-2020931178",
+  "altitudeM": 9
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/31-kerford-crescent-point-cook-vic-3030-2020879720",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/32-bowral-avenue-point-cook-vic-3030-2020856274",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/32-yuruga-boulevard-point-cook-vic-3030-2020771008",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/33-astoria-drive-point-cook-vic-3030-2020303246",
+  "altitudeM": 18
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/33-seafarer-way-point-cook-vic-3030-2020478632",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/34-constantine-drive-point-cook-vic-3030-2020926867",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/34-umbrella-way-point-cook-vic-3030-2020987268",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/35-juniper-avenue-point-cook-vic-3030-2020888293",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/36-middle-park-drive-point-cook-vic-3030-2020678210",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/37-oceanwave-parade-point-cook-vic-3030-2020870783",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/37-tamar-avenue-point-cook-vic-3030-2020823805",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/387-boardwalk-boulevard-point-cook-vic-3030-2020748746",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/39-baycrest-drive-point-cook-vic-3030-2020819494",
+  "altitudeM": 1
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/39-hartwood-avenue-williams-landing-vic-3027-2020578919",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/39-zeta-crescent-point-cook-vic-3030-2020909517",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/4-airfield-grove-point-cook-vic-3030-2020946654",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/4-citronella-circuit-point-cook-vic-3030-2020956335",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/4-cresswell-avenue-williams-landing-vic-3027-2020997716",
+  "altitudeM": 19
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/4-dalkeith-drive-point-cook-vic-3030-2020913606",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/4-goolwa-road-point-cook-vic-3030-2020815726",
+  "altitudeM": 3
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/4-jasper-street-point-cook-vic-3030-2020633107",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/4-living-crescent-point-cook-vic-3030-2020928827",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/4-luxe-terrace-point-cook-vic-3030-2020873258",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/4-275-point-cook-road-point-cook-vic-3030-2020677726",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/41-carnegie-road-point-cook-vic-3030-2020862309",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/42-coastwatch-road-point-cook-vic-3030-2020872649",
+  "altitudeM": 2
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/42-waldorf-avenue-point-cook-vic-3030-2020941137",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/43-lincolnheath-boulevard-point-cook-vic-3030-2020909978",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/45-penshurst-avenue-williams-landing-vic-3027-2021005393",
+  "altitudeM": 17
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/45-spindrift-way-point-cook-vic-3030-2018491603",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/46-astoria-drive-point-cook-vic-3030-2020745547",
+  "altitudeM": 19
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/47-parkwood-terrace-point-cook-vic-3030-2020955625",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/47-waterways-boulevard-williams-landing-vic-3027-2020761862",
+  "altitudeM": 19
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/47-yacht-road-point-cook-vic-3030-2019501372",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/48-lindsay-gardens-point-cook-vic-3030-2020956623",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-aldinga-avenue-point-cook-vic-3030-2020926451",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-bleecker-way-point-cook-vic-3030-2020813427",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-findon-court-point-cook-vic-3030-2018898989",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-gramercy-boulevard-point-cook-vic-3030-2020857401",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-grandpark-circuit-point-cook-vic-3030-2020906159",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-ionian-way-point-cook-vic-3030-2020978254",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-lafayette-cres-point-cook-vic-3030-2020840405",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-mallard-close-williams-landing-vic-3027-2020977816",
+  "altitudeM": 18
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-reef-walk-point-cook-vic-3030-2020838504",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/5-winton-grange-point-cook-vic-3030-2020844438",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/51-fogarty-street-williams-landing-vic-3027-2021001766",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/51-the-strand-point-cook-vic-3030-2020959133",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/53-baycrest-drive-point-cook-vic-3030-2020616443",
+  "altitudeM": 1
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/53-glastonbury-circuit-point-cook-vic-3030-2020992676",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/53-kirkstone-road-point-cook-vic-3030-2020999018",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/55-stoneyfell-road-point-cook-vic-3030-2020138340",
+  "altitudeM": 3
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/55-wincott-crescent-point-cook-vic-3030-2020828599",
+  "altitudeM": 2
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/56-umbrella-way-point-cook-vic-3030-2020705096",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/58-dingo-street-point-cook-vic-3030-2020823454",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/6-gillian-place-point-cook-vic-3030-2020864609",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/6-leadbeater-street-point-cook-vic-3030-2020927494",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/6-pepperjack-way-point-cook-vic-3030-2020825290",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/6-rocket-road-williams-landing-vic-3027-2020925713",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/60-evesham-drive-point-cook-vic-3030-2021002470",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/61-barnstormer-boulevard-point-cook-vic-3030-2020861054",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/61-murphy-street-point-cook-vic-3030-2020910588",
+  "altitudeM": 16
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/61-pilatus-crescent-point-cook-vic-3030-2020981847",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/62-harlem-circuit-point-cook-vic-3030-2018338643",
+  "altitudeM": 17
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/62-terrene-terrace-point-cook-vic-3030-2020963078",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/65-innisfail-drive-point-cook-vic-3030-2020897244",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/67-mulloway-drive-point-cook-vic-3030-2020878377",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/69-fongeo-drive-point-cook-vic-3030-2020423922",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/7-aruba-avenue-point-cook-vic-3030-2020870341",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/7-beacon-avenue-point-cook-vic-3030-2020996061",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/7-diadem-way-williams-landing-vic-3027-2020572401",
+  "altitudeM": 16
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/7-greenfinch-court-williams-landing-vic-3027-2020802581",
+  "altitudeM": 20
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/7-mowbray-drive-point-cook-vic-3030-2020996037",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/7-mulloway-drive-point-cook-vic-3030-2020816409",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/7-whitestone-road-point-cook-vic-3030-2020982246",
+  "altitudeM": 16
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/72-breasley-parkway-point-cook-vic-3030-2020926390",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/74-lancaster-drive-point-cook-vic-3030-2020826997",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/74-yuruga-boulevard-point-cook-vic-3030-2020954401",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/75-seagrass-crescent-point-cook-vic-3030-2020974369",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/76-ambassador-crescent-point-cook-vic-3030-2020948203",
+  "altitudeM": 19
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/76-breasley-parkway-point-cook-vic-3030-2020806572",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/79-murnong-street-point-cook-vic-3030-2020934197",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-design-drive-point-cook-vic-3030-2020942796",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-jolimont-road-point-cook-vic-3030-2020695136",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-lure-avenue-point-cook-vic-3030-2020487905",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-neptune-drive-point-cook-vic-3030-2020810531",
+  "altitudeM": 12
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-oberon-street-point-cook-vic-3030-2020747879",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-pangana-drive-point-cook-vic-3030-2020898983",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-pasadena-circuit-point-cook-vic-3030-2020593377",
+  "altitudeM": 13
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-selleck-drive-point-cook-vic-3030-2020970300",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-tarango-drive-point-cook-vic-3030-2021002631",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/8-trieste-way-point-cook-vic-3030-2020992731",
+  "altitudeM": 7
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/81-terrene-terrace-point-cook-vic-3030-2018900512",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/82-ashcroft-avenue-williams-landing-vic-3027-2020795101",
+  "altitudeM": 16
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/83-kingsford-drive-point-cook-vic-3030-2020930165",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/85-astoria-drive-point-cook-vic-3030-2020768002",
+  "altitudeM": 19
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/87-evesham-drive-point-cook-vic-3030-2021004843",
+  "altitudeM": 6
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/87-tom-roberts-parade-point-cook-vic-3030-2020791659",
+  "altitudeM": 14
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/89-sayers-road-williams-landing-vic-3027-2020956604",
+  "altitudeM": 20
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-benuad-way-point-cook-vic-3030-2016341775",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-dusty-drive-point-cook-vic-3030-2020855958",
+  "altitudeM": 4
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-faro-street-point-cook-vic-3030-2020927495",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-florentino-parade-point-cook-vic-3030-2020883925",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-pier-way-point-cook-vic-3030-2020747553",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-tamworth-grove-point-cook-vic-3030-2020693569",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-walgett-street-point-cook-vic-3030-2020852578",
+  "altitudeM": 11
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-wylie-way-point-cook-vic-3030-2020909494",
+  "altitudeM": 15
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/9-yarkon-way-point-cook-vic-3030-2020944626",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/93-shaftsbury-bvd-point-cook-vic-3030-2020926221",
+  "altitudeM": 8
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/95-urban-drive-williams-landing-vic-3027-2020908924",
+  "altitudeM": 20
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/95-waterways-blvd-williams-landing-vic-3027-2020781592",
+  "altitudeM": 18
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/96-fongeo-drive-point-cook-vic-3030-2020945798",
+  "altitudeM": 10
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2017145352",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184038",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2020736595",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2020736637",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2020852886",
+  "altitudeM": 5
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/titled-turnkey-421-boardwalk-terrene-terrace-point-cook-vic-3030-2020885918",
+  "altitudeM": 5
+ }
+]
