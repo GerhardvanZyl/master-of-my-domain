@@ -38,11 +38,11 @@ export default function TagSelect({
 
   return (
     <span className="inline-flex items-center gap-2 text-sm">
-      <span className="text-neutral-400">Room</span>
+      <span className="text-white/60">Room</span>
       <select
         value={value}
         onChange={(e) => save(e.target.value)}
-        className="rounded border border-neutral-400 bg-white px-2 py-1 text-black"
+        className="rounded-lg border border-line bg-white px-2.5 py-1.5 font-medium text-ink"
       >
         <option value="">— untagged —</option>
         {ROOM_TYPES.map((r) => (
@@ -51,7 +51,7 @@ export default function TagSelect({
           </option>
         ))}
       </select>
-      {state === "saving" && <span className="text-neutral-400">saving…</span>}
+      {state === "saving" && <span className="text-white/60">saving…</span>}
       {state === "saved" && <span className="text-green-500">saved ✓</span>}
       {state === "error" && <span className="text-red-500">failed</span>}
     </span>

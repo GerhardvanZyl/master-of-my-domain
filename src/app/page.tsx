@@ -5,14 +5,10 @@ export const dynamic = "force-dynamic";
 
 export default function Home() {
   const properties = listProperties();
+  // Header lives inside PropertyGrid — it owns the filtered "shown" count.
   return (
-    <div className="space-y-6">
-      <div className="flex items-baseline justify-between">
-        <h1 className="text-lg font-semibold">
-          Tracked properties ({properties.length})
-        </h1>
-      </div>
+    <section className="rise">
       <PropertyGrid properties={properties} />
-    </div>
+    </section>
   );
 }

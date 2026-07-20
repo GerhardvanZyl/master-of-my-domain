@@ -49,6 +49,7 @@ export const DEFAULT_VIBE_CONFIG: VibeConfig = {
 };
 
 export interface Rating {
+  profile?: string | null; // whose reaction this is (labels the breakdown)
   vibe?: string | null; // like | meh | dislike | hate
   look?: string | null; // good | ugly
   kitchen?: string | null; // small | tiny
@@ -68,40 +69,62 @@ type Scorable = Pick<
   | "hasLawn"
 >;
 
+export interface BreakdownRow {
+  label: string;
+  pts: number;
+}
+
+/** Every non-zero term that makes up the score, in the order it's applied. */
+export function vibeBreakdown(
+  p: Scorable,
+  ratings: Rating[],
+  cfg: VibeConfig = DEFAULT_VIBE_CONFIG,
+): BreakdownRow[] {
+  const rows: BreakdownRow[] = [{ label: "Base score", pts: 100 }];
+  const push = (label: string, pts: number) => {
+    if (Math.abs(pts) >= 0.05) rows.push({ label, pts: Math.round(pts * 10) / 10 });
+  };
+
+  if (p.stationDistanceM != null)
+    push(`Station ${p.stationDistanceM} m away`, -(p.stationDistanceM / 250) * cfg.perStation250m);
+  if (p.priceNumeric != null) {
+    if (p.priceNumeric > cfg.idealPrice)
+      push("Above ideal price", -((p.priceNumeric - cfg.idealPrice) / 5000) * cfg.perAbove5000);
+    else if (p.priceNumeric < cfg.idealPrice)
+      push("Below ideal price", -((cfg.idealPrice - p.priceNumeric) / 10000) * cfg.perBelow10000);
+  }
+  if (p.greenCrossDistanceM != null)
+    push("Distance to Green Cross vet", -(p.greenCrossDistanceM / 1000) * cfg.perGreenCrossKm);
+  if (!p.playgrounds500m) push("No playground ≤500 m", -cfg.noPlaygrounds);
+  if (p.ptMinutesToFlinders != null)
+    push("Transit to Flinders St", -(p.ptMinutesToFlinders / 5) * cfg.perFlinders5min);
+  // ponytail: only penalize a KNOWN-absent feature (0). null = not-yet-harvested,
+  // so an un-inspected property isn't docked for missing data.
+  if (p.hasEaves === 0) push("No all-around eaves", -cfg.noEaves);
+  if (p.pergolaCovered === 0) push("No covered pergola", -cfg.noPergola);
+  if (p.hasLawn === 0) push("No lawn", -cfg.noLawn);
+  // Ratings: both profiles' rows count, so a mutual "meh" deducts twice.
+  for (const r of ratings) {
+    const who = r.profile ? `${r.profile}: ` : "";
+    if (r.vibe === "like") push(`${who}liked it`, cfg.like);
+    else if (r.vibe === "meh") push(`${who}meh`, -cfg.meh);
+    else if (r.vibe === "dislike") push(`${who}disliked it`, -cfg.dislike);
+    else if (r.vibe === "hate") push(`${who}hated it`, -cfg.hate);
+    if (r.look === "good") push(`${who}looks good`, cfg.looksGood);
+    else if (r.look === "ugly") push(`${who}looks ugly`, -cfg.looksUgly);
+    if (r.kitchen === "small") push(`${who}small kitchen`, -cfg.smallKitchen);
+    else if (r.kitchen === "tiny") push(`${who}tiny kitchen`, -cfg.tinyKitchen);
+  }
+  return rows;
+}
+
 export function vibeScore(
   p: Scorable,
   ratings: Rating[],
   cfg: VibeConfig = DEFAULT_VIBE_CONFIG,
 ): number {
-  let s = 100;
-  if (p.stationDistanceM != null) s -= (p.stationDistanceM / 250) * cfg.perStation250m;
-  if (p.priceNumeric != null) {
-    if (p.priceNumeric > cfg.idealPrice)
-      s -= ((p.priceNumeric - cfg.idealPrice) / 5000) * cfg.perAbove5000;
-    else if (p.priceNumeric < cfg.idealPrice)
-      s -= ((cfg.idealPrice - p.priceNumeric) / 10000) * cfg.perBelow10000;
-  }
-  if (p.greenCrossDistanceM != null)
-    s -= (p.greenCrossDistanceM / 1000) * cfg.perGreenCrossKm;
-  if (!p.playgrounds500m) s -= cfg.noPlaygrounds;
-  if (p.ptMinutesToFlinders != null) s -= (p.ptMinutesToFlinders / 5) * cfg.perFlinders5min;
-  // ponytail: only penalize a KNOWN-absent feature (0). null = not-yet-harvested,
-  // so an un-inspected property isn't docked for missing data.
-  if (p.hasEaves === 0) s -= cfg.noEaves;
-  if (p.pergolaCovered === 0) s -= cfg.noPergola;
-  if (p.hasLawn === 0) s -= cfg.noLawn;
-  // Ratings: both profiles' rows count, so a mutual "meh" deducts twice.
-  for (const r of ratings) {
-    if (r.vibe === "like") s += cfg.like;
-    else if (r.vibe === "meh") s -= cfg.meh;
-    else if (r.vibe === "dislike") s -= cfg.dislike;
-    else if (r.vibe === "hate") s -= cfg.hate;
-    if (r.look === "good") s += cfg.looksGood;
-    else if (r.look === "ugly") s -= cfg.looksUgly;
-    if (r.kitchen === "small") s -= cfg.smallKitchen;
-    else if (r.kitchen === "tiny") s -= cfg.tinyKitchen;
-  }
-  return Math.round(s * 10) / 10;
+  const total = vibeBreakdown(p, ratings, cfg).reduce((a, r) => a + r.pts, 0);
+  return Math.round(total * 10) / 10;
 }
 
 const KEY = "vibeConfig";

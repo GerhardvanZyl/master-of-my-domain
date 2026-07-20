@@ -4,18 +4,16 @@ import {
   getProperty,
   getPropertyImages,
   getPriceHistory,
+  getPropertyRatings,
 } from "@/db/queries/properties";
 import PhotoGrid from "@/components/PhotoGrid";
 import PropertyMap from "@/components/PropertyMap";
 import NotesEditor from "@/components/NotesEditor";
+import PropertyRail from "@/components/PropertyRail";
+import MediaUploader from "@/components/MediaUploader";
+import { listMedia } from "@/lib/media";
 import { imageUrl } from "@/lib/images";
-import {
-  formatPrice,
-  bedBathCar,
-  fmtNum,
-  fmtDistance,
-  fmtMinutes,
-} from "@/lib/format";
+import { formatPrice, fmtNum, fmtDistance, fmtMinutes } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -29,15 +27,13 @@ export default async function PropertyDetail({
   if (!property) notFound();
   const images = getPropertyImages(id);
   const history = getPriceHistory(id);
+  const ratings = getPropertyRatings(id);
+  const media = listMedia(id);
 
-  const facts: [string, string][] = [
-    ["Price", formatPrice(property.priceDisplay, property.priceNumeric)],
-    ["Beds / Baths / Car", bedBathCar(property.beds, property.baths, property.parking)],
-    ["Property type", property.propertyType ?? "—"],
-    ["Land size", fmtNum(property.landSizeSqm, " m²")],
-    ["Suburb", [property.suburb, property.state, property.postcode].filter(Boolean).join(" ") || "—"],
+  // Location card rows (left column) vs listing metadata (right rail).
+  const locationFacts: [string, string][] = [
     [
-      "Nearest station (straight-line)",
+      "Nearest station",
       property.nearestStation
         ? `${property.nearestStation} · ${fmtDistance(property.stationDistanceM)}`
         : "—",
@@ -55,152 +51,211 @@ export default async function PropertyDetail({
           (property.ptRouteSummary ? ` · ${property.ptRouteSummary}` : "")
         : "—",
     ],
-    ["Green Cross vet (Werribee)", fmtDistance(property.greenCrossDistanceM)],
     [
       "Nearest Coles",
       property.colesDistanceM != null
         ? `${property.colesName ?? "Coles"} · ${fmtDistance(property.colesDistanceM)}`
         : "—",
     ],
-    ["Playgrounds within 500m", fmtNum(property.playgrounds500m)],
+    ["Playgrounds ≤500m", fmtNum(property.playgrounds500m)],
+    ["Green Cross vet (Werribee)", fmtDistance(property.greenCrossDistanceM)],
+  ];
+
+  const listingFacts: [string, string][] = [
+    ["Property type", property.propertyType ?? "—"],
+    ["Suburb", [property.suburb, property.state, property.postcode].filter(Boolean).join(" ") || "—"],
     ["Agent", [property.agentName, property.agencyName].filter(Boolean).join(", ") || "—"],
     ["Source", property.sourceSite],
     ["Status", property.scrapeStatus],
   ];
 
+  const stats: [string, string][] = [
+    ["Beds", fmtNum(property.beds)],
+    ["Baths", fmtNum(property.baths)],
+    ["Car", fmtNum(property.parking)],
+    ["Land", fmtNum(property.landSizeSqm, " m²")],
+  ];
+
   const hero = images[0] ?? null;
 
   return (
-    <div className="space-y-6">
-      <div className="sticky top-0 z-30 -mx-6 flex items-center gap-3 border-b border-neutral-200 bg-white/90 px-6 py-2 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/90">
-        {hero && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={imageUrl(hero)}
-            alt=""
-            className="h-10 w-14 shrink-0 rounded object-cover"
-          />
-        )}
-        <span className="truncate font-medium">
-          {property.address ?? property.listingUrl}
-        </span>
-      </div>
-      <Link href="/" className="text-sm text-blue-600 hover:underline">
-        ← Back
+    <section className="rise">
+      <Link
+        href="/"
+        className="mb-4 inline-block text-[13px] font-medium text-[#5B5A52] hover:text-forest"
+      >
+        ← All properties
       </Link>
-      <div>
-        <h1 className="text-xl font-semibold">
-          {property.address ?? property.listingUrl}
-        </h1>
-        <a
-          href={property.listingUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="text-sm text-neutral-500 hover:underline"
-        >
-          {property.listingUrl}
-        </a>
-      </div>
 
-      {property.advPricePrevious && property.advPriceCurrent && (
-        <div className="flex flex-wrap gap-x-10 gap-y-2 rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-800/60 dark:bg-amber-950/30">
-          <div>
-            <div className="text-xs text-neutral-500">
-              {property.advPricePreviousLabel ?? "Previous price"}
+      <div className="grid items-start gap-7 lg:grid-cols-[1.5fr_1fr]">
+        {/* LEFT */}
+        <div className="space-y-4">
+          <div className="relative h-[400px] overflow-hidden rounded-[18px] bg-fill">
+            {hero ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl(hero)}
+                alt={property.address ?? "property"}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full items-center justify-center text-mute">
+                no image
+              </div>
+            )}
+          </div>
+
+          {property.scrapeStatus === "error" && (
+            <div className="rounded-xl border border-[#e0b4ac] bg-[#fbeeeb] p-3 text-sm text-[#B84A3A]">
+              Scrape error: {property.scrapeError ?? "unknown"}
             </div>
-            <div className="text-lg font-semibold text-neutral-500 line-through decoration-1">
-              {property.advPricePrevious}
+          )}
+
+          <div className="card p-4">
+            <div className="mb-2.5 flex items-center justify-between">
+              <h2 className="font-serif text-lg">Listing photos</h2>
+              <span className="text-[11.5px] text-mute">
+                {images.length} photos · click to zoom &amp; correct the room tag
+              </span>
             </div>
+            <PhotoGrid images={images} />
           </div>
-          <div>
-            <div className="text-xs text-neutral-500">Current price</div>
-            <div className="text-lg font-bold">{property.advPriceCurrent}</div>
-          </div>
-        </div>
-      )}
 
-      {property.aiComment && (
-        <div className="rounded-lg border border-blue-300 bg-blue-50 p-4 text-sm dark:border-blue-900/60 dark:bg-blue-950/30">
-          <div className="mb-1 text-xs font-semibold uppercase tracking-wide text-blue-700 dark:text-blue-400">
-            Claude&apos;s take
-          </div>
-          <p className="text-neutral-700 dark:text-neutral-200">{property.aiComment}</p>
-        </div>
-      )}
+          <MediaUploader propertyId={property.id} initial={media} />
 
-      {property.scrapeStatus === "error" && (
-        <div className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/40">
-          Scrape error: {property.scrapeError ?? "unknown"}
-        </div>
-      )}
-
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg border border-neutral-200 p-4 text-sm dark:border-neutral-800 sm:grid-cols-4">
-        {facts.map(([k, v]) => (
-          <div key={k}>
-            <dt className="text-neutral-400">{k}</dt>
-            <dd className="font-medium">{v}</dd>
-          </div>
-        ))}
-      </dl>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <PropertyMap
-          lat={property.latitude}
-          lng={property.longitude}
-          address={property.address}
-        />
-        <div>
-          <h2 className="mb-2 text-sm font-semibold">My notes</h2>
-          <NotesEditor propertyId={property.id} initial={property.domainNotes} />
-        </div>
-      </div>
-
-      {property.ptSteps && (
-        <div className="rounded-lg border border-neutral-200 p-4 text-sm dark:border-neutral-800">
-          <div className="mb-1 font-semibold">
-            Commute to Flinders St — {fmtMinutes(property.ptMinutesToFlinders)}{" "}
-            <span className="font-normal text-neutral-400">
-              (leaving ~7:30am, weekday)
-            </span>
-          </div>
-          <p className="text-neutral-600 dark:text-neutral-300">{property.ptSteps}</p>
-        </div>
-      )}
-
-      {property.description && (
-        <p className="whitespace-pre-line text-sm text-neutral-600 dark:text-neutral-300">
-          {property.description}
-        </p>
-      )}
-
-      {history.length > 0 && (
-        <div>
-          <h2 className="mb-2 text-sm font-semibold">Price history</h2>
-          <table className="text-sm">
-            <tbody>
-              {history.map((h) => (
-                <tr key={h.id} className="border-b border-neutral-100 dark:border-neutral-800/50">
-                  <td className="py-1 pr-4 text-neutral-400">{h.date ?? "—"}</td>
-                  <td className="py-1 pr-4">{h.event ?? "—"}</td>
-                  <td className="py-1 font-medium">
-                    {formatPrice(h.priceDisplay, h.priceNumeric)}
-                  </td>
-                </tr>
+          <div className="card p-[18px]">
+            <h2 className="mb-3.5 font-serif text-[22px]">Location &amp; commute</h2>
+            <div className="mb-3.5">
+              <PropertyMap
+                lat={property.latitude}
+                lng={property.longitude}
+                address={property.address}
+                className="h-[220px]"
+              />
+            </div>
+            <dl className="flex flex-col gap-2.5 text-[13.5px]">
+              {locationFacts.map(([k, v], i) => (
+                <div
+                  key={k}
+                  className={`flex justify-between gap-6 ${
+                    i < locationFacts.length - 1 ? "border-b border-hairline pb-2.5" : ""
+                  }`}
+                >
+                  <dt className="shrink-0 text-mute">{k}</dt>
+                  <dd className="text-right font-medium">{v}</dd>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </dl>
+            {property.ptSteps && (
+              <p className="mt-3.5 rounded-[10px] bg-sand px-3.5 py-3 text-[12.5px] leading-relaxed text-[#5a5344]">
+                {property.ptSteps}
+              </p>
+            )}
+          </div>
 
-      <div>
-        <h2 className="mb-3 text-sm font-semibold">
-          Photos ({images.length}){" "}
-          <span className="font-normal text-neutral-400">
-            — click to zoom &amp; correct the room tag
-          </span>
-        </h2>
-        <PhotoGrid images={images} />
+          {property.description && (
+            <div className="card p-[18px]">
+              <h2 className="mb-2 font-serif text-[22px]">Listing description</h2>
+              <p className="whitespace-pre-line text-sm leading-relaxed text-[#5B5A52]">
+                {property.description}
+              </p>
+            </div>
+          )}
+
+          {history.length > 0 && (
+            <div className="card p-[18px]">
+              <h2 className="mb-2.5 font-serif text-[22px]">Price history</h2>
+              <table className="w-full text-sm">
+                <tbody>
+                  {history.map((h) => (
+                    <tr key={h.id} className="border-b border-hairline last:border-0">
+                      <td className="py-1.5 pr-4 text-mute">{h.date ?? "—"}</td>
+                      <td className="py-1.5 pr-4">{h.event ?? "—"}</td>
+                      <td className="py-1.5 text-right font-medium">
+                        {formatPrice(h.priceDisplay, h.priceNumeric)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT RAIL */}
+        <div className="flex flex-col gap-4 lg:sticky lg:top-[84px]">
+          <div>
+            <span className="text-[11px] uppercase tracking-widest text-mute">
+              {property.sourceSite}
+              {property.suburb ? ` · ${property.suburb}` : ""}
+            </span>
+            <h1 className="my-1 font-serif text-[32px] leading-tight">
+              {property.address ?? property.listingUrl}
+            </h1>
+            <div className="flex flex-wrap items-baseline gap-3">
+              <span className="font-serif text-[26px] text-forest">
+                {formatPrice(property.priceDisplay, property.priceNumeric)}
+              </span>
+              {property.advPricePrevious && (
+                <span className="text-xs text-[#a05a2c]">
+                  was{" "}
+                  <span className="line-through">{property.advPricePrevious}</span>
+                  {property.advPricePreviousLabel
+                    ? ` · ${property.advPricePreviousLabel.replace(/^Price /, "")}`
+                    : ""}
+                </span>
+              )}
+            </div>
+            <a
+              href={property.listingUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 block truncate text-xs text-mute hover:text-forest"
+            >
+              {property.listingUrl}
+            </a>
+          </div>
+
+          <div className="flex gap-2.5">
+            {stats.map(([k, v]) => (
+              <div key={k} className="flex-1 rounded-xl border border-line bg-white p-3 text-center">
+                <div className="font-serif text-2xl leading-tight">{v}</div>
+                <div className="text-[11px] text-mute">{k}</div>
+              </div>
+            ))}
+          </div>
+
+          <PropertyRail property={property} ratings={ratings} />
+
+          <div className="card p-4">
+            <div className="label-cap mb-2.5">My notes</div>
+            <NotesEditor propertyId={property.id} initial={property.domainNotes} />
+          </div>
+
+          {property.aiComment && (
+            <div className="rounded-[14px] border border-sand-line bg-sand p-4">
+              <div className="mb-2 text-[12.5px] font-semibold uppercase text-amber">
+                Claude&apos;s take
+              </div>
+              <p className="text-[13px] italic leading-relaxed text-[#5a5344]">
+                {property.aiComment}
+              </p>
+            </div>
+          )}
+
+          <div className="card p-4">
+            <div className="label-cap mb-2.5">Listing details</div>
+            <dl className="flex flex-col gap-2 text-[13px]">
+              {listingFacts.map(([k, v]) => (
+                <div key={k} className="flex justify-between gap-4">
+                  <dt className="shrink-0 text-mute">{k}</dt>
+                  <dd className="text-right font-medium">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -40,7 +40,7 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
 
   if (rows.length === 0) {
     return (
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-mute">
         No tagged room photos for these properties yet.
       </p>
     );
@@ -53,10 +53,10 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
           <tbody>
             {rows.map((row) => (
               <tr key={row.key} className="align-top">
-                <td className="w-32 border-b border-neutral-100 p-2 dark:border-neutral-800/50">
+                <td className="w-32 border-b border-hairline p-2">
                   <button
                     onClick={() => openCarousel(row.key)}
-                    className="font-medium text-blue-600 hover:underline"
+                    className="text-[14px] font-semibold text-forest hover:text-forest-hi"
                     title="Open side-by-side carousels"
                   >
                     {row.label}
@@ -67,14 +67,14 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                   return (
                     <td
                       key={col.propertyId}
-                      className="border-b border-neutral-100 p-2 dark:border-neutral-800/50"
+                      className="border-b border-hairline p-2"
                     >
                       <div className="grid grid-cols-2 gap-1">
                         {imgs.map((img, i) => (
                           <button
                             key={img.id}
                             onClick={() => setLb({ images: imgs, index: i })}
-                            className="overflow-hidden rounded bg-neutral-100 dark:bg-neutral-800"
+                            className="overflow-hidden rounded-xl border border-line bg-fill"
                           >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
@@ -86,7 +86,7 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                           </button>
                         ))}
                         {imgs.length === 0 && (
-                          <span className="text-neutral-300 dark:text-neutral-600">
+                          <span className="text-soft">
                             —
                           </span>
                         )}

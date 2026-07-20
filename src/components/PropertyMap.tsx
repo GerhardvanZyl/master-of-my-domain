@@ -14,7 +14,7 @@ export default function PropertyMap({
 }) {
   if (lat == null || lng == null) return null;
   const q = `${lat},${lng}`;
-  const frame = `w-full rounded-lg border border-neutral-200 dark:border-neutral-800 ${className}`;
+  const frame = "w-full rounded-xl border border-line bg-fill";
   return (
     <div className="space-y-3">
       <div className="space-y-1">
@@ -23,36 +23,39 @@ export default function PropertyMap({
           src={`https://maps.google.com/maps?q=${q}&z=13&output=embed`}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          className={frame}
+          className={`${frame} ${className}`}
         />
         <a
           href={`https://www.google.com/maps/search/?api=1&query=${q}`}
           target="_blank"
           rel="noreferrer"
-          className="text-xs text-blue-600 hover:underline"
+          className="text-xs text-forest hover:text-forest-hi"
         >
           Open in Google Maps ↗
         </a>
       </div>
-      <div className="space-y-1">
-        <div className="text-xs font-medium text-neutral-400">Satellite</div>
-        <iframe
-          title={`Satellite view of ${address ?? q}`}
-          src={`https://maps.google.com/maps?q=${q}&t=k&z=17&output=embed`}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className={frame}
-        />
-      </div>
-      <div className="space-y-1">
-        <div className="text-xs font-medium text-neutral-400">Street view</div>
-        <iframe
-          title={`Street view of ${address ?? q}`}
-          src={`https://maps.google.com/maps?q=&layer=c&cbll=${q}&cbp=11,0,0,0,0&output=svembed`}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          className={frame}
-        />
+      {/* Satellite + street view side by side, as in the mock. */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <div className="label-cap text-[11px] tracking-wide">Satellite</div>
+          <iframe
+            title={`Satellite view of ${address ?? q}`}
+            src={`https://maps.google.com/maps?q=${q}&t=k&z=17&output=embed`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className={`${frame} h-[150px]`}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <div className="label-cap text-[11px] tracking-wide">Street view</div>
+          <iframe
+            title={`Street view of ${address ?? q}`}
+            src={`https://maps.google.com/maps?q=&layer=c&cbll=${q}&cbp=11,0,0,0,0&output=svembed`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className={`${frame} h-[150px]`}
+          />
+        </div>
       </div>
     </div>
   );
@@ -90,7 +93,7 @@ export function AreaPhotos({
           src={`https://maps.google.com/maps?q=&layer=c&cbll=${la},${ln}&cbp=11,${heading},0,0,0&output=svembed`}
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          className="aspect-square w-full rounded-md border border-neutral-200 dark:border-neutral-800"
+          className="aspect-square w-full rounded-xl border border-line bg-fill"
         />
       ))}
     </div>

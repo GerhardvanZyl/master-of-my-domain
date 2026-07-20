@@ -42,19 +42,19 @@ export default function NotesEditor({
         }}
         rows={4}
         placeholder="Add your notes about this property…"
-        className="w-full rounded-md border border-neutral-300 bg-transparent p-2 text-sm dark:border-neutral-700"
+        className="w-full resize-y rounded-xl border border-line bg-paper px-3 py-2.5 text-[13px] leading-relaxed outline-none focus:border-forest focus:bg-white"
       />
       <div className="flex items-center gap-3 text-xs">
         <button
           onClick={save}
           disabled={!dirty || state === "saving"}
-          className="rounded bg-blue-600 px-3 py-1 font-medium text-white disabled:opacity-40"
+          className="rounded-lg bg-forest px-3.5 py-1.5 font-semibold text-linen disabled:opacity-40"
         >
           Save
         </button>
-        {state === "saving" && <span className="text-neutral-400">saving…</span>}
-        {state === "saved" && !dirty && <span className="text-green-600">saved ✓</span>}
-        {state === "error" && <span className="text-red-600">save failed</span>}
+        {state === "saving" && <span className="text-mute">saving…</span>}
+        {state === "saved" && !dirty && <span className="text-forest">saved ✓</span>}
+        {state === "error" && <span className="text-[#B84A3A]">save failed</span>}
       </div>
     </div>
   );
