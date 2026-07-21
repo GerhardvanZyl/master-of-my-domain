@@ -66,4 +66,7 @@ label, and group membership ignores duplicates.
 - Keep the DDL in `src/db/ddl.ts` in sync with `src/db/schema.ts`.
 - Scrapers must degrade gracefully (store `raw_json`, set `scrape_status`) rather
   than throw — one site changing its markup shouldn't break a scrape.
-- Tests: `npx tsx test/pipeline.test.ts` (no network needed).
+- Tests: `npm test` (units/adapters/scoring/pipeline/ingest — no network needed).
+  `npm run test:ui` drives the real UI in Chrome via playwright-core; it boots
+  its own `next dev` against a throwaway copy of `data/app.db`, so it never
+  writes to your real database, images or uploads.

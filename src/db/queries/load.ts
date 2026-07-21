@@ -146,6 +146,8 @@ export function loadProperties(items: LoadItem[]) {
           listingUrl: it.listingUrl,
           sourceSite: it.sourceSite ?? "domain",
           createdAt: now,
+          scrapedAt: now,
+          updatedAt: now,
           ...set,
         })
         .run();

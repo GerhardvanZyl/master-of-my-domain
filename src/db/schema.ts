@@ -79,6 +79,11 @@ export const properties = sqliteTable("properties", {
   pergolaCovered: integer("pergola_covered"), // covered pergola/veranda/deck 1/0/null
   hasLawn: integer("has_lawn"), // 1/0/null
   lawnType: text("lawn_type"), // "real" | "fake" | null
+  // Shortlist triage + free-text pros/cons. ponytail: pros/cons are one TEXT
+  // column each, newline-separated — a list this small doesn't need a table.
+  shortlistTag: text("shortlist_tag"), // must-see | maybe | rejected | null
+  pros: text("pros"),
+  cons: text("cons"),
   rawJson: text("raw_json"),
   scrapedAt: text("scraped_at").notNull(),
   createdAt: text("created_at").notNull(),
@@ -167,6 +172,7 @@ export const propertyRatings = sqliteTable(
     vibe: text("vibe"), // like | meh | dislike | hate | null
     look: text("look"), // good | ugly | null
     kitchen: text("kitchen"), // small | tiny | null
+    score: real("score"), // your own 0–10 gut score
     updatedAt: text("updated_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.propertyId, t.profile] })],

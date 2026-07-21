@@ -1,64 +1,61 @@
 import { NextResponse } from "next/server";
-import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { propertyRatings } from "@/db/schema";
 
-// PATCH /api/properties/<id>/rating
-//   { profile: "gerhard"|"johanita", vibe?, look?, kitchen? }
-// Partial upsert of one profile's rating for a property — only the fields present
-// in the body change; "" clears a field. Both profiles' rows feed the vibe score.
-const PROFILES = ["gerhard", "johanita"];
-const VIBES = ["like", "meh", "dislike", "hate"];
-const LOOKS = ["good", "ugly"];
-const KITCHENS = ["small", "tiny"];
+// Allowed values per field; null always clears.
+const VOCAB: Record<string, string[]> = {
+  vibe: ["like", "meh", "dislike", "hate"],
+  look: ["good", "ugly"],
+  kitchen: ["small", "tiny"],
+};
 
-function clean(v: unknown, allowed: string[]): string | null | undefined {
-  if (v === undefined) return undefined; // not provided → leave as-is
-  if (v === "" || v === null) return null; // clear
-  return typeof v === "string" && allowed.includes(v) ? v : undefined;
-}
-
+// PATCH /api/properties/<id>/rating  { profile, vibe?, look?, kitchen?, score? }
+// Upserts the (property, profile) row — only the keys present are touched.
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  let body: { profile?: string; vibe?: unknown; look?: unknown; kitchen?: unknown };
+  let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "invalid JSON body" }, { status: 400 });
   }
-  if (!body.profile || !PROFILES.includes(body.profile)) {
-    return NextResponse.json({ error: "unknown profile" }, { status: 400 });
+
+  const profile = String(body.profile ?? "");
+  if (!profile) return NextResponse.json({ error: "profile required" }, { status: 400 });
+
+  const patch: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+  for (const [k, allowed] of Object.entries(VOCAB)) {
+    if (k in body) {
+      const v = body[k];
+      if (v !== null && !allowed.includes(String(v))) {
+        return NextResponse.json({ error: `bad ${k}` }, { status: 400 });
+      }
+      patch[k] = v === null ? null : String(v);
+    }
   }
-  const vibe = clean(body.vibe, VIBES);
-  const look = clean(body.look, LOOKS);
-  const kitchen = clean(body.kitchen, KITCHENS);
-  const now = new Date().toISOString();
+  if ("score" in body) {
+    const s = body.score;
+    const n = s === null ? null : Number(s);
+    if (n !== null && (!Number.isFinite(n) || n < 0 || n > 10)) {
+      return NextResponse.json({ error: "score must be 0–10" }, { status: 400 });
+    }
+    patch.score = n;
+  }
 
-  const existing = db
-    .select()
-    .from(propertyRatings)
-    .where(and(eq(propertyRatings.propertyId, id), eq(propertyRatings.profile, body.profile)))
-    .get();
-
-  const row = {
-    vibe: vibe === undefined ? (existing?.vibe ?? null) : vibe,
-    look: look === undefined ? (existing?.look ?? null) : look,
-    kitchen: kitchen === undefined ? (existing?.kitchen ?? null) : kitchen,
-    updatedAt: now,
-  };
-
-  if (existing) {
-    db.update(propertyRatings)
-      .set(row)
-      .where(and(eq(propertyRatings.propertyId, id), eq(propertyRatings.profile, body.profile)))
-      .run();
-  } else {
+  try {
     db.insert(propertyRatings)
-      .values({ propertyId: id, profile: body.profile, ...row })
+      .values({ propertyId: id, profile, ...patch } as typeof propertyRatings.$inferInsert)
+      .onConflictDoUpdate({
+        target: [propertyRatings.propertyId, propertyRatings.profile],
+        set: patch,
+      })
       .run();
+  } catch {
+    // The only realistic failure is the FK — an id that isn't a property.
+    return NextResponse.json({ error: "no such property" }, { status: 404 });
   }
-  return NextResponse.json({ ok: true, id, profile: body.profile, ...row });
+  return NextResponse.json({ ok: true, id, profile });
 }

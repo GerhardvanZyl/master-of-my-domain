@@ -54,6 +54,9 @@ CREATE TABLE IF NOT EXISTS properties (
   pergola_covered             INTEGER,
   has_lawn                    INTEGER,
   lawn_type                   TEXT,
+  shortlist_tag               TEXT,
+  pros                        TEXT,
+  cons                        TEXT,
   raw_json       TEXT,
   scraped_at     TEXT NOT NULL,
   created_at     TEXT NOT NULL,
@@ -107,6 +110,7 @@ CREATE TABLE IF NOT EXISTS property_ratings (
   vibe           TEXT,
   look           TEXT,
   kitchen        TEXT,
+  score          REAL,
   updated_at     TEXT NOT NULL,
   PRIMARY KEY (property_id, profile)
 );
@@ -145,11 +149,11 @@ CREATE INDEX IF NOT EXISTS idx_price_history_property ON price_history(property_
  * Idempotent; safe to run on every connect.
  */
 export function migrateColumns(db: {
-  pragma: (s: string) => Array<{ name: string }>;
+  pragma: (s: string) => unknown;
   exec: (s: string) => void;
 }): void {
   const cols = new Set(
-    db.pragma("table_info(properties)").map((c) => c.name),
+    (db.pragma("table_info(properties)") as Array<{ name: string }>).map((c) => c.name),
   );
   const add: Record<string, string> = {
     nearest_station: "TEXT",
@@ -180,8 +184,18 @@ export function migrateColumns(db: {
     pergola_covered: "INTEGER",
     has_lawn: "INTEGER",
     lawn_type: "TEXT",
+    shortlist_tag: "TEXT",
+    pros: "TEXT",
+    cons: "TEXT",
   };
   for (const [name, type] of Object.entries(add)) {
     if (!cols.has(name)) db.exec(`ALTER TABLE properties ADD COLUMN ${name} ${type}`);
+  }
+
+  const rateCols = new Set(
+    (db.pragma("table_info(property_ratings)") as Array<{ name: string }>).map((c) => c.name),
+  );
+  if (!rateCols.has("score")) {
+    db.exec("ALTER TABLE property_ratings ADD COLUMN score REAL");
   }
 }

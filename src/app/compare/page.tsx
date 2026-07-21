@@ -2,8 +2,10 @@ import Link from "next/link";
 import {
   getPropertiesByIds,
   getPropertyImages,
+  getRatingsByProperty,
   type ImageWithTag,
 } from "@/db/queries/properties";
+import { vibeScore } from "@/lib/vibes";
 import { formatPrice, fmtNum, fmtDistance, fmtMinutes } from "@/lib/format";
 import CompareRooms, { type CompareCol } from "@/components/CompareRooms";
 import PropertyMap, { AreaPhotos } from "@/components/PropertyMap";
@@ -206,18 +208,23 @@ export default async function ComparePage({
 
   if (props.length < 2) {
     return (
-      <div className="space-y-3">
-        <h1 className="text-lg font-semibold">Compare properties</h1>
-        <p className="text-sm text-neutral-500">
-          Select 2–4 properties on the{" "}
-          <Link href="/" className="text-blue-600 hover:underline">
-            home page
-          </Link>{" "}
-          (tick the “compare” box) to see them side by side.
+      <section className="rise py-20 text-center">
+        <h1 className="mb-2 font-serif text-3xl">Nothing to compare yet</h1>
+        <p className="mb-6 text-sm text-mute">
+          Pick 2–4 properties from the grid to line them up side by side.
         </p>
-      </div>
+        <Link href="/" className="btn-primary inline-block">
+          Browse properties
+        </Link>
+      </section>
     );
   }
+
+  // Overall winner = best vibes score. ponytail: server-side, so it uses the
+  // DEFAULT weights — the per-browser config tweaks only affect client views.
+  const ratingsByProp = getRatingsByProperty(ids);
+  const vibes = props.map((p) => vibeScore(p, ratingsByProp.get(p.id) ?? []));
+  const winner = vibes.indexOf(Math.max(...vibes));
 
   const imgsByProp = new Map(props.map((p) => [p.id, getPropertyImages(p.id)]));
   const heroOf = (id: string) => imgsByProp.get(id)?.[0] ?? null;
@@ -228,128 +235,128 @@ export default async function ComparePage({
   }));
 
   return (
-    <div className="space-y-6">
-      <div className="sticky top-0 z-30 -mx-6 flex gap-4 overflow-x-auto border-b border-neutral-200 bg-white/90 px-6 py-2 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/90">
-        {props.map((p) => {
-          const hero = heroOf(p.id);
-          return (
-            <div key={p.id} className="flex min-w-0 flex-1 items-center gap-2">
-              {hero && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={imageUrl(hero)}
-                  alt=""
-                  className="h-9 w-12 shrink-0 rounded object-cover"
-                />
-              )}
-              <span className="truncate text-sm font-medium">
-                {p.address ?? p.listingUrl}
-              </span>
-            </div>
-          );
-        })}
+    <section className="rise space-y-10">
+      <div>
+        <div className="eyebrow mb-1.5">Side by side</div>
+        <div className="flex flex-wrap items-baseline gap-3.5">
+          <h1 className="font-serif text-[38px] leading-none">
+            Comparing {props.length} properties
+          </h1>
+          <span className="text-[13px] text-mute">
+            Best value per row is highlighted ✓
+          </span>
+        </div>
       </div>
-      <h1 className="text-lg font-semibold">Comparing {props.length} properties</h1>
+
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+        <table className="w-full min-w-[720px] border-collapse text-sm">
           <thead>
             <tr>
-              <th className="w-32 border-b border-neutral-200 p-2 text-left dark:border-neutral-800" />
-              {props.map((p) => {
+              <th className="w-40 p-0" />
+              {props.map((p, i) => {
                 const hero = heroOf(p.id);
+                const isWinner = i === winner;
                 return (
-                  <th
-                    key={p.id}
-                    className="border-b border-neutral-200 p-2 text-left align-bottom dark:border-neutral-800"
-                  >
-                    <Link href={`/property/${p.id}`} className="block">
-                      {hero ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={imageUrl(hero)}
-                          alt={p.address ?? "property"}
-                          loading="lazy"
-                          className="mb-2 aspect-[4/3] w-full rounded-md object-cover"
-                        />
-                      ) : (
-                        <div className="mb-2 flex aspect-[4/3] w-full items-center justify-center rounded-md bg-neutral-100 text-xs text-neutral-400 dark:bg-neutral-800">
-                          no image
+                  <th key={p.id} className="p-0 pr-3.5 text-left align-bottom">
+                    <div
+                      className={`overflow-hidden rounded-t-2xl border-2 border-b-0 bg-white ${
+                        isWinner ? "border-forest" : "border-line"
+                      }`}
+                    >
+                      <div className="relative h-[150px] bg-fill">
+                        {isWinner && (
+                          <span className="absolute left-2.5 top-2.5 z-10 rounded-lg bg-forest px-2.5 py-1 text-[11px] font-bold text-linen">
+                            ✦ Best match · {vibes[i]}
+                          </span>
+                        )}
+                        {hero ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={imageUrl(hero)}
+                            alt={p.address ?? "property"}
+                            loading="lazy"
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs text-mute">
+                            no image
+                          </div>
+                        )}
+                      </div>
+                      <Link href={`/property/${p.id}`} className="block px-3.5 py-3">
+                        <div className="font-serif text-[18px] leading-tight">
+                          {p.address ?? p.listingUrl}
                         </div>
-                      )}
-                      <span className="font-medium hover:underline">
-                        {p.address ?? p.listingUrl}
-                      </span>
-                    </Link>
-                    <div className="text-xs uppercase text-neutral-400">
-                      {p.sourceSite}
+                        <div className="mt-1 text-[11px] uppercase tracking-wide text-mute">
+                          {p.sourceSite}
+                          {p.suburb ? ` · ${p.suburb}` : ""}
+                        </div>
+                      </Link>
                     </div>
                   </th>
                 );
               })}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white">
             {ROWS.map((row) => {
               const best = bestIndex(
                 props.map((p) => row.num(p)),
                 row.better,
               );
               return (
-                <tr key={row.label}>
-                  <td className="border-b border-neutral-100 p-2 font-medium text-neutral-400 dark:border-neutral-800/50">
+                <tr key={row.label} className="border-t border-hairline">
+                  <td className="px-4 py-3 text-[12.5px] font-semibold text-mute">
                     {row.label}
                   </td>
                   {props.map((p, i) => (
                     <td
                       key={p.id}
-                      className={`border-b border-neutral-100 p-2 dark:border-neutral-800/50 ${
-                        best.has(i)
-                          ? "font-semibold text-green-600 dark:text-green-400"
-                          : ""
+                      className={`px-3.5 py-3 text-[13.5px] leading-snug ${
+                        best.has(i) ? "bg-[#F2F6F2] font-semibold text-forest" : ""
                       }`}
                     >
+                      {best.has(i) && <span className="mr-1.5">✓</span>}
                       {row.value(p)}
                     </td>
                   ))}
                 </tr>
               );
             })}
-            <tr>
-              <td className="p-2 align-top font-medium text-neutral-400">Map</td>
-              {props.map((p) => (
-                <td key={p.id} className="p-2 align-top">
-                  <PropertyMap
-                    lat={p.latitude}
-                    lng={p.longitude}
-                    address={p.address}
-                    minWidth="100%"
-                  />
-                </td>
-              ))}
-            </tr>
-            <tr>
-              <td className="border-b border-neutral-100 p-2 align-top font-medium text-neutral-400 dark:border-neutral-800/50">
+            <tr className="border-t border-hairline">
+              <td className="px-4 py-3 align-top text-[12.5px] font-semibold text-mute">
                 My notes
               </td>
               {props.map((p) => (
-                <td
-                  key={p.id}
-                  className="border-b border-neutral-100 p-2 align-top text-neutral-600 dark:border-neutral-800/50 dark:text-neutral-300"
-                >
+                <td key={p.id} className="px-3.5 py-3 align-top text-[13px] text-[#5B5A52]">
                   <span className="whitespace-pre-line">{p.domainNotes ?? "—"}</span>
                 </td>
               ))}
             </tr>
-            <tr>
-              <td className="border-b border-neutral-100 p-2 align-top font-medium text-neutral-400 dark:border-neutral-800/50">
+            <tr className="border-y border-hairline">
+              <td className="px-4 py-3 align-top text-[12.5px] font-semibold text-mute">
                 Claude&apos;s take
               </td>
               {props.map((p) => (
-                <td
-                  key={p.id}
-                  className="border-b border-neutral-100 p-2 align-top text-neutral-600 dark:border-neutral-800/50 dark:text-neutral-300"
-                >
-                  {p.aiComment ?? "—"}
+                <td key={p.id} className="px-3.5 py-3 align-top">
+                  <div className="rounded-xl border border-sand-line bg-sand px-3.5 py-3 text-[12.5px] italic leading-relaxed text-[#5a5344]">
+                    {p.aiComment ?? "—"}
+                  </div>
+                </td>
+              ))}
+            </tr>
+            <tr>
+              <td className="px-4 py-3 align-top text-[12.5px] font-semibold text-mute">
+                Map
+              </td>
+              {props.map((p) => (
+                <td key={p.id} className="px-3.5 py-3 align-top">
+                  <PropertyMap
+                    lat={p.latitude}
+                    lng={p.longitude}
+                    address={p.address}
+                    className="h-56"
+                  />
                 </td>
               ))}
             </tr>
@@ -357,28 +364,34 @@ export default async function ComparePage({
         </table>
       </div>
 
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold">
-          Photos by room{" "}
-          <span className="font-normal text-neutral-400">
-            — click a room label for side-by-side carousels, or any photo to zoom
+      <div>
+        <div className="mb-3.5 flex flex-wrap items-baseline gap-3.5">
+          <h2 className="font-serif text-[28px]">Room by room</h2>
+          <span className="text-[13px] text-mute">
+            Click a room label for side-by-side carousels, or any photo to zoom ·{" "}
+            <Link href="/rooms" className="text-forest hover:text-forest-hi">
+              open full rooms view →
+            </Link>
           </span>
-        </h2>
+        </div>
         <CompareRooms columns={roomCols} />
       </div>
 
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold">
-          Area photos{" "}
-          <span className="font-normal text-neutral-400">
-            — 10 street-view snapshots around each property
+      <div>
+        <div className="mb-3.5 flex flex-wrap items-baseline gap-3.5">
+          <h2 className="font-serif text-[28px]">Around the street</h2>
+          <span className="text-[13px] text-mute">
+            10 street-view snapshots around each property
           </span>
-        </h2>
+        </div>
         <div className="overflow-x-auto">
           <div className="flex gap-4">
             {props.map((p) => (
               <div key={p.id} className="w-[28rem] shrink-0">
-                <div className="mb-2 truncate text-sm font-medium" title={p.address ?? ""}>
+                <div
+                  className="mb-2 truncate font-serif text-base"
+                  title={p.address ?? ""}
+                >
                   {p.address ?? p.id}
                 </div>
                 <AreaPhotos lat={p.latitude} lng={p.longitude} seed={p.id} />
@@ -387,6 +400,6 @@ export default async function ComparePage({
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

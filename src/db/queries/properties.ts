@@ -10,7 +10,7 @@ import { priorityScore } from "@/lib/priority";
 export interface PropertyListItem extends Property {
   imageCount: number;
   thumbPath: string | null;
-  ratings: Pick<PropertyRating, "profile" | "vibe" | "look" | "kitchen">[];
+  ratings: Pick<PropertyRating, "profile" | "vibe" | "look" | "kitchen" | "score">[];
 }
 
 export function listProperties(): PropertyListItem[] {
@@ -44,13 +44,20 @@ export function listProperties(): PropertyListItem[] {
       vibe: propertyRatings.vibe,
       look: propertyRatings.look,
       kitchen: propertyRatings.kitchen,
+      score: propertyRatings.score,
     })
     .from(propertyRatings)
     .all();
   const ratingsByProp = new Map<string, PropertyListItem["ratings"]>();
   for (const r of ratingRows) {
     const arr = ratingsByProp.get(r.propertyId) ?? [];
-    arr.push({ profile: r.profile, vibe: r.vibe, look: r.look, kitchen: r.kitchen });
+    arr.push({
+      profile: r.profile,
+      vibe: r.vibe,
+      look: r.look,
+      kitchen: r.kitchen,
+      score: r.score,
+    });
     ratingsByProp.set(r.propertyId, arr);
   }
 
@@ -73,19 +80,6 @@ export function getProperty(id: string): Property | undefined {
   return db.select().from(properties).where(eq(properties.id, id)).get();
 }
 
-export function getPropertyRatings(propertyId: string) {
-  return db
-    .select({
-      profile: propertyRatings.profile,
-      vibe: propertyRatings.vibe,
-      look: propertyRatings.look,
-      kitchen: propertyRatings.kitchen,
-    })
-    .from(propertyRatings)
-    .where(eq(propertyRatings.propertyId, propertyId))
-    .all();
-}
-
 export function getPriceHistory(propertyId: string): PriceHistory[] {
   return db
     .select()
@@ -106,6 +100,40 @@ export function getPropertiesByIds(ids: string[]): Property[] {
     .all();
   const byId = new Map(rows.map((r) => [r.id, r]));
   return ids.map((id) => byId.get(id)).filter((p): p is Property => !!p);
+}
+
+/** Rating rows (both profiles) for one property — used by the detail rail. */
+export function getPropertyRatings(propertyId: string): PropertyListItem["ratings"] {
+  return db
+    .select({
+      profile: propertyRatings.profile,
+      vibe: propertyRatings.vibe,
+      look: propertyRatings.look,
+      kitchen: propertyRatings.kitchen,
+      score: propertyRatings.score,
+    })
+    .from(propertyRatings)
+    .where(eq(propertyRatings.propertyId, propertyId))
+    .all();
+}
+
+/** Same, keyed by property id, for a set of properties (compare view). */
+export function getRatingsByProperty(
+  ids: string[],
+): Map<string, PropertyListItem["ratings"]> {
+  const out = new Map<string, PropertyListItem["ratings"]>();
+  if (ids.length === 0) return out;
+  const rows = db
+    .select()
+    .from(propertyRatings)
+    .where(inArray(propertyRatings.propertyId, ids))
+    .all();
+  for (const r of rows) {
+    const arr = out.get(r.propertyId) ?? [];
+    arr.push({ profile: r.profile, vibe: r.vibe, look: r.look, kitchen: r.kitchen, score: r.score });
+    out.set(r.propertyId, arr);
+  }
+  return out;
 }
 
 export interface ImageWithTag {

@@ -1,15 +1,84 @@
 @import "tailwindcss";
 
+/* Design tokens lifted from design/Property Compare.dc.html. Light-only —
+   the mock has no dark variant, so `color-scheme: light` pins form controls. */
+@theme {
+  --color-cream: #efebe1;
+  --color-paper: #fbfaf6;
+  --color-line: #e4dfd3;
+  --color-hairline: #f0ece1;
+  --color-headline: #e1dcce;
+  --color-ink: #1c1c19;
+  --color-body: #3a3a34;
+  --color-mute: #8c8a80;
+  --color-soft: #b9afa0;
+  --color-forest: #1f4a3a;
+  --color-forest-hi: #2c6350;
+  --color-amber: #b9762a;
+  --color-sand: #f4efe4;
+  --color-sand-line: #e7dfcb;
+  --color-fill: #e8e3d6;
+  --color-linen: #f4f1ea;
+
+  --font-serif: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-sans: "Geist", system-ui, sans-serif;
+}
+
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
 body {
-  @apply bg-neutral-50 text-neutral-900 antialiased;
+  @apply bg-cream font-sans text-ink antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-  body {
-    @apply bg-neutral-950 text-neutral-100;
+::selection {
+  background: #1f4a3a;
+  color: #f4f1ea;
+}
+
+::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cdc7b8;
+  border-radius: 8px;
+}
+
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: riseIn 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+/* Repeated shells from the mock. Everything else stays inline Tailwind. */
+@utility card {
+  @apply rounded-2xl border border-line bg-white;
+}
+@utility eyebrow {
+  @apply text-xs font-semibold uppercase tracking-[2.5px] text-amber;
+}
+@utility label-cap {
+  @apply text-xs font-semibold uppercase text-mute;
+}
+@utility field {
+  @apply rounded-lg border border-line bg-white px-3 py-2 text-[13.5px] font-medium text-ink outline-none focus:border-forest;
+}
+@utility chip {
+  @apply flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[12.5px] font-semibold text-body;
+}
+@utility chip-on {
+  @apply border-forest bg-forest text-linen;
+}
+@utility btn-primary {
+  @apply rounded-xl bg-forest px-5 py-2.5 text-sm font-semibold text-linen;
 }

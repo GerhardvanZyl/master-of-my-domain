@@ -155,11 +155,16 @@ async function main() {
   }
 
   // --- Anti-bot wall detection (readRawFromPage, needs a browser) ---
-  const browser: Browser = await chromium.launch({
-    executablePath: CHROMIUM,
-    headless: true,
-    args: ["--no-sandbox"],
-  });
+  // Reuse the app's own resolver so this works on any OS with a Chrome/Edge
+  // installed, not just the Linux path CHROMIUM defaults to.
+  const { getBrowser } = await import("../src/scrape/browser");
+  const browser: Browser = process.env.CHROMIUM_PATH
+    ? await chromium.launch({
+        executablePath: CHROMIUM,
+        headless: true,
+        args: ["--no-sandbox"],
+      })
+    : await getBrowser();
   const ctx = await browser.newContext();
   try {
     {

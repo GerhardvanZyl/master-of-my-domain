@@ -15,7 +15,7 @@ export default function RoomColumns({ columns }: { columns: PropertyColumn[] }) 
 
   if (columns.length === 0) {
     return (
-      <p className="text-sm text-neutral-500">
+      <p className="text-sm text-mute">
         No photos here yet. Tag some photos first (see CLAUDE.md / the
         tag-photos skill).
       </p>
@@ -29,7 +29,7 @@ export default function RoomColumns({ columns }: { columns: PropertyColumn[] }) 
             <div key={col.propertyId} className="w-56 shrink-0">
               <Link
                 href={`/property/${col.propertyId}`}
-                className="mb-2 block truncate text-sm font-medium hover:underline"
+                className="mb-2 block truncate font-serif text-base hover:text-forest"
                 title={col.address ?? col.propertyId}
               >
                 {col.address ?? col.propertyId}
@@ -40,7 +40,7 @@ export default function RoomColumns({ columns }: { columns: PropertyColumn[] }) 
                     key={img.id}
                     onClick={() => setOpen(indexOf(img.id))}
                     title="Open"
-                    className="relative block w-full overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-800"
+                    className="relative block w-full overflow-hidden rounded-xl border border-line bg-fill"
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img

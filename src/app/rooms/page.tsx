@@ -19,14 +19,7 @@ function Chip({
   children: React.ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      className={`rounded-full border px-3 py-1 text-sm ${
-        active
-          ? "border-blue-600 bg-blue-600 text-white"
-          : "border-neutral-300 hover:border-neutral-400 dark:border-neutral-700"
-      }`}
-    >
+    <Link href={href} className={`chip ${active ? "chip-on" : "hover:border-forest"}`}>
       {children}
     </Link>
   );
@@ -56,11 +49,17 @@ export default async function RoomsPage({
   const nothingTagged = rooms.length === 0 && groups.length === 0;
 
   return (
-    <div className="space-y-5">
-      <h1 className="text-lg font-semibold">Compare rooms</h1>
+    <section className="rise space-y-5">
+      <div>
+        <div className="eyebrow mb-1.5">Photos by room</div>
+        <h1 className="font-serif text-[38px] leading-none">Room-by-room</h1>
+        <p className="mt-2 text-[13.5px] text-mute">
+          Every tagged photo of a room, across all properties, side by side.
+        </p>
+      </div>
 
       {nothingTagged ? (
-        <p className="text-sm text-neutral-500">
+        <p className="card p-8 text-sm text-mute">
           No tagged photos yet. In a terminal, run <code>claude</code> and use the
           <strong> tag-photos</strong> skill (or ask it to “tag the photos”). See{" "}
           <code>CLAUDE.md</code>.
@@ -68,9 +67,7 @@ export default async function RoomsPage({
       ) : (
         <>
           <div className="space-y-2">
-            <div className="text-xs uppercase tracking-wide text-neutral-400">
-              By room type
-            </div>
+            <div className="label-cap">By room type</div>
             <div className="flex flex-wrap gap-2">
               {rooms.map((r) => (
                 <Chip
@@ -81,16 +78,12 @@ export default async function RoomsPage({
                   {r.roomType} ({r.count})
                 </Chip>
               ))}
-              {rooms.length === 0 && (
-                <span className="text-sm text-neutral-500">none</span>
-              )}
+              {rooms.length === 0 && <span className="text-sm text-mute">none</span>}
             </div>
           </div>
 
           <div className="space-y-2">
-            <div className="text-xs uppercase tracking-wide text-neutral-400">
-              Similarity groups
-            </div>
+            <div className="label-cap">Similarity groups</div>
             <div className="flex flex-wrap gap-2">
               {groups.map((g) => (
                 <Chip
@@ -102,7 +95,7 @@ export default async function RoomsPage({
                 </Chip>
               ))}
               {groups.length === 0 && (
-                <span className="text-sm text-neutral-500">
+                <span className="text-sm text-mute">
                   none yet — the tagging job creates these
                 </span>
               )}
@@ -110,18 +103,18 @@ export default async function RoomsPage({
           </div>
 
           {heading ? (
-            <div className="space-y-3 pt-2">
-              <h2 className="text-sm font-semibold">{heading}</h2>
+            <div className="space-y-3 border-t border-line pt-5">
+              <h2 className="font-serif text-2xl">{heading}</h2>
               <RoomColumns columns={columns} />
             </div>
           ) : (
-            <p className="pt-2 text-sm text-neutral-500">
+            <p className="pt-2 text-sm text-mute">
               Pick a room type or a similarity group above to compare photos side
               by side.
             </p>
           )}
         </>
       )}
-    </div>
+    </section>
   );
 }

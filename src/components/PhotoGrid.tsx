@@ -16,7 +16,7 @@ export default function PhotoGrid({ images }: { images: PhotoLite[] }) {
             key={img.id}
             onClick={() => setOpen(i)}
             title="Open"
-            className="relative block overflow-hidden rounded-md bg-neutral-100 dark:bg-neutral-800"
+            className="relative block overflow-hidden rounded-[9px] border border-hairline bg-fill"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

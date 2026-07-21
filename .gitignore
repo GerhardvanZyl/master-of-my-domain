@@ -17,3 +17,6 @@ next-env.d.ts
 # misc
 *.log
 .DS_Store
+
+# UI test build output
+.next-test/
