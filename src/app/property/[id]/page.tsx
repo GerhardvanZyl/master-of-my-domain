@@ -4,10 +4,13 @@ import {
   getProperty,
   getPropertyImages,
   getPriceHistory,
+  getPropertyRatings,
 } from "@/db/queries/properties";
 import PhotoGrid from "@/components/PhotoGrid";
 import PropertyMap from "@/components/PropertyMap";
 import NotesEditor from "@/components/NotesEditor";
+import RatingControls from "@/components/RatingControls";
+import MetadataEditor from "@/components/MetadataEditor";
 import { imageUrl } from "@/lib/images";
 import {
   formatPrice,
@@ -29,6 +32,10 @@ export default async function PropertyDetail({
   if (!property) notFound();
   const images = getPropertyImages(id);
   const history = getPriceHistory(id);
+  const ratings = getPropertyRatings(id);
+
+  // 0/1/null → Yes/No/—  (null = not yet deduced from photos).
+  const yesNo = (v: number | null) => (v == null ? "—" : v ? "Yes" : "No");
 
   const facts: [string, string][] = [
     ["Price", formatPrice(property.priceDisplay, property.priceNumeric)],
@@ -63,6 +70,27 @@ export default async function PropertyDetail({
         : "—",
     ],
     ["Playgrounds within 500m", fmtNum(property.playgrounds500m)],
+    ["Altitude", fmtNum(property.altitudeM, " m")],
+    // Deduced-from-photos metadata (tasks 5 & 10). "—" until harvested/deduced.
+    ["All-around eaves", yesNo(property.hasEaves)],
+    ["Master bedroom", fmtNum(property.masterBedSqm, " m²")],
+    ["Other bedrooms (avg)", fmtNum(property.avgOtherBedSqm, " m²")],
+    ["Common areas", fmtNum(property.commonAreasCount)],
+    ["Balcony", fmtNum(property.balconySqm, " m²")],
+    ["Back garden", fmtNum(property.backGardenSqm, " m²")],
+    ["Covered pergola/deck", yesNo(property.pergolaCovered)],
+    [
+      "Lawn",
+      property.hasLawn == null
+        ? "—"
+        : property.hasLawn
+          ? property.lawnType
+            ? `Yes · ${property.lawnType}`
+            : "Yes"
+          : "No",
+    ],
+    ["Flood overlay", yesNo(property.floodOverlay)],
+    ["Bushfire overlay", yesNo(property.bushfireOverlay)],
     ["Agent", [property.agentName, property.agencyName].filter(Boolean).join(", ") || "—"],
     ["Source", property.sourceSite],
     ["Status", property.scrapeStatus],
@@ -78,7 +106,8 @@ export default async function PropertyDetail({
           <img
             src={imageUrl(hero)}
             alt=""
-            className="h-10 w-14 shrink-0 rounded object-cover"
+            /* Task 11: doubled diagonal (h-10 w-14 → h-20 w-28). */
+            className="h-20 w-28 shrink-0 rounded object-cover"
           />
         )}
         <span className="truncate font-medium">
@@ -134,7 +163,8 @@ export default async function PropertyDetail({
         </div>
       )}
 
-      <dl className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg border border-neutral-200 p-4 text-sm dark:border-neutral-800 sm:grid-cols-4">
+      {/* Task 16.1: cap the property metadata at 1920px on ultra-wide screens. */}
+      <dl className="grid max-w-[1920px] grid-cols-2 gap-x-6 gap-y-2 rounded-lg border border-neutral-200 p-4 text-sm dark:border-neutral-800 sm:grid-cols-4">
         {facts.map(([k, v]) => (
           <div key={k}>
             <dt className="text-neutral-400">{k}</dt>
@@ -143,12 +173,35 @@ export default async function PropertyDetail({
         ))}
       </dl>
 
+      <MetadataEditor
+        propertyId={property.id}
+        initial={{
+          hasEaves: property.hasEaves,
+          masterBedSqm: property.masterBedSqm,
+          avgOtherBedSqm: property.avgOtherBedSqm,
+          commonAreasCount: property.commonAreasCount,
+          balconySqm: property.balconySqm,
+          backGardenSqm: property.backGardenSqm,
+          pergolaCovered: property.pergolaCovered,
+          hasLawn: property.hasLawn,
+          lawnType: property.lawnType,
+          floodOverlay: property.floodOverlay,
+          bushfireOverlay: property.bushfireOverlay,
+          altitudeM: property.altitudeM,
+        }}
+      />
+
+      <PropertyMap
+        lat={property.latitude}
+        lng={property.longitude}
+        address={property.address}
+      />
+
       <div className="grid gap-6 md:grid-cols-2">
-        <PropertyMap
-          lat={property.latitude}
-          lng={property.longitude}
-          address={property.address}
-        />
+        <div>
+          <h2 className="mb-2 text-sm font-semibold">Vibe ratings</h2>
+          <RatingControls propertyId={property.id} ratings={ratings} />
+        </div>
         <div>
           <h2 className="mb-2 text-sm font-semibold">My notes</h2>
           <NotesEditor propertyId={property.id} initial={property.domainNotes} />

@@ -35,9 +35,13 @@ export const ReaAdapter: Adapter = {
       );
     }
 
-    const ld = jsonLd.map(asRecord).find((o) => o !== null) as
-      | Record<string, unknown>
-      | undefined;
+    // Same trap as Domain: the first JSON-LD block is often the site/Organization
+    // one, so prefer whichever block actually carries an address.
+    const ldBlocks = jsonLd
+      .map(asRecord)
+      .filter((o): o is Record<string, unknown> => o !== null);
+    const ld: Record<string, unknown> | undefined =
+      ldBlocks.find((o) => asRecord(o.address) !== null) ?? ldBlocks[0];
     const ldAddress = asRecord(ld?.address);
     const ldGeo = asRecord(ld?.geo);
 

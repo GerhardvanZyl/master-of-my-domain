@@ -37,6 +37,13 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
       return next;
     });
   }
+  function jump(colIdx: number, to: number) {
+    setPos((prev) => {
+      const next = [...prev];
+      next[colIdx] = to;
+      return next;
+    });
+  }
 
   if (rows.length === 0) {
     return (
@@ -166,6 +173,30 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                       <span className="text-neutral-500">no photo</span>
                     )}
                   </div>
+                  {/* Task 12: filmstrip of every photo of this room type —
+                      click to jump straight to one instead of cycling. */}
+                  {imgs.length > 1 && (
+                    <div className="flex gap-1 overflow-x-auto pt-2">
+                      {imgs.map((thumb, i) => (
+                        <button
+                          key={thumb.id}
+                          onClick={() => jump(ci, i)}
+                          className={`shrink-0 overflow-hidden rounded border-2 ${
+                            i === at ? "border-white" : "border-transparent opacity-60 hover:opacity-100"
+                          }`}
+                          aria-label={`Photo ${i + 1}`}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={imageUrl(thumb)}
+                            alt=""
+                            loading="lazy"
+                            className="h-14 w-20 object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   <div className="pt-1 text-center text-xs text-neutral-400">
                     {imgs.length ? `${at + 1} / ${imgs.length}` : "—"}
                   </div>

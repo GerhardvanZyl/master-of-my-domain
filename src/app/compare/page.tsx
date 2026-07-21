@@ -96,6 +96,56 @@ const ROWS: Row[] = [
     value: (p) => fmtNum(p.playgrounds500m),
     num: (p) => p.playgrounds500m,
   },
+  // Deduced-from-photos metadata (tasks 5 & 10). "—" until harvested.
+  {
+    label: "All-around eaves",
+    better: "max",
+    value: (p) => (p.hasEaves == null ? "—" : p.hasEaves ? "Yes" : "No"),
+    num: (p) => p.hasEaves,
+  },
+  {
+    label: "Master bedroom",
+    better: "max",
+    value: (p) => fmtNum(p.masterBedSqm, " m²"),
+    num: (p) => p.masterBedSqm,
+  },
+  {
+    label: "Other bedrooms (avg)",
+    better: "max",
+    value: (p) => fmtNum(p.avgOtherBedSqm, " m²"),
+    num: (p) => p.avgOtherBedSqm,
+  },
+  {
+    label: "Common areas",
+    better: "max",
+    value: (p) => fmtNum(p.commonAreasCount),
+    num: (p) => p.commonAreasCount,
+  },
+  {
+    label: "Back garden",
+    better: "max",
+    value: (p) => fmtNum(p.backGardenSqm, " m²"),
+    num: (p) => p.backGardenSqm,
+  },
+  {
+    label: "Covered pergola/deck",
+    better: "max",
+    value: (p) => (p.pergolaCovered == null ? "—" : p.pergolaCovered ? "Yes" : "No"),
+    num: (p) => p.pergolaCovered,
+  },
+  {
+    label: "Lawn",
+    better: null,
+    value: (p) =>
+      p.hasLawn == null
+        ? "—"
+        : p.hasLawn
+          ? p.lawnType
+            ? `Yes · ${p.lawnType}`
+            : "Yes"
+          : "No",
+    num: () => null,
+  },
   {
     label: "Suburb",
     better: null,
@@ -272,7 +322,7 @@ export default async function ComparePage({
                     lat={p.latitude}
                     lng={p.longitude}
                     address={p.address}
-                    className="h-64"
+                    minWidth="100%"
                   />
                 </td>
               ))}

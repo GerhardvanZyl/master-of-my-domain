@@ -7,6 +7,8 @@ import type { PropertyListItem } from "@/db/queries/properties";
 import { imageUrl } from "@/lib/images";
 import { formatPrice, bedBathCar, fmtDistance, fmtMinutes } from "@/lib/format";
 import { DEFAULT_VIBE_CONFIG, loadVibeConfig, saveVibeConfig, vibeScore } from "@/lib/vibes";
+import { useProfile } from "@/components/Profile";
+import VibeSettings from "@/components/VibeSettings";
 
 type NumGetter = (p: PropertyListItem) => number | null;
 
@@ -23,6 +25,8 @@ const SORTS: { key: string; label: string; num?: NumGetter; dir: "asc" | "desc" 
   { key: "coles", label: "Coles: nearest", num: (p) => p.colesDistanceM, dir: "asc" },
   { key: "playgrounds", label: "Playgrounds ≤500m: most", num: (p) => p.playgrounds500m, dir: "desc" },
   { key: "greencross", label: "Green Cross vet: nearest", num: (p) => p.greenCrossDistanceM, dir: "asc" },
+  { key: "eaves", label: "Eaves: has them first", num: (p) => p.hasEaves, dir: "desc" },
+  { key: "master", label: "Master bedroom: biggest", num: (p) => p.masterBedSqm, dir: "desc" },
 ];
 
 const PRICE_MIN = 400_000;
@@ -68,10 +72,57 @@ export default function PropertyGrid({
   const [idealPrice, setIdealPrice] = useState(DEFAULT_VIBE_CONFIG.idealPrice);
   const [q, setQ] = useState("");
   const [mapSize, setMapSize] = useState("md"); // off | sm | md | lg
+  const [pinned, setPinned] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [forceOpen, setForceOpen] = useState(false);
 
-  // Hydrate the ideal price from the saved vibe config after mount (localStorage
-  // is client-only, so we can't read it during the initial render).
-  useEffect(() => setIdealPrice(loadVibeConfig().idealPrice), []);
+  const { profile } = useProfile();
+  const fkey = `filters:${profile ?? "default"}`;
+
+  // Task 17: load the last-used filter/sort for the active profile (or the
+  // shared "default" bucket when none picked). Runs on mount and profile switch.
+  useEffect(() => {
+    let s: Record<string, unknown> = {};
+    try {
+      s = JSON.parse(localStorage.getItem(fkey) || "{}");
+    } catch {
+      /* ignore */
+    }
+    setSort(typeof s.sort === "string" ? s.sort : "priority");
+    setSuburb(typeof s.suburb === "string" ? s.suburb : "");
+    setMinBeds(typeof s.minBeds === "number" ? s.minBeds : 0);
+    setMinBaths(typeof s.minBaths === "number" ? s.minBaths : 0);
+    setMinParking(typeof s.minParking === "number" ? s.minParking : 0);
+    setMaxPrice(typeof s.maxPrice === "number" ? s.maxPrice : PRICE_MAX);
+    setQ(typeof s.q === "string" ? s.q : "");
+    setMapSize(typeof s.mapSize === "string" ? s.mapSize : "md");
+    setPinned(!!s.pinned);
+    setIdealPrice(typeof s.idealPrice === "number" ? s.idealPrice : loadVibeConfig().idealPrice);
+  }, [fkey]);
+
+  // Persist on any change, keyed by profile.
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        fkey,
+        JSON.stringify({ sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, pinned }),
+      );
+    } catch {
+      /* ignore */
+    }
+  }, [fkey, sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, pinned]);
+
+  // Task 15: once pinned, collapse the bar after the user scrolls down a little.
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 140);
+      if (y <= 140) setForceOpen(false); // back at top → reset the expand
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const collapsed = pinned && scrolled && !forceOpen;
 
   const suburbs = useMemo(
     () =>
@@ -151,9 +202,68 @@ export default function PropertyGrid({
   const selCls =
     "rounded border border-neutral-300 bg-transparent px-2 py-1 dark:border-neutral-700";
 
+  // Only the filters the user has actually set — shown as chips when collapsed.
+  const activeChips = [
+    sort !== "priority" && SORTS.find((s) => s.key === sort)?.label,
+    suburb || false,
+    minBeds > 0 && `${minBeds}+ bd`,
+    minBaths > 0 && `${minBaths}+ ba`,
+    minParking > 0 && `${minParking}+ car`,
+    maxPrice < PRICE_MAX && `≤ ${fmtK(maxPrice)}`,
+    q.trim() && `“${q.trim()}”`,
+  ].filter(Boolean) as string[];
+
+  const pinBtn = (
+    <button
+      type="button"
+      onClick={() => setPinned((v) => !v)}
+      title={pinned ? "Unpin filters" : "Pin filters (stays at top when scrolling)"}
+      aria-label={pinned ? "Unpin filters" : "Pin filters"}
+      className={`rounded px-1.5 py-0.5 ${pinned ? "text-blue-600" : "text-neutral-400 hover:text-neutral-600"}`}
+    >
+      📌
+    </button>
+  );
+
   return (
     <>
+      <div
+        className={
+          pinned
+            ? "sticky top-0 z-20 -mx-6 border-b border-neutral-200 bg-white/95 px-6 py-2 backdrop-blur dark:border-neutral-800 dark:bg-neutral-950/95"
+            : ""
+        }
+      >
+        {collapsed ? (
+          // Collapsed: slim bar of only the set filters. Capped to ~3 lines on
+          // mobile so a pinned bar never eats the screen.
+          <div className="flex max-h-[4.5rem] flex-wrap items-center gap-2 overflow-y-auto text-sm sm:max-h-none">
+            {pinBtn}
+            {activeChips.length === 0 ? (
+              <span className="text-neutral-400">No filters set</span>
+            ) : (
+              activeChips.map((c) => (
+                <span
+                  key={c}
+                  className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300"
+                >
+                  {c}
+                </span>
+              ))
+            )}
+            <button
+              type="button"
+              onClick={() => setForceOpen(true)}
+              className="rounded border border-neutral-300 px-2 py-0.5 text-xs hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+            >
+              Filters ▾
+            </button>
+            <span className="ml-auto text-xs text-neutral-400">{view.length} shown</span>
+          </div>
+        ) : (
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-neutral-200 p-3 text-sm dark:border-neutral-800">
+        {pinBtn}
+        <VibeSettings />
         <label className="flex items-center gap-1">
           Sort
           <select value={sort} onChange={(e) => setSort(e.target.value)} className={selCls}>
@@ -253,6 +363,8 @@ export default function PropertyGrid({
         </label>
         <span className="ml-auto text-neutral-400">{view.length} shown</span>
       </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 gap-4 pt-4 sm:grid-cols-2 lg:grid-cols-3">
         {view.map((p) => (
@@ -339,6 +451,19 @@ export default function PropertyGrid({
                   {p.colesDistanceM != null && `🛒 ${fmtDistance(p.colesDistanceM)}`}
                   {p.colesDistanceM != null && p.playgrounds500m != null && " · "}
                   {p.playgrounds500m != null && `🛝 ${p.playgrounds500m} ≤500m`}
+                </div>
+              )}
+              {/* Deduced from photos (tasks 5 & 10) — omitted until harvested. */}
+              {(p.hasEaves != null || p.hasLawn != null || p.masterBedSqm != null) && (
+                <div className="text-xs text-neutral-500">
+                  {[
+                    p.hasEaves != null && (p.hasEaves ? "🏠 eaves" : "🏠 no eaves"),
+                    p.hasLawn != null &&
+                      (p.hasLawn ? `🌱 ${p.lawnType ?? "lawn"}` : "🌱 no lawn"),
+                    p.masterBedSqm != null && `🛏 ${p.masterBedSqm} m²`,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </div>
               )}
               <div className="flex gap-3 pt-1 text-xs text-neutral-500">

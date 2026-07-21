@@ -73,13 +73,28 @@ export function getProperty(id: string): Property | undefined {
   return db.select().from(properties).where(eq(properties.id, id)).get();
 }
 
+export function getPropertyRatings(propertyId: string) {
+  return db
+    .select({
+      profile: propertyRatings.profile,
+      vibe: propertyRatings.vibe,
+      look: propertyRatings.look,
+      kitchen: propertyRatings.kitchen,
+    })
+    .from(propertyRatings)
+    .where(eq(propertyRatings.propertyId, propertyId))
+    .all();
+}
+
 export function getPriceHistory(propertyId: string): PriceHistory[] {
   return db
     .select()
     .from(priceHistory)
     .where(eq(priceHistory.propertyId, propertyId))
     .orderBy(priceHistory.date)
-    .all();
+    .all()
+    // Task 19: rental history isn't relevant to a purchase — show sales only.
+    .filter((h) => !/rent|lease/i.test(h.event ?? ""));
 }
 
 export function getPropertiesByIds(ids: string[]): Property[] {

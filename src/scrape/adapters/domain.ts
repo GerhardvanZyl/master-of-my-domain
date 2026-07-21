@@ -68,9 +68,14 @@ export const DomainAdapter: Adapter = {
       );
     }
 
-    const ld = jsonLd.map(asRecord).find((o) => o !== null) as
-      | Record<string, unknown>
-      | undefined;
+    // Domain emits several JSON-LD blocks and the site/Organization one (whose
+    // `name` is literally "Domain") often comes first — prefer the block that
+    // actually carries an address, or we label every property "Domain".
+    const ldBlocks = jsonLd
+      .map(asRecord)
+      .filter((o): o is Record<string, unknown> => o !== null);
+    const ld: Record<string, unknown> | undefined =
+      ldBlocks.find((o) => asRecord(o.address) !== null) ?? ldBlocks[0];
     const ldAddress = asRecord(ld?.address);
     const ldGeo = asRecord(ld?.geo);
 
