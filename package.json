@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "dev:https": "node scripts/dev-https.mjs",
+    "serve:https": "node scripts/https-proxy.mjs",
     "build": "next build",
     "start": "next start",
     "test": "tsx test/units.test.ts && tsx test/adapters.test.ts && tsx test/features.test.ts && tsx test/pipeline.test.ts && tsx test/ingest.test.ts",
