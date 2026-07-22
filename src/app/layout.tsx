@@ -1,12 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import NavLinks from "@/components/NavLinks";
 import ProfileBar from "@/components/ProfileBar";
+import ProfileGate from "@/components/ProfileGate";
+import RegisterSW from "@/components/RegisterSW";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Property Compare",
   description: "Scrape, store and compare property listings side by side.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Properties" },
+  icons: { apple: "/icons/apple-touch-icon.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1F4A3A",
 };
 
 // ponytail: plain <link> for the webfonts rather than next/font — the app is
@@ -28,8 +37,8 @@ export default function RootLayout({
       </head>
       <body>
         <header className="sticky top-0 z-40 border-b border-headline bg-[rgba(244,241,234,0.86)] backdrop-blur-md">
-          <nav className="mx-auto flex h-16 w-full max-w-[1560px] items-center gap-9 px-8">
-            <Link href="/" className="flex items-center gap-2.5">
+          <nav className="mx-auto flex h-16 w-full max-w-[1560px] items-center gap-3 px-4 sm:gap-9 sm:px-8">
+            <Link href="/" className="flex shrink-0 items-center gap-2.5">
               <span className="flex h-[30px] w-[30px] items-center justify-center rounded-lg bg-forest">
                 <svg
                   width="17"
@@ -46,7 +55,7 @@ export default function RootLayout({
                   <path d="M9.5 21v-6h5v6" />
                 </svg>
               </span>
-              <span className="font-serif text-[22px] tracking-[0.2px]">
+              <span className="hidden font-serif text-[22px] tracking-[0.2px] sm:inline">
                 Property Compare
               </span>
             </Link>
@@ -54,9 +63,11 @@ export default function RootLayout({
             <ProfileBar />
           </nav>
         </header>
-        <main className="mx-auto w-full max-w-[1560px] px-8 pb-20 pt-7">
+        <main className="mx-auto w-full max-w-[1560px] px-4 pb-20 pt-7 sm:px-8">
           {children}
         </main>
+        <ProfileGate />
+        <RegisterSW />
       </body>
     </html>
   );

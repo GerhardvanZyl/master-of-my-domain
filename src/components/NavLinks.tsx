@@ -14,7 +14,7 @@ const LINKS = [
 export default function NavLinks() {
   const pathname = usePathname();
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex min-w-0 items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {LINKS.map(([href, label]) => {
         const active =
           href === "/"
@@ -24,7 +24,7 @@ export default function NavLinks() {
           <Link
             key={href}
             href={href}
-            className={`relative px-3 py-2 text-[14.5px] font-medium ${
+            className={`relative shrink-0 whitespace-nowrap px-2 py-2 text-[14.5px] font-medium sm:px-3 ${
               active ? "text-ink" : "text-mute hover:text-body"
             }`}
           >

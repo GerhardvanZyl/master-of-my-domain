@@ -9,8 +9,10 @@
  * Run: npx tsx scripts/compute-metadata.ts
  * Writes: data/harvest/metadata.json
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import "../src/lib/load-env";
+import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { sqlite } from "../src/db/client";
 
 // Greencross Vet Hospital at the University of Melbourne, Werribee.
 // Address: Building 411, 250 Princes Highway, Werribee VIC 3030.
@@ -74,8 +76,13 @@ function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): num
 }
 
 const root = process.cwd(); // run from repo root: npx tsx scripts/compute-metadata.ts
-const props: { listingUrl: string; latitude?: number; longitude?: number }[] =
-  JSON.parse(readFileSync(resolve(root, "data/harvest/enriched-core.json"), "utf8"));
+// Read straight from the DB (source of truth) so a processing round after new
+// listings are added always covers them — not a stale harvest snapshot.
+const props = sqlite
+  .prepare(
+    "SELECT listing_url AS listingUrl, latitude, longitude FROM properties WHERE latitude IS NOT NULL",
+  )
+  .all() as { listingUrl: string; latitude?: number; longitude?: number }[];
 
 const out = props.map((p) => {
   const { listingUrl, latitude: lat, longitude: lng } = p;

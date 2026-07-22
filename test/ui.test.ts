@@ -96,7 +96,9 @@ function seed(dbPath: string) {
   assert.ok(props.length >= 2, "need at least 2 geocoded properties to test with");
   // Clean slate for the fields the UI writes.
   db.exec("DELETE FROM property_ratings");
-  db.exec("UPDATE properties SET shortlist_tag=NULL, pros=NULL, cons=NULL");
+  // has_eaves reset to unknown so the feature-toggle test's single click
+  // (unknown → yes) is deterministic regardless of the real scraped value.
+  db.exec("UPDATE properties SET shortlist_tag=NULL, pros=NULL, cons=NULL, has_eaves=NULL");
   db.prepare("UPDATE properties SET shortlist_tag='rejected' WHERE id=?").run(props[0].id);
   const total = (db.prepare("SELECT count(*) n FROM properties").get() as { n: number }).n;
   db.close();
@@ -120,11 +122,16 @@ async function hydrated(page: Page) {
 
 /** Run an action and wait for the write it triggers to actually land. */
 async function saved(page: Page, action: () => Promise<void>) {
-  const res = page.waitForResponse(
-    (r) => r.request().method() === "PATCH" && r.url().includes("/api/properties/"),
-  );
+  // .catch keeps a floating rejection from crashing the whole process as an
+  // unhandledRejection if `action()` times out before the response arrives.
+  const res = page
+    .waitForResponse(
+      (r) => r.request().method() === "PATCH" && r.url().includes("/api/properties/"),
+    )
+    .catch(() => null);
   await action();
-  assert.ok((await res).ok(), "PATCH should succeed");
+  const r = await res;
+  assert.ok(r && r.ok(), "PATCH should succeed");
 }
 
 async function chooseProfile(page: Page, name = "Gerhard") {
@@ -273,30 +280,42 @@ async function main() {
     assert.equal(Number(await total.innerText()), before + 25, "like is worth +25");
   });
 
-  await t("shortlist tag + feature toggle persist across a reload", async () => {
-    await saved(page, () => page.locator("[data-tag=must-see]").click());
-    await page.waitForSelector('[data-tag=must-see][data-active="true"]');
-    // Features cycle unknown -> yes -> no; one click from unknown means "yes".
-    await saved(page, () => page.locator("[data-feature=hasEaves]").click());
-    await page.waitForSelector('[data-feature=hasEaves][data-value="yes"]');
+  // The rail's "Shortlist status" tag and "Your score" slider were removed by
+  // request; the deduced-feature toggle is what persists there now.
+  await t("feature toggle persists across a reload", async () => {
+    // Cycle is yes(1) → no(0) → unknown(null) → yes; drive it to "yes" from
+    // whatever the current value is (at most 3 clicks) so it's deterministic.
+    const btn = page.locator("[data-feature=hasEaves]").first();
+    await btn.waitFor();
+    const trace: string[] = [`start=${await btn.getAttribute("data-value")}`];
+    for (let i = 0; i < 3; i++) {
+      const before = await btn.getAttribute("data-value");
+      if (before === "yes") break;
+      // Await the PATCH so the write lands before we later reload (else the
+      // reload navigates away mid-request and the value never persists).
+      await saved(page, () => btn.click());
+      trace.push(`click${i}: ${before} -> ${await btn.getAttribute("data-value")}`);
+    }
+    assert.equal(
+      await btn.getAttribute("data-value"),
+      "yes",
+      `optimistic value never reached yes; trace=${JSON.stringify(trace)}`,
+    );
+    // The real "persists" assertion: the awaited PATCH wrote it to the DB.
+    const readEaves = () => {
+      const db = new Database(path.join(tmp, "app.db"), { readonly: true });
+      const r = db
+        .prepare("SELECT has_eaves FROM properties WHERE id=?")
+        .get(fixture.props[0].id) as { has_eaves: number } | undefined;
+      db.close();
+      return r?.has_eaves;
+    };
+    assert.equal(readEaves(), 1, `has_eaves not persisted to DB; trace=${JSON.stringify(trace)}`);
+    // …and a reloaded page reflects it (wait for the rail to render first).
     await page.reload({ waitUntil: "domcontentloaded" });
     await hydrated(page);
-    await page.waitForSelector('[data-tag=must-see][data-active="true"]');
+    await page.waitForSelector("[data-feature=hasEaves]");
     await page.waitForSelector('[data-feature=hasEaves][data-value="yes"]');
-    const db = new Database(path.join(tmp, "app.db"), { readonly: true });
-    const row = db
-      .prepare("SELECT shortlist_tag, has_eaves FROM properties WHERE id=?")
-      .get(fixture.props[0].id) as { shortlist_tag: string; has_eaves: number };
-    db.close();
-    assert.deepEqual(row, { shortlist_tag: "must-see", has_eaves: 1 });
-  });
-
-  await t("score slider saves a 0–10 value", async () => {
-    await saved(page, () => page.locator('input[type="range"]').last().fill("7.5"));
-    await page.waitForSelector('[data-score="7.5"]');
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await hydrated(page);
-    await page.waitForSelector('[data-score="7.5"]');
   });
 
   await t("pros and cons round-trip", async () => {
@@ -395,6 +414,182 @@ async function main() {
       await page.waitForURL(/\/rooms\?room=/);
       assert.match(await page.locator("h2").first().innerText(), /photos across properties/);
     }
+  });
+
+  console.log("\nresponsive");
+  const MOBILE = { width: 390, height: 844 }; // iPhone 14-ish
+  const DESKTOP = { width: 1440, height: 900 };
+
+  // A property that actually has photos, for the detail + lightbox checks.
+  const dbRO = new Database(path.join(tmp, "app.db"), { readonly: true });
+  const photoProp = dbRO
+    .prepare(
+      "SELECT property_id id, COUNT(*) n FROM images GROUP BY property_id HAVING n > 1 ORDER BY n DESC LIMIT 1",
+    )
+    .get() as { id: string; n: number } | undefined;
+  dbRO.close();
+  const detailId = photoProp?.id ?? fixture.props[0].id;
+
+  /** Fail if the PAGE scrolls horizontally, naming the elements that overflow. */
+  async function noHScroll(label: string, url: string) {
+    await page.setViewportSize(MOBILE);
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForTimeout(250);
+    const info = await page.evaluate(() => {
+      const de = document.documentElement;
+      const vw = de.clientWidth;
+      const bad: { tag: string; cls: string; right: number; ox: string }[] = [];
+      for (const el of Array.from(document.querySelectorAll("body *"))) {
+        const r = el.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0 && r.right > vw + 1) {
+          const st = getComputedStyle(el);
+          bad.push({
+            tag: el.tagName.toLowerCase(),
+            cls: String((el as HTMLElement).className).slice(0, 50),
+            right: Math.round(r.right),
+            ox: st.overflowX,
+          });
+        }
+      }
+      return { vw, sw: de.scrollWidth, bad: bad.slice(0, 6) };
+    });
+    assert.ok(
+      info.sw <= info.vw + 1,
+      `${label}: page scrolls sideways (scrollWidth ${info.sw} > viewport ${info.vw}). ` +
+        `Offenders: ${JSON.stringify(info.bad)}`,
+    );
+  }
+
+  for (const [label, url] of [
+    ["home", base],
+    ["detail", `${base}/property/${detailId}`],
+    ["compare", `${base}/compare?ids=${fixture.props[0].id},${fixture.props[1].id}`],
+    ["rooms", `${base}/rooms`],
+    ["map", `${base}/map`],
+    ["config", `${base}/config`],
+  ] as const) {
+    await t(`no horizontal scroll on mobile — ${label}`, () => noHScroll(label, url));
+  }
+
+  await t("filter toolbar rows are aligned into one column on mobile", async () => {
+    await page.setViewportSize(MOBILE);
+    await page.goto(base, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const info = await page.evaluate(() => {
+      const labels = Array.from(document.querySelectorAll("select"))
+        .map((s) => s.closest("label"))
+        .filter(Boolean) as HTMLElement[];
+      const rects = labels.map((l) => l.getBoundingClientRect());
+      const widths = rects.map((r) => Math.round(r.width));
+      const lefts = rects.map((r) => Math.round(r.left));
+      // Inline the max-min (a named inner fn trips tsx/esbuild's __name in evaluate).
+      const widthSpan = widths.length ? Math.max(...widths) - Math.min(...widths) : 0;
+      const leftSpan = lefts.length ? Math.max(...lefts) - Math.min(...lefts) : 0;
+      const dividers = Array.from(document.querySelectorAll("div.w-px"));
+      const visibleDividers = dividers.filter((d) => getComputedStyle(d).display !== "none").length;
+      return { widths, lefts, widthSpan, leftSpan, visibleDividers };
+    });
+    assert.ok(info.widths.length >= 5, `expected filter selects, saw ${info.widths.length}`);
+    // Aligned = same width and same left edge (one clean column), not ragged.
+    assert.ok(info.widthSpan <= 2, `filter rows have ragged widths: ${JSON.stringify(info.widths)}`);
+    assert.ok(info.leftSpan <= 2, `filter rows are not left-aligned: ${JSON.stringify(info.lefts)}`);
+    assert.equal(info.visibleDividers, 0, "vertical dividers must be hidden on mobile");
+  });
+
+  // A short phrase forced to wrap into 3+ lines means a column too narrow for it
+  // (e.g. distance text crushed next to buttons). Flags cramped/squashed layout
+  // that a horizontal-scroll check can't see.
+  async function squashOffenders(url: string) {
+    await page.setViewportSize(MOBILE);
+    await page.goto(url, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForTimeout(200);
+    return page.evaluate(() => {
+      const out: { text: string; lines: number; width: number }[] = [];
+      for (const el of Array.from(document.querySelectorAll("body *"))) {
+        // Only leaf-ish elements whose OWN text (not a child's) is what wraps.
+        const textNodes = Array.from(el.childNodes).filter(
+          (n) => n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim(),
+        );
+        if (!textNodes.length) continue;
+        const direct = textNodes.map((n) => n.textContent).join(" ").replace(/\s+/g, " ").trim();
+        const words = direct.split(" ").length;
+        // Short phrases only — real prose legitimately wraps to many lines.
+        if (direct.length > 55 || words > 8) continue;
+        // Count ACTUAL visual line-boxes of the element's OWN text via Range rects
+        // over each direct text node (NOT child elements), grouped by top. This
+        // ignores box height from flex-centering / tall cells / iframes and the
+        // line count of nested children — only this element's text wrapping counts.
+        const tops = new Set<number>();
+        for (const tn of textNodes) {
+          const rng = document.createRange();
+          rng.selectNodeContents(tn);
+          for (const rc of Array.from(rng.getClientRects())) {
+            if (rc.width > 0 && rc.height > 0) tops.add(Math.round(rc.top));
+          }
+        }
+        const lines = tops.size;
+        const width = Math.round((el as HTMLElement).getBoundingClientRect().width);
+        // Cramped = a short phrase in a grid CARD squeezed into a sub-column far
+        // narrower than the card, i.e. crammed next to fixed-width controls while
+        // space sits unused (the "text smooshed next to buttons" pathology). Scoped
+        // to <article> cards; label/value rows and tables use narrow columns by
+        // design, so those are only caught by the severe ≥3-line rule below.
+        const card = el.closest("article") as HTMLElement | null;
+        const cardW = card ? card.getBoundingClientRect().width : 0;
+        const cramped = lines >= 2 && cardW > 0 && width < 0.45 * cardW;
+        // Flag severe wrapping anywhere (≥3 lines) OR a cramped card sub-column.
+        if (lines >= 3 || cramped) out.push({ text: direct.slice(0, 40), lines, width });
+      }
+      return out.slice(0, 8);
+    });
+  }
+
+  for (const [label, url] of [
+    ["home cards", base],
+    ["detail", `${base}/property/${detailId}`],
+    ["compare", `${base}/compare?ids=${fixture.props[0].id},${fixture.props[1].id}`],
+  ] as const) {
+    await t(`no squashed/over-wrapped text on mobile — ${label}`, async () => {
+      const bad = await squashOffenders(url);
+      assert.equal(bad.length, 0, `squashed text (short phrase wrapping 3+ lines): ${JSON.stringify(bad)}`);
+    });
+  }
+
+  await t("lightbox fits the desktop viewport (not a too-tall modal)", async () => {
+    await page.setViewportSize(DESKTOP);
+    await page.goto(`${base}/property/${detailId}`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const opener = page.locator('button[title="Open"]').first();
+    await opener.waitFor();
+    await opener.click();
+    const modal = page.locator("div.fixed.inset-0.z-\\[90\\]");
+    await modal.waitFor();
+    const m = await modal.boundingBox();
+    assert.ok(m, "modal should render");
+    assert.ok(
+      m!.height <= DESKTOP.height + 1,
+      `modal is ${m!.height}px tall, taller than the ${DESKTOP.height}px viewport`,
+    );
+    // The photo must sit fully on-screen (object-contain + max-h-full).
+    const ib = await modal.locator("img").first().boundingBox();
+    assert.ok(
+      ib && ib.y >= -1 && ib.y + ib.height <= DESKTOP.height + 1,
+      `photo overflows the viewport vertically: ${JSON.stringify(ib)}`,
+    );
+    // Filmstrip, when present, stays on-screen at the bottom.
+    const strip = modal.locator("div.overflow-x-auto").first();
+    if ((await strip.count()) > 0) {
+      const sb = await strip.boundingBox();
+      assert.ok(
+        sb && sb.y + sb.height <= DESKTOP.height + 1,
+        `filmstrip pushed off-screen: ${JSON.stringify(sb)}`,
+      );
+    }
+    await page.keyboard.press("Escape");
+    await modal.waitFor({ state: "detached" });
+    await page.setViewportSize(DESKTOP);
   });
 
   console.log("\nregressions");

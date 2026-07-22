@@ -7,6 +7,7 @@ import {
 } from "@/db/queries/properties";
 import { vibeScore } from "@/lib/vibes";
 import { formatPrice, fmtNum, fmtDistance, fmtMinutes } from "@/lib/format";
+import { formatInspection } from "@/lib/inspection";
 import CompareRooms, { type CompareCol } from "@/components/CompareRooms";
 import PropertyMap, { AreaPhotos } from "@/components/PropertyMap";
 import { imageUrl } from "@/lib/images";
@@ -30,6 +31,15 @@ const ROWS: Row[] = [
     better: "min",
     value: (p) => formatPrice(p.priceDisplay, p.priceNumeric),
     num: (p) => p.priceNumeric,
+  },
+  {
+    label: "Next inspection",
+    better: null,
+    value: (p) => {
+      const i = formatInspection(p.nextInspection);
+      return i?.upcoming ? i.label : "—";
+    },
+    num: () => null,
   },
   { label: "Beds", better: "max", value: (p) => fmtNum(p.beds), num: (p) => p.beds },
   { label: "Baths", better: "max", value: (p) => fmtNum(p.baths), num: (p) => p.baths },

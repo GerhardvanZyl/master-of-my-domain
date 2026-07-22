@@ -48,6 +48,78 @@ function asRecord(v: unknown): Record<string, unknown> | null {
     ? (v as Record<string, unknown>)
     : null;
 }
+
+/** Epoch ms from a unix number (s or ms) or a parseable date string. */
+function toMs(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v))
+    return v > 1e12 ? v : v * 1000;
+  if (typeof v === "string") {
+    const t = Date.parse(v);
+    return Number.isNaN(t) ? null : t;
+  }
+  return null;
+}
+
+/** Start datetime (ms) of one inspection entry, across Domain's shape variants. */
+function inspectionStart(item: unknown): number | null {
+  const direct = toMs(item);
+  if (direct != null) return direct;
+  const r = asRecord(item);
+  if (!r) return null;
+  const oh = asRecord(r.openingHours);
+  return toMs(
+    r.openingTime ??
+      r.openTime ??
+      r.startTime ??
+      r.start ??
+      r.begins ??
+      r.dateTime ??
+      r.date ??
+      r.startDate ??
+      (oh ? (oh.begins ?? oh.start ?? oh.from) : null),
+  );
+}
+
+/**
+ * Deep-walk the embedded data for the soonest UPCOMING open-for-inspection.
+ * Collects times from any `*inspection*` key (array or object) plus schema.org
+ * Event blocks, then returns the earliest that isn't already well past.
+ * ponytail: Date.parse trusts the source's tz offset; a tz-less string is read
+ * as server-local — fine while every Domain listing here is Melbourne.
+ */
+function nextInspection(...roots: unknown[]): string | null {
+  const times: number[] = [];
+  const visited = new Set<unknown>();
+  const stack: unknown[] = [...roots];
+  while (stack.length) {
+    const node = stack.pop();
+    if (!node || typeof node !== "object") continue;
+    if (visited.has(node)) continue;
+    visited.add(node);
+    if (Array.isArray(node)) {
+      for (const v of node) stack.push(v);
+      continue;
+    }
+    const rec = node as Record<string, unknown>;
+    if (typeof rec["@type"] === "string" && /event/i.test(rec["@type"])) {
+      const t = inspectionStart(rec);
+      if (t != null) times.push(t);
+    }
+    for (const [k, v] of Object.entries(rec)) {
+      if (/inspection/i.test(k)) {
+        for (const item of Array.isArray(v) ? v : [v]) {
+          const t = inspectionStart(item);
+          if (t != null) times.push(t);
+        }
+      }
+      stack.push(v);
+    }
+  }
+  // "Next" = soonest still-relevant time (keep today's earlier slot visible).
+  const cutoff = Date.now() - 6 * 3600_000;
+  const upcoming = times.filter((t) => t >= cutoff).sort((a, b) => a - b);
+  return upcoming.length ? new Date(upcoming[0]).toISOString() : null;
+}
 function str(v: unknown): string | null {
   if (typeof v === "string") return v.trim() || null;
   if (typeof v === "number") return String(v);
@@ -151,6 +223,7 @@ export const DomainAdapter: Adapter = {
       description,
       latitude: Number.isFinite(latitude) ? latitude : null,
       longitude: Number.isFinite(longitude) ? longitude : null,
+      nextInspection: nextInspection(root, jsonLd),
       raw: {
         address,
         priceDisplay,

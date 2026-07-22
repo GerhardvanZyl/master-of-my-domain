@@ -39,6 +39,12 @@ const domainRaw: RawPageData = {
             { url: "https://rimh2.domainstatic.com.au/aaa/2000x1500/1.jpg" },
             { url: "https://rimh2.domainstatic.com.au/bbb/2000x1500/2.jpg" },
           ],
+          inspectionDetails: {
+            inspections: [
+              { openingHours: { begins: "2999-01-06T11:00:00+11:00" } },
+              { openingHours: { begins: "2999-01-04T11:00:00+11:00" } },
+            ],
+          },
         },
       },
     },
@@ -95,6 +101,11 @@ async function main() {
     assert.equal(property.priceNumeric, 900000, "domain price parsed");
     assert.match(String(property.address), /Domain Rd/, "domain address");
     assert.equal(property.postcode, "2000", "domain postcode");
+    assert.equal(
+      property.nextInspection,
+      new Date("2999-01-04T11:00:00+11:00").toISOString(),
+      "domain picks the soonest upcoming inspection",
+    );
     assert.equal(images.length, 2, "domain images harvested by host regex");
     assert.ok(
       images[0].sourceUrl.includes("domainstatic.com.au"),

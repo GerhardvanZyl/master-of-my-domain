@@ -58,6 +58,8 @@ export const properties = sqliteTable("properties", {
   advPriceCurrent: text("adv_price_current"),
   advPricePrevious: text("adv_price_previous"),
   advPricePreviousLabel: text("adv_price_previous_label"),
+  // ISO datetime of the next upcoming open-for-inspection (Australia/Melbourne).
+  nextInspection: text("next_inspection"),
   // Neighbourhood metadata computed from lat/lng (straight-line) + OpenStreetMap.
   greenCrossDistanceM: integer("green_cross_distance_m"),
   colesDistanceM: integer("coles_distance_m"),

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { imageUrl } from "@/lib/images";
 import type { PhotoLite } from "@/lib/photo";
 import TagSelect from "./TagSelect";
@@ -31,6 +32,18 @@ export default function Lightbox({
     [index, images.length, onIndexChange],
   );
 
+  // Horizontal swipe → prev/next on touch devices.
+  const touchX = useRef<number | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchX.current = e.touches[0]?.clientX ?? null;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchX.current == null) return;
+    const dx = (e.changedTouches[0]?.clientX ?? touchX.current) - touchX.current;
+    touchX.current = null;
+    if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+  };
+
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -45,10 +58,14 @@ export default function Lightbox({
   if (index == null) return null;
   const img = images[index];
   if (!img) return null;
+  if (typeof document === "undefined") return null;
 
-  return (
+  // Portal to <body>: the detail page's `.rise` (and other) ancestors animate a
+  // transform, which turns them into the containing block for `position: fixed`
+  // — trapping the overlay inside a tall section so it fell off the viewport.
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-black/90 p-4"
+      className="fixed inset-0 z-[90] flex flex-col bg-black/90 p-4"
       onClick={onClose}
     >
       <div className="flex items-center justify-between text-white">
@@ -68,6 +85,8 @@ export default function Lightbox({
       <div
         className="relative flex min-h-0 flex-1 items-center justify-center"
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
       >
         {images.length > 1 && (
           <button
@@ -95,6 +114,35 @@ export default function Lightbox({
         )}
       </div>
 
+      {/* Filmstrip of every photo — click to jump. */}
+      {images.length > 1 && (
+        <div
+          className="mt-3 flex shrink-0 gap-2 overflow-x-auto pb-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {images.map((im, i) => (
+            <button
+              key={im.id}
+              onClick={() => onIndexChange(i)}
+              aria-label={`Photo ${i + 1}`}
+              className={`h-14 w-20 shrink-0 overflow-hidden rounded border-2 transition ${
+                i === index
+                  ? "border-white"
+                  : "border-transparent opacity-55 hover:opacity-100"
+              }`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl(im)}
+                alt=""
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
       {editable && (
         <div
           className="flex justify-center pt-3 text-white"
@@ -103,6 +151,7 @@ export default function Lightbox({
           <TagSelect imageId={img.id} roomType={img.roomType} />
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }

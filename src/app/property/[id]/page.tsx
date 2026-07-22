@@ -5,16 +5,23 @@ import {
   getPropertyImages,
   getPriceHistory,
   getPropertyRatings,
+  pickHero,
+  pickShowcase,
+  pickFloorplan,
+  isDelisted,
 } from "@/db/queries/properties";
 import PhotoGrid from "@/components/PhotoGrid";
+import HeroGallery from "@/components/HeroGallery";
 import PropertyMap from "@/components/PropertyMap";
+import MapModal from "@/components/MapModal";
 import NotesEditor from "@/components/NotesEditor";
 import PropertyRail from "@/components/PropertyRail";
 import MediaUploader from "@/components/MediaUploader";
 import MetadataEditor from "@/components/MetadataEditor";
 import { listMedia } from "@/lib/media";
 import { imageUrl } from "@/lib/images";
-import { formatPrice, fmtNum, fmtDistance, fmtMinutes } from "@/lib/format";
+import { formatPrice, fmtNum, fmtDistance, fmtMinutes, isTransitEstimated } from "@/lib/format";
+import { formatInspection } from "@/lib/inspection";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +56,7 @@ export default async function PropertyDetail({
       "Transit to Flinders St (7:30am)",
       property.ptMinutesToFlinders != null
         ? fmtMinutes(property.ptMinutesToFlinders) +
+          (isTransitEstimated(property.ptSteps) ? "*" : "") +
           (property.ptRouteSummary ? ` · ${property.ptRouteSummary}` : "")
         : "—",
     ],
@@ -102,7 +110,12 @@ export default async function PropertyDetail({
     ["Land", fmtNum(property.landSizeSqm, " m²")],
   ];
 
-  const hero = images[0] ?? null;
+  const hero = pickHero(images);
+  const showcase = pickShowcase(images, hero, 3);
+  const heroIndex = hero ? images.indexOf(hero) : 0;
+  const showcaseIndices = showcase.map((s) => images.indexOf(s));
+  const floorplan = pickFloorplan(images);
+  const delisted = isDelisted(property.listingUrl);
 
   return (
     <section className="rise">
@@ -113,29 +126,66 @@ export default async function PropertyDetail({
         ← All properties
       </Link>
 
-      <div className="grid items-start gap-7 lg:grid-cols-[1.5fr_1fr]">
+      {delisted && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#e0b4ac] bg-[#fbeeeb] px-4 py-3 text-sm font-medium text-[#B84A3A]">
+          <span className="text-base">⚠</span>
+          No longer listed on Domain — this listing appears to be sold or
+          withdrawn. Your ratings and notes are kept.
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 items-start gap-7 lg:grid-cols-[1.5fr_1fr]">
         {/* LEFT */}
         <div className="space-y-4">
-          <div className="relative h-[400px] overflow-hidden rounded-[18px] bg-fill">
-            {hero ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={imageUrl(hero)}
-                alt={property.address ?? "property"}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-mute">
-                no image
-              </div>
-            )}
-          </div>
+          <HeroGallery
+            images={images}
+            heroIndex={heroIndex}
+            showcaseIndices={showcaseIndices}
+            alt={property.address ?? "property"}
+          />
 
           {property.scrapeStatus === "error" && (
             <div className="rounded-xl border border-[#e0b4ac] bg-[#fbeeeb] p-3 text-sm text-[#B84A3A]">
               Scrape error: {property.scrapeError ?? "unknown"}
             </div>
           )}
+
+          <div className="card p-[18px]">
+            <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-serif text-[22px]">Location &amp; commute</h2>
+              <MapModal
+                lat={property.latitude}
+                lng={property.longitude}
+                address={property.address}
+              />
+            </div>
+            <div className="mb-3.5">
+              <PropertyMap
+                lat={property.latitude}
+                lng={property.longitude}
+                address={property.address}
+                className="h-[220px]"
+              />
+            </div>
+            <dl className="flex flex-col gap-2.5 text-[13.5px]">
+              {locationFacts.map(([k, v], i) => (
+                <div
+                  key={k}
+                  className={`flex justify-between gap-4 ${
+                    i < locationFacts.length - 1 ? "border-b border-hairline pb-2.5" : ""
+                  }`}
+                >
+                  <dt className="min-w-0 text-mute">{k}</dt>
+                  <dd className="min-w-0 break-words text-right font-medium">{v}</dd>
+                </div>
+              ))}
+            </dl>
+            {property.ptSteps && (
+              <p className="mt-3.5 rounded-[10px] bg-sand px-3.5 py-3 text-[12.5px] leading-relaxed text-[#5a5344]">
+                {property.ptSteps}
+              </p>
+            )}
+          </div>
 
           <div className="card p-4">
             <div className="mb-2.5 flex items-center justify-between">
@@ -150,47 +200,17 @@ export default async function PropertyDetail({
           <MediaUploader propertyId={property.id} initial={media} />
 
           <div className="card p-[18px]">
-            <h2 className="mb-3.5 font-serif text-[22px]">Location &amp; commute</h2>
-            <div className="mb-3.5">
-              <PropertyMap
-                lat={property.latitude}
-                lng={property.longitude}
-                address={property.address}
-                className="h-[220px]"
-              />
-            </div>
-            <dl className="flex flex-col gap-2.5 text-[13.5px]">
-              {locationFacts.map(([k, v], i) => (
-                <div
-                  key={k}
-                  className={`flex justify-between gap-6 ${
-                    i < locationFacts.length - 1 ? "border-b border-hairline pb-2.5" : ""
-                  }`}
-                >
-                  <dt className="shrink-0 text-mute">{k}</dt>
-                  <dd className="text-right font-medium">{v}</dd>
-                </div>
-              ))}
-            </dl>
-            {property.ptSteps && (
-              <p className="mt-3.5 rounded-[10px] bg-sand px-3.5 py-3 text-[12.5px] leading-relaxed text-[#5a5344]">
-                {property.ptSteps}
-              </p>
-            )}
-          </div>
-
-          <div className="card p-[18px]">
             <h2 className="mb-3.5 font-serif text-[22px]">Home &amp; grounds</h2>
             <dl className="flex flex-col gap-2.5 text-[13.5px]">
               {homeFacts.map(([k, v], i) => (
                 <div
                   key={k}
-                  className={`flex justify-between gap-6 ${
+                  className={`flex justify-between gap-4 ${
                     i < homeFacts.length - 1 ? "border-b border-hairline pb-2.5" : ""
                   }`}
                 >
-                  <dt className="shrink-0 text-mute">{k}</dt>
-                  <dd className="text-right font-medium">{v}</dd>
+                  <dt className="min-w-0 text-mute">{k}</dt>
+                  <dd className="min-w-0 break-words text-right font-medium">{v}</dd>
                 </div>
               ))}
             </dl>
@@ -251,7 +271,7 @@ export default async function PropertyDetail({
               {property.sourceSite}
               {property.suburb ? ` · ${property.suburb}` : ""}
             </span>
-            <h1 className="my-1 font-serif text-[32px] leading-tight">
+            <h1 className="my-1 break-words font-serif text-[32px] leading-tight">
               {property.address ?? property.listingUrl}
             </h1>
             <div className="flex flex-wrap items-baseline gap-3">
@@ -268,6 +288,14 @@ export default async function PropertyDetail({
                 </span>
               )}
             </div>
+            {(() => {
+              const inspect = formatInspection(property.nextInspection);
+              return inspect?.upcoming ? (
+                <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-3 py-1 text-[13px] font-semibold text-forest">
+                  📅 Next inspection · {inspect.label}
+                </div>
+              ) : null;
+            })()}
             <a
               href={property.listingUrl}
               target="_blank"
@@ -294,6 +322,25 @@ export default async function PropertyDetail({
             <NotesEditor propertyId={property.id} initial={property.domainNotes} />
           </div>
 
+          {floorplan && (
+            <div className="card p-4">
+              <div className="label-cap mb-2.5">Floorplan</div>
+              <a
+                href={imageUrl(floorplan)}
+                target="_blank"
+                rel="noreferrer"
+                className="block overflow-hidden rounded-[10px] bg-white"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl(floorplan)}
+                  alt="Floorplan"
+                  className="h-auto w-full object-contain"
+                />
+              </a>
+            </div>
+          )}
+
           {property.aiComment && (
             <div className="rounded-[14px] border border-sand-line bg-sand p-4">
               <div className="mb-2 text-[12.5px] font-semibold uppercase text-amber">
@@ -310,8 +357,8 @@ export default async function PropertyDetail({
             <dl className="flex flex-col gap-2 text-[13px]">
               {listingFacts.map(([k, v]) => (
                 <div key={k} className="flex justify-between gap-4">
-                  <dt className="shrink-0 text-mute">{k}</dt>
-                  <dd className="text-right font-medium">{v}</dd>
+                  <dt className="min-w-0 text-mute">{k}</dt>
+                  <dd className="min-w-0 break-words text-right font-medium">{v}</dd>
                 </div>
               ))}
             </dl>

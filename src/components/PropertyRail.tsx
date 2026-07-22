@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Property } from "@/db/schema";
 import type { PropertyListItem } from "@/db/queries/properties";
-import { PROFILES, SHORTLIST_TAGS, useProfile } from "@/lib/profile";
+import { PROFILES, useProfile } from "@/lib/profile";
 import { DEFAULT_VIBE_CONFIG, loadVibeConfig, vibeBreakdown, type VibeConfig } from "@/lib/vibes";
 
 type Ratings = PropertyListItem["ratings"];
@@ -114,32 +114,6 @@ export default function PropertyRail({
         </div>
       )}
 
-      <Card title="Shortlist status">
-        <div className="flex gap-2">
-          {SHORTLIST_TAGS.map((t) => {
-            const on = prop.shortlistTag === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => patchProperty({ shortlistTag: on ? null : t.id })}
-                data-tag={t.id}
-                data-active={on ? "true" : "false"}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-[10px] border px-1.5 py-2.5 text-[12.5px] font-semibold ${
-                  on ? "text-white" : "border-line bg-white text-body"
-                }`}
-                style={on ? { background: t.colour, borderColor: t.colour } : undefined}
-              >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ background: on ? "#fff" : t.colour }}
-                />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      </Card>
-
       {!profile ? (
         <div className="card p-4 text-[13px] text-mute">
           Pick a profile in the header to rate this place.
@@ -221,38 +195,8 @@ export default function PropertyRail({
             </div>
           </div>
 
-          <Card title="Your score">
-            <div className="mb-2 flex items-center justify-between">
-              <span
-                data-score={mine?.score ?? ""}
-                className="font-serif text-[26px] text-forest"
-              >
-                {mine?.score ?? "—"}
-                <span className="text-sm text-mute">/10</span>
-              </span>
-              {mine?.score != null && (
-                <button
-                  onClick={() => rate({ score: null })}
-                  className="text-xs text-mute hover:text-forest"
-                >
-                  clear
-                </button>
-              )}
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={10}
-              step={0.5}
-              value={mine?.score ?? 0}
-              onChange={(e) => rate({ score: Number(e.target.value) })}
-              className="w-full accent-[#1F4A3A]"
-            />
-            <div className="mt-1 flex justify-between text-[11px] text-soft">
-              <span>Pass</span>
-              <span>Dream home</span>
-            </div>
-          </Card>
+          {/* "Your score" slider removed per request; scoring logic (rate({score}),
+              the score field, vibe breakdown, "Both of you") is kept intact. */}
         </>
       )}
 

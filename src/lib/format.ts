@@ -42,3 +42,13 @@ export function fmtMinutes(min: number | null): string {
   const m = min % 60;
   return h ? `${h}h ${String(m).padStart(2, "0")}m` : `${m} min`;
 }
+
+/**
+ * A transit time carried over from the nearest tracked property rather than
+ * looked up fresh (the Maps 7:30am UI can't be scripted). Marked in pt_steps;
+ * the UI shows a `*` on such times. Keep this prefix in sync with the value
+ * written by the transit-estimate step (see the processing-round memory).
+ */
+export function isTransitEstimated(ptSteps: string | null | undefined): boolean {
+  return !!ptSteps && ptSteps.startsWith("Estimated from nearest tracked property");
+}

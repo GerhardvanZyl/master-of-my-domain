@@ -78,6 +78,7 @@ export function upsertProperty(
     description: p.description ?? null,
     latitude: p.latitude ?? null,
     longitude: p.longitude ?? null,
+    nextInspection: p.nextInspection ?? null,
     rawJson: p.raw ? JSON.stringify(p.raw) : null,
     scrapedAt: now,
     updatedAt: now,

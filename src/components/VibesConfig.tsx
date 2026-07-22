@@ -103,8 +103,8 @@ export default function VibesConfig({
         </p>
       </div>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
-        <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {GROUPS.map((g) => (
             <div key={g.title} className="card p-4">
               <div className="mb-3 text-[12.5px] font-bold text-forest">{g.title}</div>

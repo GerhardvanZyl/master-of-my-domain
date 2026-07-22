@@ -25,6 +25,8 @@ export interface NormalizedProperty {
   description?: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  /** ISO datetime of the next upcoming open-for-inspection, if any. */
+  nextInspection?: string | null;
   /** Structured subset of the source's embedded JSON, stored as raw_json. */
   raw?: unknown;
   /** 'ok' | 'partial' — 'partial' means we got some data but not the full shape. */

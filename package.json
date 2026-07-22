@@ -13,6 +13,7 @@
     "scrape": "tsx scripts/scrape.ts",
     "load": "tsx scripts/load-properties.ts",
     "load:images": "tsx scripts/load-images.ts",
+    "price:observe": "tsx scripts/record-price-obs.ts",
     "tag:list": "tsx scripts/tag-list.ts",
     "tag:set": "tsx scripts/tag-set.ts",
     "tag:status": "tsx scripts/tag-status.ts",

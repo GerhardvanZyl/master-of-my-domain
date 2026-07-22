@@ -31,8 +31,30 @@ function logIngest(url: string, propertyId: string | null, error: string | null)
   }
 }
 
+/**
+ * Read the payload as JSON, or — when the request is a form POST — from a
+ * `payload` field holding the JSON string. The form path lets a listing page
+ * hand over its (large) embedded data via a top-level form-submit navigation to
+ * localhost, which sidesteps both the URL-length ceiling of a hash bridge and
+ * the Private-Network-Access block on a cross-origin fetch.
+ */
+async function readPayload(req: Request): Promise<RawPageData | null> {
+  const ct = req.headers.get("content-type") ?? "";
+  if (ct.includes("form-urlencoded") || ct.includes("form-data")) {
+    const fd = await req.formData().catch(() => null);
+    const s = fd?.get("payload");
+    if (typeof s !== "string") return null;
+    try {
+      return JSON.parse(s) as RawPageData;
+    } catch {
+      return null;
+    }
+  }
+  return (await req.json().catch(() => null)) as RawPageData | null;
+}
+
 export async function POST(req: Request) {
-  const raw = (await req.json().catch(() => null)) as RawPageData | null;
+  const raw = await readPayload(req);
   if (!raw || typeof raw.url !== "string") {
     return NextResponse.json({ ok: false, error: "missing url" }, { status: 400 });
   }

@@ -30,6 +30,9 @@
 
 body {
   @apply bg-cream font-sans text-ink antialiased;
+  /* Backstop against mobile horizontal scroll. `clip` (not `hidden`) doesn't
+     create a scroll container, so the sticky header keeps working. */
+  overflow-x: clip;
 }
 
 ::selection {

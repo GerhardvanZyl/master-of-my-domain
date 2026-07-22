@@ -5,17 +5,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { PropertyListItem } from "@/db/queries/properties";
 import { imageUrl } from "@/lib/images";
-import { formatPrice, fmtDistance, fmtMinutes } from "@/lib/format";
+import { formatPrice, fmtDistance, fmtMinutes, isTransitEstimated } from "@/lib/format";
+import { formatInspection } from "@/lib/inspection";
 import { DEFAULT_VIBE_CONFIG, loadVibeConfig, saveVibeConfig, vibeScore } from "@/lib/vibes";
 import { SHORTLIST_TAGS, useProfile } from "@/lib/profile";
+import MultiSelect from "./MultiSelect";
 
 type NumGetter = (p: PropertyListItem) => number | null;
 
 // Sort options. "priority" keeps the server's ranking (price near $850k + beds).
 // "vibes" is handled specially (needs the configurable score), so no num getter.
 const SORTS: { key: string; label: string; num?: NumGetter; dir: "asc" | "desc" }[] = [
-  { key: "priority", label: "Priority (default)", dir: "asc" },
-  { key: "vibes", label: "Vibes: best first", dir: "desc" },
+  { key: "vibes", label: "Vibes: best first (default)", dir: "desc" },
+  { key: "priority", label: "Priority", dir: "asc" },
   { key: "score", label: "Your score: best first", dir: "desc" },
   { key: "price-asc", label: "Price: low → high", num: (p) => p.priceNumeric, dir: "asc" },
   { key: "price-desc", label: "Price: high → low", num: (p) => p.priceNumeric, dir: "desc" },
@@ -34,12 +36,25 @@ const PRICE_MAX = 1_500_000; // slider top = "no cap"
 const PRICE_STEP = 25_000;
 const fmtK = (n: number) => (n >= PRICE_MAX ? "any" : `$${(n / 1000).toFixed(0)}k`);
 
+// Vibe rating buttons shown on each tile (mirror RatingControls' VIBE row).
+const VIBE_OPTS = [
+  { v: "like", emoji: "😍", label: "Like" },
+  { v: "meh", emoji: "😐", label: "Meh" },
+  { v: "dislike", emoji: "🙁", label: "Dislike" },
+  { v: "hate", emoji: "🤮", label: "Hate" },
+] as const;
+
 // Map-tile size overlay widths. Medium = the old 1/4 tile enlarged 50%.
 const MAP_SIZES: Record<string, string> = {
   sm: "w-1/4",
   md: "w-[37.5%]",
   lg: "w-1/2",
 };
+
+// Sale status is only in the free-text price_display (no dedicated column).
+const isAuction = (p: PropertyListItem) => /auction/i.test(p.priceDisplay ?? "");
+const isUnderOffer = (p: PropertyListItem) =>
+  /under\s*offer|under\s*contract/i.test(p.priceDisplay ?? "");
 
 // Nulls always sort last, regardless of direction.
 function byNum(num: NumGetter, dir: "asc" | "desc") {
@@ -62,18 +77,20 @@ export default function PropertyGrid({
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
 
-  // Filter + sort state.
-  const [sort, setSort] = useState("priority");
-  const [suburb, setSuburb] = useState("");
+  // Filter + sort state. Vibes score is the default ranking.
+  const [sort, setSort] = useState("vibes");
+  const [suburb, setSuburb] = useState<string[]>([]);
   const [minBeds, setMinBeds] = useState(0);
   const [minBaths, setMinBaths] = useState(0);
   const [minParking, setMinParking] = useState(0);
   const [maxPrice, setMaxPrice] = useState(PRICE_MAX);
   const [idealPrice, setIdealPrice] = useState(DEFAULT_VIBE_CONFIG.idealPrice);
   const [q, setQ] = useState("");
-  const [mapSize, setMapSize] = useState("md"); // off | sm | md | lg
+  const [mapSize, setMapSize] = useState("sm"); // off | sm | md | lg
   const [layout, setLayout] = useState("gallery"); // gallery | compact | list
   const [tagFilter, setTagFilter] = useState(""); // "" = all
+  const [hideAuction, setHideAuction] = useState(false);
+  const [hideUnderOffer, setHideUnderOffer] = useState(false);
   // Task 15: pin the filter bar to the top, collapse it to chips on scroll.
   const [pinned, setPinned] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -97,16 +114,25 @@ export default function PropertyGrid({
     } catch {
       /* ignore */
     }
-    setSort(typeof s.sort === "string" ? s.sort : "priority");
-    setSuburb(typeof s.suburb === "string" ? s.suburb : "");
+    setSort(typeof s.sort === "string" ? s.sort : "vibes");
+    // Back-compat: old saved value was a single suburb string.
+    setSuburb(
+      Array.isArray(s.suburb)
+        ? (s.suburb as string[])
+        : typeof s.suburb === "string" && s.suburb
+          ? [s.suburb]
+          : [],
+    );
     setMinBeds(typeof s.minBeds === "number" ? s.minBeds : 0);
     setMinBaths(typeof s.minBaths === "number" ? s.minBaths : 0);
     setMinParking(typeof s.minParking === "number" ? s.minParking : 0);
     setMaxPrice(typeof s.maxPrice === "number" ? s.maxPrice : PRICE_MAX);
     setQ(typeof s.q === "string" ? s.q : "");
-    setMapSize(typeof s.mapSize === "string" ? s.mapSize : "md");
+    setMapSize(typeof s.mapSize === "string" ? s.mapSize : "sm");
     setLayout(typeof s.layout === "string" ? s.layout : "gallery");
     setTagFilter(typeof s.tagFilter === "string" ? s.tagFilter : "");
+    setHideAuction(!!s.hideAuction);
+    setHideUnderOffer(!!s.hideUnderOffer);
     setPinned(!!s.pinned);
     setIdealPrice(typeof s.idealPrice === "number" ? s.idealPrice : loadVibeConfig().idealPrice);
   }, [fkey]);
@@ -116,12 +142,12 @@ export default function PropertyGrid({
     try {
       localStorage.setItem(
         fkey,
-        JSON.stringify({ sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, pinned }),
+        JSON.stringify({ sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, pinned }),
       );
     } catch {
       /* ignore */
     }
-  }, [fkey, sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, pinned]);
+  }, [fkey, sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, pinned]);
 
   // Once pinned, collapse the bar after the user scrolls down a little.
   useEffect(() => {
@@ -159,12 +185,14 @@ export default function PropertyGrid({
     const needle = q.trim().toLowerCase();
     let list = properties.filter((p) => {
       if (tagFilter && p.shortlistTag !== tagFilter) return false;
-      if (suburb && p.suburb !== suburb) return false;
+      if (suburb.length && (!p.suburb || !suburb.includes(p.suburb))) return false;
       if (minBeds && (p.beds ?? 0) < minBeds) return false;
       if (minBaths && (p.baths ?? 0) < minBaths) return false;
       if (minParking && (p.parking ?? 0) < minParking) return false;
       if (maxP != null && (p.priceNumeric ?? Infinity) > maxP) return false;
       if (needle && !(p.address ?? "").toLowerCase().includes(needle)) return false;
+      if (hideAuction && isAuction(p)) return false;
+      if (hideUnderOffer && isUnderOffer(p)) return false;
       return true;
     });
     if (sort === "vibes") {
@@ -177,7 +205,7 @@ export default function PropertyGrid({
     }
     return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [properties, suburb, minBeds, minBaths, minParking, maxPrice, q, sort, scoreOf, tagFilter, profile]);
+  }, [properties, suburb, minBeds, minBaths, minParking, maxPrice, q, sort, scoreOf, tagFilter, hideAuction, hideUnderOffer, profile]);
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -188,22 +216,19 @@ export default function PropertyGrid({
     });
   }
 
-  async function remove(id: string) {
-    if (!confirm("Remove this property and its images?")) return;
+  // Rate a property's "vibe" for the active profile straight from its tile.
+  // Clicking the current choice again clears it. Feeds the Vibes score.
+  async function setVibe(id: string, current: string | null, v: string) {
+    if (!profile || busy) return;
+    const next = current === v ? "" : v;
     setBusy(id);
     try {
-      const res = await fetch(`/api/properties?id=${encodeURIComponent(id)}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error(`delete failed (${res.status})`);
-      setSelected((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
+      await fetch(`/api/properties/${id}/rating`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile, vibe: next }),
       });
       router.refresh();
-    } catch (err) {
-      alert(`Could not remove property: ${err instanceof Error ? err.message : err}`);
     } finally {
       setBusy(null);
     }
@@ -222,13 +247,15 @@ export default function PropertyGrid({
 
   // Only the filters the user has actually set — shown as chips when collapsed.
   const activeChips = [
-    sort !== "priority" && SORTS.find((s) => s.key === sort)?.label,
-    suburb || false,
+    sort !== "vibes" && SORTS.find((s) => s.key === sort)?.label,
+    suburb.length > 0 && (suburb.length <= 2 ? suburb.join(", ") : `${suburb.length} suburbs`),
     minBeds > 0 && `${minBeds}+ bd`,
     minBaths > 0 && `${minBaths}+ ba`,
     minParking > 0 && `${minParking}+ car`,
     maxPrice < PRICE_MAX && `≤ ${fmtK(maxPrice)}`,
     tagFilter && SHORTLIST_TAGS.find((t) => t.id === tagFilter)?.label,
+    hideUnderOffer && "no under-offer",
+    hideAuction && "no auction",
     q.trim() && `“${q.trim()}”`,
   ].filter(Boolean) as string[];
 
@@ -292,9 +319,9 @@ export default function PropertyGrid({
         ) : (
       <div className="flex flex-wrap items-center gap-x-5 gap-y-3.5 rounded-2xl border border-line bg-paper p-4 shadow-[0_1px_2px_rgba(0,0,0,.03)]">
         {pinBtn}
-        <label className="label-cap flex items-center gap-2">
-          Sort
-          <select value={sort} onChange={(e) => setSort(e.target.value)} className="field">
+        <label className="label-cap flex w-full items-center gap-2 sm:w-auto">
+          <span className="w-16 shrink-0 sm:w-auto">Sort</span>
+          <select value={sort} onChange={(e) => setSort(e.target.value)} className="field min-w-0 flex-1 sm:flex-none">
             {SORTS.map((s) => (
               <option key={s.key} value={s.key}>
                 {s.label}
@@ -302,20 +329,13 @@ export default function PropertyGrid({
             ))}
           </select>
         </label>
-        <label className="label-cap flex items-center gap-2">
-          Suburb
-          <select value={suburb} onChange={(e) => setSuburb(e.target.value)} className="field">
-            <option value="">any</option>
-            {suburbs.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="label-cap flex items-center gap-2">
-          Beds ≥
-          <select value={minBeds} onChange={(e) => setMinBeds(Number(e.target.value))} className="field">
+        <div className="label-cap flex w-full items-center gap-2 sm:w-auto">
+          <span className="w-16 shrink-0 sm:w-auto">Suburb</span>
+          <MultiSelect options={suburbs} value={suburb} onChange={setSuburb} />
+        </div>
+        <label className="label-cap flex w-full items-center gap-2 sm:w-auto">
+          <span className="w-16 shrink-0 sm:w-auto">Beds ≥</span>
+          <select value={minBeds} onChange={(e) => setMinBeds(Number(e.target.value))} className="field min-w-0 flex-1 sm:flex-none">
             {[0, 1, 2, 3, 4, 5].map((n) => (
               <option key={n} value={n}>
                 {n || "any"}
@@ -323,9 +343,9 @@ export default function PropertyGrid({
             ))}
           </select>
         </label>
-        <label className="label-cap flex items-center gap-2">
-          Baths ≥
-          <select value={minBaths} onChange={(e) => setMinBaths(Number(e.target.value))} className="field">
+        <label className="label-cap flex w-full items-center gap-2 sm:w-auto">
+          <span className="w-16 shrink-0 sm:w-auto">Baths ≥</span>
+          <select value={minBaths} onChange={(e) => setMinBaths(Number(e.target.value))} className="field min-w-0 flex-1 sm:flex-none">
             {[0, 1, 2, 3, 4].map((n) => (
               <option key={n} value={n}>
                 {n || "any"}
@@ -333,9 +353,9 @@ export default function PropertyGrid({
             ))}
           </select>
         </label>
-        <label className="label-cap flex items-center gap-2">
-          Car ≥
-          <select value={minParking} onChange={(e) => setMinParking(Number(e.target.value))} className="field">
+        <label className="label-cap flex w-full items-center gap-2 sm:w-auto">
+          <span className="w-16 shrink-0 sm:w-auto">Car ≥</span>
+          <select value={minParking} onChange={(e) => setMinParking(Number(e.target.value))} className="field min-w-0 flex-1 sm:flex-none">
             {[0, 1, 2, 3, 4].map((n) => (
               <option key={n} value={n}>
                 {n || "any"}
@@ -343,9 +363,10 @@ export default function PropertyGrid({
             ))}
           </select>
         </label>
-        <div className="h-6 w-px bg-line" />
-        <label className="label-cap flex items-center gap-2">
-          Max <span className="w-10 tabular-nums text-body">{fmtK(maxPrice)}</span>
+        <div className="hidden h-6 w-px bg-line sm:block" />
+        <label className="label-cap flex w-full items-center gap-2 sm:w-auto">
+          <span className="w-16 shrink-0 sm:w-auto">Max</span>
+          <span className="w-10 tabular-nums text-body sm:mr-1">{fmtK(maxPrice)}</span>
           <input
             type="range"
             min={PRICE_MIN}
@@ -353,14 +374,15 @@ export default function PropertyGrid({
             step={PRICE_STEP}
             value={maxPrice}
             onChange={(e) => setMaxPrice(Number(e.target.value))}
-            className="w-28 accent-[#1F4A3A]"
+            className="min-w-0 flex-1 accent-[#1F4A3A] sm:w-28 sm:flex-none"
           />
         </label>
         <label
-          className="label-cap flex items-center gap-2"
+          className="label-cap flex w-full items-center gap-2 sm:w-auto"
           title="Target price used by the Vibes score"
         >
-          Ideal <span className="w-10 tabular-nums text-body">{fmtK(idealPrice)}</span>
+          <span className="w-16 shrink-0 sm:w-auto">Ideal</span>
+          <span className="w-10 tabular-nums text-body sm:mr-1">{fmtK(idealPrice)}</span>
           <input
             type="range"
             min={PRICE_MIN}
@@ -372,30 +394,48 @@ export default function PropertyGrid({
               setIdealPrice(v);
               saveVibeConfig({ ...loadVibeConfig(), idealPrice: v });
             }}
-            className="w-28 accent-[#B9762A]"
+            className="min-w-0 flex-1 accent-[#B9762A] sm:w-28 sm:flex-none"
           />
         </label>
-        <div className="h-6 w-px bg-line" />
-        <div className="flex items-center gap-2">
+        <div className="hidden h-6 w-px bg-line sm:block" />
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           <span className="label-cap">Shortlist</span>
-          {SHORTLIST_TAGS.map((t) => {
-            const on = tagFilter === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTagFilter(on ? "" : t.id)}
-                className={`chip ${on ? "chip-on" : "hover:border-forest"}`}
-              >
-                <span
-                  className="h-[7px] w-[7px] rounded-full"
-                  style={{ background: on ? "#fff" : t.colour }}
-                />
-                {t.label}
-              </button>
-            );
-          })}
+          <div className="flex flex-nowrap items-center gap-2">
+            {SHORTLIST_TAGS.map((t) => {
+              const on = tagFilter === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTagFilter(on ? "" : t.id)}
+                  className={`chip whitespace-nowrap ${on ? "chip-on" : "hover:border-forest"}`}
+                >
+                  <span
+                    className="h-[7px] w-[7px] shrink-0 rounded-full"
+                    style={{ background: on ? "#fff" : t.colour }}
+                  />
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="hidden h-6 w-px bg-line sm:block" />
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <span className="label-cap">Hide</span>
+          <button
+            onClick={() => setHideUnderOffer((v) => !v)}
+            className={`chip ${hideUnderOffer ? "chip-on" : "hover:border-forest"}`}
+          >
+            Under offer
+          </button>
+          <button
+            onClick={() => setHideAuction((v) => !v)}
+            className={`chip ${hideAuction ? "chip-on" : "hover:border-forest"}`}
+          >
+            Auction
+          </button>
+        </div>
+        <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:flex-nowrap">
           <div className="flex rounded-[10px] border border-line bg-hairline p-[3px]">
             {[
               ["gallery", "Gallery"],
@@ -417,11 +457,11 @@ export default function PropertyGrid({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search address…"
-            className="field w-44 font-normal placeholder:text-soft"
+            className="field w-full min-w-0 font-normal placeholder:text-soft sm:w-44 sm:flex-none"
           />
-          <label className="label-cap flex items-center gap-2">
-            Map
-            <select value={mapSize} onChange={(e) => setMapSize(e.target.value)} className="field">
+          <label className="label-cap flex w-full items-center gap-2 sm:w-auto">
+            <span className="w-16 shrink-0 sm:w-auto">Map</span>
+            <select value={mapSize} onChange={(e) => setMapSize(e.target.value)} className="field min-w-0 flex-1 sm:flex-none">
               <option value="off">off</option>
               <option value="sm">S</option>
               <option value="md">M</option>
@@ -438,6 +478,8 @@ export default function PropertyGrid({
           {view.map((p) => {
             const isSel = selected.has(p.id);
             const tag = SHORTLIST_TAGS.find((t) => t.id === p.shortlistTag);
+            const isNew = Date.now() - new Date(p.createdAt).getTime() < 7 * 86400_000;
+            const inspect = formatInspection(p.nextInspection);
             return (
               <div
                 key={p.id}
@@ -450,7 +492,9 @@ export default function PropertyGrid({
                       src={imageUrl({ localPath: p.thumbPath })}
                       alt={p.address ?? "property"}
                       loading="lazy"
-                      className="h-full w-full object-cover"
+                      className={`h-full w-full object-cover ${
+                        p.delisted ? "opacity-60 grayscale" : ""
+                      }`}
                     />
                   )}
                 </div>
@@ -470,8 +514,23 @@ export default function PropertyGrid({
                         {tag.label}
                       </span>
                     )}
+                    {p.delisted && (
+                      <span className="shrink-0 rounded bg-[#B84A3A] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                        Off-market
+                      </span>
+                    )}
+                    {isNew && !p.delisted && (
+                      <span className="shrink-0 rounded bg-forest px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                        New
+                      </span>
+                    )}
                   </span>
-                  <span className="block text-xs text-mute">{p.suburb ?? "—"}</span>
+                  <span className="flex items-center gap-2 text-xs text-mute">
+                    {p.suburb ?? "—"}
+                    {inspect?.upcoming && (
+                      <span className="font-semibold text-forest">📅 {inspect.label}</span>
+                    )}
+                  </span>
                 </Link>
                 <span className="flex-1 text-sm font-semibold text-forest">
                   {formatPrice(p.priceDisplay, p.priceNumeric)}
@@ -486,6 +545,9 @@ export default function PropertyGrid({
                 </span>
                 <span className="flex-[0.8] text-[12.5px] text-[#5B5A52]">
                   {fmtMinutes(p.ptMinutesToFlinders)}
+                  {isTransitEstimated(p.ptSteps) && (
+                    <span title="Estimated from the nearest tracked property">*</span>
+                  )}
                 </span>
                 <button
                   onClick={() => toggle(p.id)}
@@ -509,6 +571,8 @@ export default function PropertyGrid({
         {view.map((p) => {
           const isSel = selected.has(p.id);
           const tag = SHORTLIST_TAGS.find((t) => t.id === p.shortlistTag);
+          const isNew = Date.now() - new Date(p.createdAt).getTime() < 7 * 86400_000;
+          const inspect = formatInspection(p.nextInspection);
           return (
             <article
               key={p.id}
@@ -518,7 +582,7 @@ export default function PropertyGrid({
             >
               <div
                 className={`relative bg-fill ${
-                  layout === "compact" ? "h-[150px]" : "h-[210px]"
+                  layout === "compact" ? "h-[188px]" : "h-[263px]"
                 }`}
               >
                 <Link href={`/property/${p.id}`} className="block h-full w-full">
@@ -528,7 +592,9 @@ export default function PropertyGrid({
                       src={imageUrl({ localPath: p.thumbPath })}
                       alt={p.address ?? "property"}
                       loading="lazy"
-                      className="h-full w-full object-cover"
+                      className={`h-full w-full object-cover ${
+                        p.delisted ? "opacity-60 grayscale" : ""
+                      }`}
                     />
                   ) : (
                     <div className="flex h-full items-center justify-center text-sm text-mute">
@@ -549,6 +615,16 @@ export default function PropertyGrid({
                         {tag.label}
                       </span>
                     )}
+                    {p.delisted && (
+                      <span className="rounded-md bg-[#B84A3A] px-2 py-1 text-[10.5px] font-bold uppercase tracking-wide text-white">
+                        No longer listed
+                      </span>
+                    )}
+                    {isNew && !p.delisted && (
+                      <span className="rounded-md bg-forest px-2 py-1 text-[10.5px] font-bold uppercase tracking-wide text-white">
+                        New
+                      </span>
+                    )}
                   </div>
                   <span className="absolute right-2.5 top-2.5 rounded-md bg-[rgba(28,28,25,.72)] px-2 py-1 text-[10.5px] font-semibold text-white">
                     {p.imageCount} photos
@@ -567,25 +643,15 @@ export default function PropertyGrid({
                       vibes
                     </span>
                   </div>
-                  <button
-                    onClick={() => toggle(p.id)}
-                    disabled={!isSel && selected.size >= 4}
-                    title="Add to compare"
-                    className={`pointer-events-auto absolute bottom-2.5 right-2.5 rounded-[9px] px-2.5 py-1.5 text-xs font-bold shadow-[0_2px_6px_rgba(0,0,0,.2)] disabled:opacity-40 ${
-                      isSel ? "bg-forest text-linen" : "bg-white text-forest"
-                    }`}
-                  >
-                    {isSel ? "✓ Added" : "Compare"}
-                  </button>
                 </div>
                 {mapSize !== "off" && p.latitude != null && p.longitude != null && (
                   <iframe
                     title={`Map of ${p.address ?? "property"}`}
                     src={`https://maps.google.com/maps?q=${p.latitude},${p.longitude}&z=13&output=embed`}
                     loading="lazy"
-                    // pointer-events-none: it's a preview, and it otherwise
-                    // overlaps (and swallows clicks on) the Compare button.
-                    className={`pointer-events-none absolute right-1.5 top-10 aspect-square ${MAP_SIZES[mapSize]} rounded-md border-2 border-white bg-white shadow-md`}
+                    // pointer-events-none: it's just a preview and would otherwise
+                    // swallow clicks meant for the card.
+                    className={`pointer-events-none absolute -bottom-3 right-1.5 aspect-square ${MAP_SIZES[mapSize]} rounded-md border-2 border-white bg-white shadow-md`}
                   />
                 )}
               </div>
@@ -609,6 +675,11 @@ export default function PropertyGrid({
                     </span>
                   )}
                 </div>
+                {inspect?.upcoming && (
+                  <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-2.5 py-1 text-[12px] font-semibold text-forest">
+                    📅 Inspect {inspect.label}
+                  </div>
+                )}
                 <div className="mb-2.5 flex items-center gap-3.5 border-y border-hairline py-2 text-[13px] text-body">
                   <span>
                     <b className="font-semibold">{p.beds ?? "—"}</b> bd
@@ -623,30 +694,71 @@ export default function PropertyGrid({
                     <span className="ml-auto text-xs text-mute">{p.landSizeSqm} m²</span>
                   )}
                 </div>
-                <div className="flex flex-col gap-1.5 text-[12.5px] text-[#5B5A52]">
-                  {p.nearestStation && (
-                    <div>
-                      🚉 {p.nearestStation} · {fmtDistance(p.stationDistanceM)}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-2">
+                  <div className="flex min-w-0 flex-col gap-1.5 text-[12.5px] text-[#5B5A52]">
+                    {p.nearestStation && (
+                      <div className="truncate">
+                        🚉 {p.nearestStation} · {fmtDistance(p.stationDistanceM)}
+                      </div>
+                    )}
+                    {p.ptMinutesToFlinders != null && (
+                      <div>
+                        🕑 {fmtMinutes(p.ptMinutesToFlinders)}
+                        {isTransitEstimated(p.ptSteps) && (
+                          <span title="Estimated from the nearest tracked property">*</span>
+                        )}{" "}
+                        to Flinders St
+                      </div>
+                    )}
+                    {(p.colesDistanceM != null || p.playgrounds500m != null) && (
+                      <div>
+                        {p.colesDistanceM != null && `🛒 ${fmtDistance(p.colesDistanceM)}`}
+                        {p.colesDistanceM != null && p.playgrounds500m != null && " · "}
+                        {p.playgrounds500m != null && `🛝 ${p.playgrounds500m} ≤500m`}
+                      </div>
+                    )}
+                  </div>
+                  {/* Emotes + Compare: their own full-width row on mobile (so the
+                      distance text above isn't crushed), inline ≥sm. */}
+                  <div className="flex shrink-0 items-center justify-between gap-1.5 sm:ml-auto sm:justify-normal">
+                    <div className="flex items-center gap-1.5">
+                    {(() => {
+                      const myVibe = profile
+                        ? p.ratings.find((r) => r.profile === profile)?.vibe ?? null
+                        : null;
+                      return VIBE_OPTS.map((o) => {
+                        const on = myVibe === o.v;
+                        return (
+                          <button
+                            key={o.v}
+                            onClick={() => setVibe(p.id, myVibe, o.v)}
+                            disabled={busy === p.id || !profile}
+                            title={o.label}
+                            aria-label={o.label}
+                            className={`rounded-full border px-1.5 py-0.5 text-sm leading-none transition ${
+                              on ? "border-forest bg-forest/15" : "border-line hover:bg-paper"
+                            } ${busy === p.id ? "opacity-50" : ""}`}
+                          >
+                            {o.emoji}
+                          </button>
+                        );
+                      });
+                    })()}
                     </div>
-                  )}
-                  {p.ptMinutesToFlinders != null && (
-                    <div>🕑 {fmtMinutes(p.ptMinutesToFlinders)} to Flinders St</div>
-                  )}
-                  {(p.colesDistanceM != null || p.playgrounds500m != null) && (
-                    <div>
-                      {p.colesDistanceM != null && `🛒 ${fmtDistance(p.colesDistanceM)}`}
-                      {p.colesDistanceM != null && p.playgrounds500m != null && " · "}
-                      {p.playgrounds500m != null && `🛝 ${p.playgrounds500m} ≤500m`}
-                    </div>
-                  )}
+                    <button
+                      onClick={() => toggle(p.id)}
+                      disabled={!isSel && selected.size >= 4}
+                      title="Add to compare"
+                      className={`shrink-0 rounded-[9px] border px-3 py-1.5 text-xs font-bold transition disabled:opacity-40 ${
+                        isSel
+                          ? "border-forest bg-forest text-linen"
+                          : "border-line bg-white text-forest hover:border-forest"
+                      }`}
+                    >
+                      {isSel ? "✓ Added" : "Compare"}
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() => remove(p.id)}
-                  disabled={busy === p.id}
-                  className="mt-3 text-xs text-soft hover:text-[#B84A3A]"
-                >
-                  remove
-                </button>
               </div>
             </article>
           );
