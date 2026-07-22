@@ -10,7 +10,7 @@ const nextBin = require.resolve("next/dist/bin/next");
 const proxy = fileURLToPath(new URL("./https-proxy.mjs", import.meta.url));
 
 const tasks = [
-  { name: "dev", argv: [nextBin, "dev"] },
+  { name: "dev", argv: [nextBin, "dev", "-p", "3225"] },
   { name: "https", argv: [proxy] },
 ];
 

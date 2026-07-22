@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
  * Run alongside `npm run dev`:  npm run serve:https
  */
 const cert = (f) => readFileSync(fileURLToPath(new URL(`../certs/${f}`, import.meta.url)));
-const TARGET = { host: "127.0.0.1", port: Number(process.env.DEV_PORT ?? 3001) };
+const TARGET = { host: "127.0.0.1", port: Number(process.env.DEV_PORT ?? 3225) };
 const PORT = Number(process.env.HTTPS_PORT ?? 3443);
 const LAN = process.env.LAN_IP ?? "192.168.68.103";
 

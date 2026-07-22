@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -p 3225",
     "dev:https": "node scripts/dev-https.mjs",
     "serve:https": "node scripts/https-proxy.mjs",
     "build": "next build",
