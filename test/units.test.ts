@@ -9,6 +9,7 @@ import { parseFlags } from "../src/lib/args";
 import { imageUrl } from "../src/lib/images";
 import { formatPrice, bedBathCar, fmtNum } from "../src/lib/format";
 import { priorityScore } from "../src/lib/priority";
+import { pickHero } from "../src/db/queries/properties";
 
 // --- firstInt ---
 assert.equal(firstInt(4), 4);
@@ -122,6 +123,41 @@ assert.equal(priorityScore(4, null), -Infinity, "missing price sinks to bottom")
 assert.ok(
   priorityScore(4, 900000) > priorityScore(4, null),
   "any priced listing beats an unpriced one",
+);
+
+// --- pickHero (lead with Domain's own cover, never a floorplan/logo) ---
+const U = (id: string, pi: number, crop = 1) =>
+  `https://rimh2.domainstatic.com.au/x/${id}_${pi}_${crop}_260101_010101-w1-h1`;
+type HImg = { width: number | null; height: number | null; notes?: string | null; sourceUrl?: string | null };
+// Ordinal order (as ingested) leads with the floorplan; pickHero must skip it
+// and return Domain's lowest-photoIndex 3:2 photo instead.
+const heroImgs: HImg[] = [
+  { width: 1130, height: 800, sourceUrl: U("100", 9, 3) }, // A-paper floorplan, first
+  { width: 1600, height: 1067, sourceUrl: U("100", 5) }, // 3:2 photo, index 5
+  { width: 1600, height: 1067, sourceUrl: U("100", 1) }, // 3:2 photo, index 1 = cover
+  { width: 1080, height: 1080, sourceUrl: U("999", 1) }, // foreign square logo
+];
+assert.equal(pickHero(heroImgs)?.sourceUrl, U("100", 1), "picks lowest-index 3:2 of own listing");
+assert.equal(
+  pickHero([{ width: 200, height: 70, sourceUrl: U("1", 1) }, ...heroImgs])?.sourceUrl,
+  U("100", 1),
+  "ignores a foreign banner strip with a lower index",
+);
+assert.equal(
+  pickHero([{ width: 1, height: 1, notes: "hero", sourceUrl: U("100", 8) }, ...heroImgs])?.sourceUrl,
+  U("100", 8),
+  "explicit notes='hero' always wins",
+);
+// Acreage: no 3:2 shot → fall back to lowest-index real landscape (16:9 aerial),
+// not the portrait or A-paper floorplan.
+assert.equal(
+  pickHero([
+    { width: 712, height: 1080, sourceUrl: U("200", 2) }, // portrait floorplan
+    { width: 1920, height: 1080, sourceUrl: U("200", 5) }, // 16:9 aerial, index 5
+    { width: 1920, height: 1080, sourceUrl: U("200", 1) }, // 16:9 aerial, index 1
+  ])?.sourceUrl,
+  U("200", 1),
+  "landscape fallback also leads with lowest index, skips floorplans",
 );
 
 console.log("✓ units.test: all assertions passed");

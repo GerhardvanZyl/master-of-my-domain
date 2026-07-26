@@ -1,0 +1,26 @@
+[
+  {
+    "listingUrl": "https://www.domain.com.au/47-middle-park-drive-point-cook-vic-3030-2020808002",
+    "ptMinutesToFlinders": 70,
+    "ptRouteSummary": "Bus 497 + Werribee train",
+    "ptSteps": "Estimated from nearest tracked property (36 Middle Park Drive, ~145 m away): Walk ~10 min to Point Cook Village/Point Cook Rd, Bus 497, then change to a Werribee-line train → Flinders St (arrive ~9:01am)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/20-seychelles-street-point-cook-vic-3030-2021012526",
+    "ptMinutesToFlinders": 68,
+    "ptRouteSummary": "Bus 494 + Werribee train",
+    "ptSteps": "Estimated from nearest tracked property (37 Oceanwave Parade, ~138 m away): Walk ~7 min to Island Way/Alamanda Bvd, Bus 494, then change to a Werribee-line train → Flinders St (arrive ~8:41am)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/16-drysdale-crescent-point-cook-vic-3030-2021010862",
+    "ptMinutesToFlinders": 64,
+    "ptRouteSummary": "Bus 494 + Werribee train",
+    "ptSteps": "Estimated from nearest tracked property (8 Trieste Way, ~187 m away): Walk ~11 min to Lennon Bvd/Shaftsbury Bvd, Bus 494, then change to a Werribee-line train → Flinders St (arrive ~8:41am)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/27-payson-drive-point-cook-vic-3030-2021010398",
+    "ptMinutesToFlinders": 70,
+    "ptRouteSummary": "Bus 498 + Werribee train",
+    "ptSteps": "Estimated from nearest tracked property (14 Amboy Walk, ~112 m away): Walk ~13 min to Sneydes Rd/Hacketts Rd, Bus 498, then change to a Werribee-line train → Flinders St (arrive ~9:01am)."
+  }
+]

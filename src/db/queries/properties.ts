@@ -30,20 +30,30 @@ export function isHeroPhoto(width: number | null, height: number | null): boolea
   return a != null && Math.abs(a - 1.5) < 0.06;
 }
 
-function isLandscape(width: number | null, height: number | null): boolean {
-  const a = aspect(width, height);
-  return a != null && a >= 1;
+/**
+ * Domain encodes its own gallery order in the CDN filename:
+ *   `<listingId>_<photoIndex>_<crop>_<date>...` (e.g. `2017917468_1_1_221014-…`).
+ * photoIndex 1 is the cover Domain leads with; higher indices come later in the
+ * gallery (floorplans/aerials last). We use listingId to drop cross-listing
+ * contamination (an agent's other listings leak into ingest) and photoIndex to
+ * lead with the same photo Domain does. Older/REA captures don't match → null,
+ * and those fall back to the aspect heuristic in listing order.
+ */
+export function urlIds(
+  sourceUrl?: string | null,
+): { listingId: string; photoIndex: number } | null {
+  const m = (sourceUrl?.split("/").pop() ?? "").match(/^(\d+)_(\d+)_\d+_/);
+  return m ? { listingId: m[1], photoIndex: Number(m[2]) } : null;
 }
 
 /**
- * Domain's designated cover/hero photo. Domain emits the listing's chosen cover
- * as a distinct "_3" crop variant (e.g. `2020830624_28_3_260511-…`); every other
- * photo is `_1`. So a source URL matching `_<n>_3_<date>` IS the image Domain
- * leads with. (Listings captured via the older extension path have no `_3`
- * variant — those fall back to the aspect heuristic.)
+ * A real landscape photo usable as a fallback hero: excludes A-paper floorplans
+ * (~1.41) and wide banner strips / logos (aspect ≥ 2). Used only when a listing
+ * has no clean 3:2 shot (e.g. acreage led with a 16:9 aerial).
  */
-export function isDomainCover(sourceUrl?: string | null): boolean {
-  return !!sourceUrl && /_\d+_3_\d/.test(sourceUrl);
+function isRealLandscape(width: number | null, height: number | null): boolean {
+  const a = aspect(width, height);
+  return a != null && a >= 1 && a < 2 && !(a > 1.37 && a < 1.46);
 }
 
 /**
@@ -66,9 +76,10 @@ export function pickFloorplan<
 }
 
 /**
- * Hero image: an explicit pick (notes='hero') wins; else Domain's own cover
- * (the `_3` crop) so we lead with the exact photo Domain does; else first 3:2
- * photo, else first landscape, else the first image.
+ * Hero image: an explicit pick (notes='hero') wins; else the photo Domain leads
+ * with — its lowest-photoIndex 3:2 shot; else the lowest-index real landscape
+ * (16:9 aerial etc.); else the first image. Cover candidates are restricted to
+ * the listing's dominant listingId so contamination and floorplans/logos can't win.
  */
 export function pickHero<
   T extends {
@@ -78,11 +89,25 @@ export function pickHero<
     sourceUrl?: string | null;
   },
 >(imgs: T[]): T | null {
+  const explicit = imgs.find((i) => i.notes === "hero");
+  if (explicit) return explicit;
+  const idx = (i: T) => urlIds(i.sourceUrl)?.photoIndex ?? Number.MAX_SAFE_INTEGER;
+  const lid = (i: T) => urlIds(i.sourceUrl)?.listingId ?? null;
+  // Lowest Domain gallery index among candidates sharing the dominant listingId.
+  const pickFrom = (cands: T[]): T | null => {
+    if (!cands.length) return null;
+    const counts = new Map<string, number>();
+    for (const c of cands) {
+      const id = lid(c);
+      if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    const dom = [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+    const own = dom ? cands.filter((c) => lid(c) === dom) : cands;
+    return own.reduce((a, b) => (idx(a) <= idx(b) ? a : b));
+  };
   return (
-    imgs.find((i) => i.notes === "hero") ??
-    imgs.find((i) => isDomainCover(i.sourceUrl)) ??
-    imgs.find((i) => isHeroPhoto(i.width, i.height)) ??
-    imgs.find((i) => isLandscape(i.width, i.height)) ??
+    pickFrom(imgs.filter((i) => isHeroPhoto(i.width, i.height))) ??
+    pickFrom(imgs.filter((i) => isRealLandscape(i.width, i.height))) ??
     imgs[0] ??
     null
   );
@@ -138,23 +163,16 @@ export function listProperties(): PropertyListItem[] {
     .orderBy(images.ordinal)
     .all();
 
+  // Group images per property (kept in ordinal order) so the grid thumbnail uses
+  // the exact same pickHero as the detail page — one source of truth.
   const counts = new Map<string, number>();
-  const thumbHero = new Map<string, string>(); // explicit notes='hero' pick wins
-  const thumbCover = new Map<string, string>(); // Domain's own cover (_3 crop)
-  const thumb = new Map<string, string>(); // first 3:2 photo — never a floorplan/logo
-  const thumbLand = new Map<string, string>(); // fallback: first landscape
-  const thumbAny = new Map<string, string>(); // last resort
+  const byProp = new Map<string, (typeof imgs)[number][]>();
   for (const i of imgs) {
     counts.set(i.propertyId, (counts.get(i.propertyId) ?? 0) + 1);
-    if (!thumbAny.has(i.propertyId)) thumbAny.set(i.propertyId, i.localPath);
-    if (i.notes === "hero") thumbHero.set(i.propertyId, i.localPath);
-    if (!thumbCover.has(i.propertyId) && isDomainCover(i.sourceUrl))
-      thumbCover.set(i.propertyId, i.localPath);
-    if (!thumbLand.has(i.propertyId) && isLandscape(i.width, i.height))
-      thumbLand.set(i.propertyId, i.localPath);
-    if (!thumb.has(i.propertyId) && isHeroPhoto(i.width, i.height))
-      thumb.set(i.propertyId, i.localPath);
+    (byProp.get(i.propertyId) ?? byProp.set(i.propertyId, []).get(i.propertyId)!).push(i);
   }
+  const thumbOf = (id: string): string | null =>
+    pickHero(byProp.get(id) ?? [])?.localPath ?? null;
 
   const ratingRows = db
     .select({
@@ -195,13 +213,7 @@ export function listProperties(): PropertyListItem[] {
     .map((p) => ({
       ...p,
       imageCount: counts.get(p.id) ?? 0,
-      thumbPath:
-        thumbHero.get(p.id) ??
-        thumbCover.get(p.id) ??
-        thumb.get(p.id) ??
-        thumbLand.get(p.id) ??
-        thumbAny.get(p.id) ??
-        null,
+      thumbPath: thumbOf(p.id),
       delisted: delistedUrls.has(p.listingUrl),
       ratings: ratingsByProp.get(p.id) ?? [],
     }))

@@ -62,14 +62,25 @@ export default function MultiSelect({
       </button>
       {open && (
         <div className="absolute left-0 z-30 mt-1 max-h-72 w-56 overflow-y-auto rounded-xl border border-line bg-white p-1 shadow-lg">
-          {value.length > 0 && (
-            <button
-              type="button"
-              onClick={() => onChange([])}
-              className="mb-1 block w-full rounded px-2 py-1 text-left text-xs text-mute hover:bg-paper"
-            >
-              Clear ({value.length})
-            </button>
+          {options.length > 0 && (
+            <div className="mb-1 flex gap-1 text-xs text-mute">
+              <button
+                type="button"
+                onClick={() => onChange([...options])}
+                disabled={value.length === options.length}
+                className="flex-1 rounded px-2 py-1 text-left hover:bg-paper disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                Select all ({options.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                disabled={value.length === 0}
+                className="flex-1 rounded px-2 py-1 text-left hover:bg-paper disabled:opacity-40 disabled:hover:bg-transparent"
+              >
+                Clear ({value.length})
+              </button>
+            </div>
           )}
           {options.map((o) => (
             <label

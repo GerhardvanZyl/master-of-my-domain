@@ -275,7 +275,6 @@ export default function PropertyGrid({
     <>
       <div className="mb-6 flex items-end justify-between gap-6">
         <div>
-          <div className="eyebrow mb-1.5">{suburbs.join(" · ") || "Shortlist"}</div>
           <h1 className="font-serif text-[40px] leading-none">Tracked properties</h1>
         </div>
         <div className="pb-1 text-right">
