@@ -8,7 +8,7 @@ import {
   pickHero,
   pickShowcase,
   pickFloorplan,
-  isDelisted,
+  getSaleStatus,
 } from "@/db/queries/properties";
 import PhotoGrid from "@/components/PhotoGrid";
 import HeroGallery from "@/components/HeroGallery";
@@ -53,7 +53,7 @@ export default async function PropertyDetail({
         : "—",
     ],
     [
-      "Transit to Flinders St (7:30am)",
+      `Transit to ${property.state === "NSW" ? "Museum Stn" : "Flinders St"} (7:30am)`,
       property.ptMinutesToFlinders != null
         ? fmtMinutes(property.ptMinutesToFlinders) +
           (isTransitEstimated(property.ptSteps) ? "*" : "") +
@@ -115,7 +115,9 @@ export default async function PropertyDetail({
   const heroIndex = hero ? images.indexOf(hero) : 0;
   const showcaseIndices = showcase.map((s) => images.indexOf(s));
   const floorplan = pickFloorplan(images);
-  const delisted = isDelisted(property.listingUrl);
+  const saleStatus = getSaleStatus(property.listingUrl);
+  const delisted = saleStatus !== null;
+  const soldRow = history.find((h) => /sold/i.test(h.event ?? ""));
 
   return (
     <section className="rise">
@@ -129,8 +131,23 @@ export default async function PropertyDetail({
       {delisted && (
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#e0b4ac] bg-[#fbeeeb] px-4 py-3 text-sm font-medium text-[#B84A3A]">
           <span className="text-base">⚠</span>
-          No longer listed on Domain — this listing appears to be sold or
-          withdrawn. Your ratings and notes are kept.
+          {saleStatus === "sold" ? (
+            <span>
+              Sold — no longer listed on Domain
+              {soldRow?.priceDisplay ? ` (${soldRow.priceDisplay})` : ""}. Your
+              ratings and notes are kept.
+            </span>
+          ) : saleStatus === "withdrawn" ? (
+            <span>
+              Withdrawn — no longer listed on Domain. Your ratings and notes are
+              kept.
+            </span>
+          ) : (
+            <span>
+              No longer listed on Domain — this listing appears to be sold or
+              withdrawn. Your ratings and notes are kept.
+            </span>
+          )}
         </div>
       )}
 

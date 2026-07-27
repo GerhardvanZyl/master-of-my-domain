@@ -12,8 +12,13 @@ export interface PropertyListItem extends Property {
   thumbPath: string | null;
   /** Listing no longer appears in Domain search results (sold/withdrawn). */
   delisted: boolean;
+  /** Specific removal reason when known: "sold" | "withdrawn" | "delisted". */
+  saleStatus: string | null;
   ratings: Pick<PropertyRating, "profile" | "vibe" | "look" | "kitchen" | "score">[];
 }
+
+/** scrape_jobs.status values that mean the listing is no longer for sale. */
+const DELISTED_STATUSES = ["delisted", "sold", "withdrawn"];
 
 function aspect(width: number | null, height: number | null): number | null {
   return width && height ? width / height : null;
@@ -200,13 +205,13 @@ export function listProperties(): PropertyListItem[] {
 
   // Listings flagged as no longer in search results (sold/withdrawn) — tracked in
   // scrape_jobs rather than deleting the row, so ratings/notes survive.
-  const delistedUrls = new Set(
+  const delistedStatus = new Map(
     db
-      .select({ url: scrapeJobs.url })
+      .select({ url: scrapeJobs.url, status: scrapeJobs.status })
       .from(scrapeJobs)
-      .where(eq(scrapeJobs.status, "delisted"))
+      .where(inArray(scrapeJobs.status, DELISTED_STATUSES))
       .all()
-      .map((r) => r.url),
+      .map((r) => [r.url, r.status] as const),
   );
 
   return props
@@ -214,7 +219,8 @@ export function listProperties(): PropertyListItem[] {
       ...p,
       imageCount: counts.get(p.id) ?? 0,
       thumbPath: thumbOf(p.id),
-      delisted: delistedUrls.has(p.listingUrl),
+      delisted: delistedStatus.has(p.listingUrl),
+      saleStatus: delistedStatus.get(p.listingUrl) ?? null,
       ratings: ratingsByProp.get(p.id) ?? [],
     }))
     // Priority order: nearest the $850k target first, more bedrooms boosts.
@@ -229,13 +235,24 @@ export function getProperty(id: string): Property | undefined {
   return db.select().from(properties).where(eq(properties.id, id)).get();
 }
 
+/** Removal status for a listing URL: "sold" | "withdrawn" | "delisted" | null. */
+export function getSaleStatus(listingUrl: string): string | null {
+  const row = db
+    .select({ status: scrapeJobs.status })
+    .from(scrapeJobs)
+    .where(
+      and(
+        eq(scrapeJobs.url, listingUrl),
+        inArray(scrapeJobs.status, DELISTED_STATUSES),
+      ),
+    )
+    .get();
+  return row?.status ?? null;
+}
+
 /** True if this listing URL has been flagged sold/withdrawn (scrape_jobs). */
 export function isDelisted(listingUrl: string): boolean {
-  return !!db
-    .select({ id: scrapeJobs.id })
-    .from(scrapeJobs)
-    .where(and(eq(scrapeJobs.url, listingUrl), eq(scrapeJobs.status, "delisted")))
-    .get();
+  return getSaleStatus(listingUrl) !== null;
 }
 
 export function getPriceHistory(propertyId: string): PriceHistory[] {

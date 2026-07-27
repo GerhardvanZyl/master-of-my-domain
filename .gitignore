@@ -24,3 +24,7 @@ next-env.d.ts
 # local TLS certs / private keys — never commit
 certs/
 public/rootCA.crt
+
+# SQLite WAL sidecar files (transient — never commit)
+data/app.db-shm
+data/app.db-wal

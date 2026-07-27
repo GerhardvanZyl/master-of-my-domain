@@ -1,0 +1,25 @@
+{"id":"e07d0993-0bf1-49a6-9be6-88dc10bff080","addr":"100 Prince Alfred Parade, Newport","min":114,"routes":"bus 199/E90 + T8"}
+{"id":"0f44aa31-4938-409a-a1bd-5e7d8544cac7","addr":"12/1 East Crescent St, McMahons Point","min":23,"routes":"F4 ferry + T8"}
+{"id":"673a6137-09a0-45bc-9abc-15b1677c6730","addr":"164 Hanckel Road, Oakville","min":119,"routes":"bus + train"}
+{"id":"43b3047a-8533-4fa7-9023-4dc8319739e0","addr":"17 Walter Road, Ingleside","min":113,"routes":"bus + T8"}
+{"id":"10f8f203-9138-47c2-b726-1286883f0e56","addr":"24 Pearson Street, Balmain East","min":40,"routes":"ferry/bus + train"}
+{"id":"42d79c76-0d70-4c58-898a-85bfb176b28b","addr":"243b Whale Beach Road, Whale Beach","min":124,"routes":"L90/199 + T8"}
+{"id":"373ada1b-e7d7-432f-aae5-affe2a2af3eb","addr":"25 Palmerston Street, Vaucluse","min":64,"routes":"bus + T8"}
+{"id":"d601fc50-6ce4-4e9e-83c5-50a89ee43d6c","addr":"26A/171 Gloucester Street, The Rocks","min":14,"routes":"walk + T2/T3"}
+{"id":"25174e73-31c5-49ca-8c7b-676fcb8c3e9d","addr":"2c Wolseley Street, Drummoyne","min":39,"routes":"bus + train"}
+{"id":"prop_b31352fbb832","addr":"31 Wunulla Road, Point Piper","min":43,"routes":"bus 324/325 + train"}
+{"id":"965021fd-ffac-4bdf-826b-4abdc45a3e6c","addr":"342 Whale Beach Road, Palm Beach","min":132,"routes":"L90/199 + T8"}
+{"id":"b9ff6cde-a693-4e23-94f7-c1d04c3c275f","addr":"365 Eastwood Rd, Leppington","min":191,"routes":"bus + train"}
+{"id":"bc6095cf-7ce7-4372-b362-2070688c9853","addr":"4 Ocean Road, Palm Beach","min":112,"routes":"L90/199 + T8"}
+{"id":"34aba3e7-2da3-4496-91ef-fe28fd61b954","addr":"40-42 Coogee Bay Road, Coogee","min":39,"routes":"bus 373"}
+{"id":"4b5f98f7-bb6e-4f80-9d32-611723b4a4b7","addr":"44 Porters Road, Kenthurst","min":137,"routes":"639/604 + M1"}
+{"id":"a5566375-9c11-4827-990f-5673e380132a","addr":"47-49 Neerim Road, Castle Cove","min":64,"routes":"206 + 333"}
+{"id":"3cde4a07-855b-41d9-8654-17b2cddb34a4","addr":"5 Ninth Avenue, Llandilo","min":100,"routes":"673 + T1/T2"}
+{"id":"826c832c-411b-4b11-8072-fc64dbf63a01","addr":"505/38 Cumberland Street, The Rocks","min":16,"routes":"walk + T2"}
+{"id":"9265ab9d-cf50-473e-9d5e-64304243891d","addr":"604/38 Cumberland Street, The Rocks","min":16,"routes":"walk + T2"}
+{"id":"b10b9381-2951-485b-a0a3-92a1b9a6f6b6","addr":"692 Old Northern Road, Dural","min":99,"routes":"637 + M1 metro"}
+{"id":"6c1ce4b3-ba55-4715-9c9c-e5bdb05eacbd","addr":"79 Kelvin Park Drive, Bradfield","min":143,"routes":"856 + T2"}
+{"id":"80fd0a39-2ca3-469e-9024-ac66b6421c2c","addr":"85-87 Thomas Street, Parramatta","min":65,"routes":"525 + T1/T2"}
+{"id":"fdc28c70-fcb2-40ae-90c4-1be1480f7181","addr":"93-99 Calverts Road, Orchard Hills","min":133,"routes":"781 + T1"}
+{"id":"f02ac6c8-b245-43c3-b0b7-a809024a3a43","addr":"95 Pacific Road, Palm Beach","min":124,"routes":"199 + B1/T8"}
+{"id":"d3a3ed55-4966-47ac-8f75-31a5320a361d","addr":"Mulgoa","min":120,"routes":"795 + BMT/T2"}

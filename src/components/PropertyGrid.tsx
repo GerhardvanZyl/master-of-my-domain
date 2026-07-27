@@ -515,7 +515,11 @@ export default function PropertyGrid({
                     )}
                     {p.delisted && (
                       <span className="shrink-0 rounded bg-[#B84A3A] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-                        Off-market
+                        {p.saleStatus === "sold"
+                          ? "Sold"
+                          : p.saleStatus === "withdrawn"
+                            ? "Withdrawn"
+                            : "Off-market"}
                       </span>
                     )}
                     {isNew && !p.delisted && (
@@ -616,7 +620,11 @@ export default function PropertyGrid({
                     )}
                     {p.delisted && (
                       <span className="rounded-md bg-[#B84A3A] px-2 py-1 text-[10.5px] font-bold uppercase tracking-wide text-white">
-                        No longer listed
+                        {p.saleStatus === "sold"
+                          ? "Sold"
+                          : p.saleStatus === "withdrawn"
+                            ? "Withdrawn"
+                            : "No longer listed"}
                       </span>
                     )}
                     {isNew && !p.delisted && (
