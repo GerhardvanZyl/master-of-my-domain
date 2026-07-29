@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import Image from "next/image";
 import { imageUrl } from "@/lib/images";
 import { ROOM_ROW_ORDER, type PhotoLite } from "@/lib/photo";
 import Lightbox from "./Lightbox";
@@ -45,6 +47,25 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
     });
   }
 
+  // ← / → drive every column at once; Esc closes. The modal's own buttons still
+  // move one column independently.
+  useEffect(() => {
+    if (!carousel) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") return setCarousel(null);
+      const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (!d) return;
+      setPos((prev) =>
+        columns.map((c, i) => {
+          const len = c.rooms[carousel]?.length ?? 0;
+          return len ? (((prev[i] ?? 0) + d) % len + len) % len : 0;
+        }),
+      );
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [carousel, columns]);
+
   if (rows.length === 0) {
     return (
       <p className="text-sm text-mute">
@@ -63,10 +84,10 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                 <td className="w-32 border-b border-hairline p-2">
                   <button
                     onClick={() => openCarousel(row.key)}
-                    className="text-[14px] font-semibold text-forest hover:text-forest-hi"
+                    className="flex items-center gap-1 text-left text-[14px] font-semibold text-forest underline decoration-forest/30 underline-offset-2 hover:text-forest-hi hover:decoration-forest"
                     title="Open side-by-side carousels"
                   >
-                    {row.label}
+                    {row.label} <span className="text-[11px]">⤢</span>
                   </button>
                 </td>
                 {columns.map((col) => {
@@ -81,14 +102,15 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                           <button
                             key={img.id}
                             onClick={() => setLb({ images: imgs, index: i })}
-                            className="overflow-hidden rounded-xl border border-line bg-fill"
+                            className="relative aspect-[4/3] overflow-hidden rounded-xl border border-line bg-fill"
                           >
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <Image
                               src={imageUrl(img)}
                               alt={img.roomType ?? "photo"}
+                              fill
+                              sizes="200px"
                               loading="lazy"
-                              className="aspect-[4/3] w-full object-cover"
+                              className="object-cover"
                             />
                           </button>
                         ))}
@@ -107,8 +129,11 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
         </table>
       </div>
 
-      {/* Task 3: full-browser modal, one independent carousel per property */}
-      {carousel && (
+      {/* Task 3: full-browser modal, one independent carousel per property.
+          Portaled to <body> for the same reason as Lightbox: `.rise` animates a
+          transform, so it becomes the containing block for `position: fixed`
+          and the overlay would size itself to the tall section, not the window. */}
+      {carousel && typeof document !== "undefined" && createPortal(
         <div
           className="fixed inset-0 z-50 flex flex-col bg-black/90 p-4"
           onClick={() => setCarousel(null)}
@@ -116,6 +141,9 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
           <div className="flex items-center justify-between text-white">
             <span className="text-sm font-medium">
               {ROOM_ROW_ORDER.find((r) => r.key === carousel)?.label}
+              <span className="ml-2 text-xs font-normal text-neutral-400">
+                ← → all columns · Esc to close
+              </span>
             </span>
             <button
               onClick={() => setCarousel(null)}
@@ -147,23 +175,26 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                         {imgs.length > 1 && (
                           <button
                             onClick={() => bump(ci, -1, imgs.length)}
-                            className="absolute left-1 rounded-full bg-white/10 px-3 py-2 text-xl hover:bg-white/20"
-                            aria-label="Previous"
+                            className="nav-btn absolute left-1 z-10"
+                            aria-label="Previous photo"
+                            title="Previous (← moves all columns)"
                           >
                             ‹
                           </button>
                         )}
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={imageUrl(img)}
                           alt={img.roomType ?? "photo"}
-                          className="max-h-[70vh] max-w-full object-contain"
+                          fill
+                          sizes="(max-width: 640px) 100vw, 45vw"
+                          className="object-contain"
                         />
                         {imgs.length > 1 && (
                           <button
                             onClick={() => bump(ci, 1, imgs.length)}
-                            className="absolute right-1 rounded-full bg-white/10 px-3 py-2 text-xl hover:bg-white/20"
-                            aria-label="Next"
+                            className="nav-btn absolute right-1 z-10"
+                            aria-label="Next photo"
+                            title="Next (→ moves all columns)"
                           >
                             ›
                           </button>
@@ -182,14 +213,17 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                           key={thumb.id}
                           onClick={() => jump(ci, i)}
                           className={`shrink-0 overflow-hidden rounded border-2 ${
-                            i === at ? "border-white" : "border-transparent opacity-60 hover:opacity-100"
+                            i === at
+                              ? "border-[#5FBF92] shadow-[0_0_10px_2px_rgba(95,191,146,.5)]"
+                              : "border-transparent opacity-60 hover:opacity-100"
                           }`}
                           aria-label={`Photo ${i + 1}`}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          <Image
                             src={imageUrl(thumb)}
                             alt=""
+                            width={160}
+                            height={112}
                             loading="lazy"
                             className="h-14 w-20 object-cover"
                           />
@@ -204,7 +238,8 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
               );
             })}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* Task 4: single photo in a lightbox (with tag correction) */}

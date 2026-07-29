@@ -41,6 +41,14 @@ export async function PATCH(
   for (const k of TEXTS) {
     if (k in body) patch[k] = String(body[k] ?? "").trim() || null;
   }
+  // "I walked through this one" — an ISO date, or null to un-mark it.
+  if ("attendedAt" in body) {
+    const v = body.attendedAt;
+    if (v !== null && Number.isNaN(Date.parse(String(v)))) {
+      return NextResponse.json({ error: "bad attendedAt" }, { status: 400 });
+    }
+    patch.attendedAt = v === null ? null : String(v);
+  }
   if (Object.keys(patch).length === 1) {
     return NextResponse.json({ error: "nothing to update" }, { status: 400 });
   }

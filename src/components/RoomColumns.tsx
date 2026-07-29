@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import type { PropertyColumn } from "@/db/queries/rooms";
 import { imageUrl } from "@/lib/images";
 import type { PhotoLite } from "@/lib/photo";
@@ -40,14 +41,14 @@ export default function RoomColumns({ columns }: { columns: PropertyColumn[] }) 
                     key={img.id}
                     onClick={() => setOpen(indexOf(img.id))}
                     title="Open"
-                    className="relative block w-full overflow-hidden rounded-xl border border-line bg-fill"
+                    className="relative block aspect-[4/3] w-full overflow-hidden rounded-xl border border-line bg-fill"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={imageUrl(img)}
                       alt={img.roomType ?? "photo"}
-                      loading="lazy"
-                      className="aspect-[4/3] w-full object-cover"
+                      fill
+                      sizes="224px"
+                      className="object-cover"
                     />
                     {img.roomType && (
                       <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium uppercase text-white">

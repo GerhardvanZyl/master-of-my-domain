@@ -2014,5 +2014,12 @@
     "stationDistanceM": 2084,
     "secondStation": "Williams Landing Station",
     "secondStationDistanceM": 2302
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/77-astoria-drive-point-cook-vic-3030-2021028436",
+    "nearestStation": "Hoppers Crossing Station",
+    "stationDistanceM": 1034,
+    "secondStation": "Williams Landing Station",
+    "secondStationDistanceM": 3782
   }
 ]

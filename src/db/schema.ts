@@ -60,6 +60,8 @@ export const properties = sqliteTable("properties", {
   advPricePreviousLabel: text("adv_price_previous_label"),
   // ISO datetime of the next upcoming open-for-inspection (Australia/Melbourne).
   nextInspection: text("next_inspection"),
+  // ISO date we actually walked through it. Not per profile — you inspect together.
+  attendedAt: text("attended_at"),
   // Neighbourhood metadata computed from lat/lng (straight-line) + OpenStreetMap.
   greenCrossDistanceM: integer("green_cross_distance_m"),
   colesDistanceM: integer("coles_distance_m"),
@@ -108,6 +110,10 @@ export const images = sqliteTable(
     width: integer("width"),
     height: integer("height"),
     bytes: integer("bytes"),
+    // Gallery alt text ("{address}, Image N") — Domain encodes its own cover
+    // index here; parsed out in pickHero as a stronger signal than the CDN
+    // filename's photoIndex. Nullable: older captures + REA never set it.
+    alt: text("alt"),
     createdAt: text("created_at").notNull(),
   },
   (t) => [
@@ -198,6 +204,31 @@ export const priceHistory = sqliteTable(
   (t) => [index("idx_price_history_property").on(t.propertyId)],
 );
 
+/**
+ * A property shared from one profile to another. `to_profile` is unique per
+ * property (not a composite with from_profile) — re-sharing the same property
+ * to the same person should refresh the existing unread row rather than pile
+ * up duplicates (see upsertShare in db/queries/shares.ts).
+ */
+export const shares = sqliteTable(
+  "shares",
+  {
+    id: text("id").primaryKey(),
+    propertyId: text("property_id")
+      .notNull()
+      .references(() => properties.id, { onDelete: "cascade" }),
+    fromProfile: text("from_profile").notNull(),
+    toProfile: text("to_profile").notNull(),
+    note: text("note"),
+    createdAt: text("created_at").notNull(),
+    readAt: text("read_at"),
+  },
+  (t) => [
+    unique("uq_shares_property_to").on(t.propertyId, t.toProfile),
+    index("idx_shares_to_read").on(t.toProfile, t.readAt),
+  ],
+);
+
 export const scrapeJobs = sqliteTable("scrape_jobs", {
   id: text("id").primaryKey(),
   url: text("url").notNull(),
@@ -217,3 +248,5 @@ export type PropertyRating = typeof propertyRatings.$inferSelect;
 export type ScrapeJob = typeof scrapeJobs.$inferSelect;
 export type PriceHistory = typeof priceHistory.$inferSelect;
 export type NewPriceHistory = typeof priceHistory.$inferInsert;
+export type Share = typeof shares.$inferSelect;
+export type NewShare = typeof shares.$inferInsert;

@@ -34,6 +34,10 @@ const p = {
   hasEaves: 0,
   pergolaCovered: null,
   hasLawn: 1,
+  beds: 3,
+  commonAreasCount: 2,
+  masterBedSqm: 15,
+  avgOtherBedSqm: null,
 };
 const ratings: Rating[] = [
   { profile: "gerhard", vibe: "like", look: "good", kitchen: null },
@@ -55,6 +59,11 @@ assert.ok(rows.some((r) => r.label === "johanita: meh" && r.pts === -10));
 assert.ok(rows.some((r) => r.label === "No all-around eaves"));
 assert.ok(!rows.some((r) => r.label.includes("pergola")));
 assert.ok(!rows.some((r) => r.label === "No lawn"));
+// Room-size terms: +5×2 living areas, −5×1 missing bed, −2×3 m² of master.
+assert.ok(rows.some((r) => r.label === "2 living areas" && r.pts === 10));
+assert.ok(rows.some((r) => r.label === "Only 3 bedrooms" && r.pts === -5));
+assert.ok(rows.some((r) => r.label === "Master bed 15 m²" && r.pts === -6));
+assert.ok(!rows.some((r) => r.label.includes("Other beds")));
 // Zero-magnitude terms are dropped rather than listed as "0".
 assert.ok(rows.every((r) => r.pts !== 0));
 

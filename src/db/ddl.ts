@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS properties (
   adv_price_previous          TEXT,
   adv_price_previous_label    TEXT,
   next_inspection             TEXT,
+  attended_at                 TEXT,
   green_cross_distance_m      INTEGER,
   coles_distance_m            INTEGER,
   coles_name                  TEXT,
@@ -76,6 +77,7 @@ CREATE TABLE IF NOT EXISTS images (
   width          INTEGER,
   height         INTEGER,
   bytes          INTEGER,
+  alt            TEXT,
   created_at     TEXT NOT NULL,
   UNIQUE(property_id, source_url)
 );
@@ -126,6 +128,17 @@ CREATE TABLE IF NOT EXISTS price_history (
   created_at     TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS shares (
+  id             TEXT PRIMARY KEY,
+  property_id    TEXT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  from_profile   TEXT NOT NULL,
+  to_profile     TEXT NOT NULL,
+  note           TEXT,
+  created_at     TEXT NOT NULL,
+  read_at        TEXT,
+  UNIQUE(property_id, to_profile)
+);
+
 CREATE TABLE IF NOT EXISTS scrape_jobs (
   id             TEXT PRIMARY KEY,
   url            TEXT NOT NULL,
@@ -142,6 +155,7 @@ CREATE INDEX IF NOT EXISTS idx_image_tags_room ON image_tags(room_type);
 CREATE INDEX IF NOT EXISTS idx_group_members_group ON similarity_group_members(group_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_image ON similarity_group_members(image_id);
 CREATE INDEX IF NOT EXISTS idx_price_history_property ON price_history(property_id);
+CREATE INDEX IF NOT EXISTS idx_shares_to_read ON shares(to_profile, read_at);
 `;
 
 /**
@@ -168,6 +182,7 @@ export function migrateColumns(db: {
     adv_price_previous: "TEXT",
     adv_price_previous_label: "TEXT",
     next_inspection: "TEXT",
+    attended_at: "TEXT",
     green_cross_distance_m: "INTEGER",
     coles_distance_m: "INTEGER",
     coles_name: "TEXT",
@@ -199,5 +214,12 @@ export function migrateColumns(db: {
   );
   if (!rateCols.has("score")) {
     db.exec("ALTER TABLE property_ratings ADD COLUMN score REAL");
+  }
+
+  const imageCols = new Set(
+    (db.pragma("table_info(images)") as Array<{ name: string }>).map((c) => c.name),
+  );
+  if (!imageCols.has("alt")) {
+    db.exec("ALTER TABLE images ADD COLUMN alt TEXT");
   }
 }

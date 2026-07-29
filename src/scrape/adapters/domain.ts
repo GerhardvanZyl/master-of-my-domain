@@ -126,6 +126,156 @@ function str(v: unknown): string | null {
   return null;
 }
 
+/**
+ * Bounded-depth walk collecting values for keys matching `keyMatch`. Same
+ * spirit as extract.ts's deepCollect, but caps recursion so a probe that only
+ * expects a shallow field (e.g. soldDetails.soldDate) can't be tricked into a
+ * pathological full-tree walk by a huge payload.
+ */
+function shallowCollect(
+  root: unknown,
+  keyMatch: (key: string) => boolean,
+  maxDepth: number,
+): unknown[] {
+  const out: unknown[] = [];
+  const visited = new Set<unknown>();
+  const stack: { node: unknown; depth: number }[] = [{ node: root, depth: 0 }];
+  while (stack.length) {
+    const { node, depth } = stack.pop()!;
+    if (!node || typeof node !== "object" || visited.has(node)) continue;
+    visited.add(node);
+    if (Array.isArray(node)) {
+      if (depth < maxDepth) for (const v of node) stack.push({ node: v, depth: depth + 1 });
+      continue;
+    }
+    for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+      if (keyMatch(k)) out.push(v);
+      if (depth < maxDepth) stack.push({ node: v, depth: depth + 1 });
+    }
+  }
+  return out;
+}
+
+/** Bounded-depth walk collecting every string leaf value (any key). */
+function collectStrings(root: unknown, maxDepth: number): string[] {
+  const out: string[] = [];
+  const visited = new Set<unknown>();
+  const stack: { node: unknown; depth: number }[] = [{ node: root, depth: 0 }];
+  while (stack.length) {
+    const { node, depth } = stack.pop()!;
+    if (typeof node === "string") {
+      out.push(node);
+      continue;
+    }
+    if (!node || typeof node !== "object" || visited.has(node)) continue;
+    visited.add(node);
+    if (depth >= maxDepth) continue;
+    const values = Array.isArray(node) ? node : Object.values(node as Record<string, unknown>);
+    for (const v of values) stack.push({ node: v, depth: depth + 1 });
+  }
+  return out;
+}
+
+/**
+ * Normalise a candidate sold-date value (ISO/free-text string, or unix
+ * seconds/ms) to "YYYY-MM-DD". Rejects anything that doesn't parse to a real
+ * date, and anything in the future (a mis-parsed field is more likely than a
+ * listing legitimately selling tomorrow).
+ */
+function normalizeSoldDate(v: unknown): string | null {
+  if (typeof v === "number" && Number.isFinite(v)) {
+    const ms = v > 1e12 ? v : v * 1000;
+    if (ms > Date.now()) return null;
+    return new Date(ms).toISOString().slice(0, 10);
+  }
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  if (!s) return null;
+  // Pure "YYYY-MM-DD" is unambiguous — skip Date.parse entirely so it can't
+  // get reinterpreted as UTC midnight and shift a day against local tz.
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (iso) {
+    const t = Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+    return Number.isNaN(t) || t > Date.now() ? null : s;
+  }
+  const t = Date.parse(s);
+  if (Number.isNaN(t)) return null;
+  const d = new Date(t);
+  if (d.getTime() > Date.now()) return null;
+  // Free-text formats ("12 Jul 2025") parse to LOCAL midnight in V8 — read
+  // back local date parts, not toISOString (UTC), which can shift a day.
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+const SOLD_DATE_KEYS = new Set(["solddate", "datesold", "soldon"]);
+
+/** Rung 1: any *soldDate/dateSold/soldOn key anywhere in the object graph. */
+function keySoldDate(root: unknown): string | null {
+  for (const v of shallowCollect(root, (k) => SOLD_DATE_KEYS.has(k.toLowerCase()), 6)) {
+    const n = normalizeSoldDate(v);
+    if (n) return n;
+  }
+  return null;
+}
+
+/** JSON-LD blocks found directly on `payload.jsonLd`, or `payload` itself if it's already the block array. */
+function extractJsonLdBlocks(payload: unknown): Record<string, unknown>[] {
+  const rec = asRecord(payload);
+  const arr = rec && Array.isArray(rec.jsonLd) ? rec.jsonLd : Array.isArray(payload) ? payload : [];
+  return arr.map(asRecord).filter((o): o is Record<string, unknown> => o !== null);
+}
+
+/** Rung 2: a JSON-LD offer whose availability reads "sold" (schema.org SoldOut). */
+function ldSoldDate(blocks: Record<string, unknown>[]): string | null {
+  for (const block of blocks) {
+    const offers = asRecord(block.offers);
+    const availability = str(offers?.availability) ?? str(block.availability);
+    if (!availability || !/sold/i.test(availability)) continue;
+    const candidate =
+      offers?.priceValidUntil ?? offers?.validThrough ?? block.datePosted ?? block.dateModified;
+    const n = normalizeSoldDate(candidate);
+    if (n) return n;
+  }
+  return null;
+}
+
+const SOLD_TEXT_RES: RegExp[] = [
+  /sold\b[^.]{0,30}?(\d{1,2}\s+\w{3,9}\s+\d{4})/i,
+  /sold\s+on\s+([^.\n]{4,40})/i,
+];
+
+/** Rung 3: free text like "Sold on 12 Jul 2025" / "Sold at auction 12 July 2025". */
+function freeTextSoldDate(root: unknown): string | null {
+  for (const s of collectStrings(root, 8)) {
+    for (const re of SOLD_TEXT_RES) {
+      const m = s.match(re);
+      if (!m) continue;
+      const n = normalizeSoldDate(m[1]);
+      if (n) return n;
+    }
+  }
+  return null;
+}
+
+/**
+ * The real sale date for a sold Domain listing, or null if it can't be found
+ * in the payload — callers should fall back to today's date (detection date)
+ * rather than block on this. `payload` can be the raw listing-page data
+ * (nextData/jsonLd shape), a bare object such as `{ soldDetails: {...} }`, or
+ * any nested fragment thereof; every rung walks whatever it's given.
+ * Probes, in order: (1) a `soldDate`/`dateSold`/`soldOn` key anywhere in the
+ * object graph, (2) JSON-LD offers marked sold, (3) free text like "Sold on
+ * 12 Jul 2025".
+ */
+export function soldDate(payload: unknown): string | null {
+  if (payload == null) return null;
+  return (
+    keySoldDate(payload) ??
+    ldSoldDate(extractJsonLdBlocks(payload)) ??
+    freeTextSoldDate(payload)
+  );
+}
+
 export const DomainAdapter: Adapter = {
   site: "domain",
   matches(hostname) {
@@ -201,6 +351,7 @@ export const DomainAdapter: Adapter = {
     const images: NormalizedImage[] = urls.map((sourceUrl, ordinal) => ({
       sourceUrl,
       ordinal,
+      alt: raw.imgAlts?.[sourceUrl] ?? null,
     }));
 
     const property: NormalizedProperty = {

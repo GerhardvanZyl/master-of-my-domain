@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   getPropertiesByIds,
   getPropertyImages,
@@ -280,12 +281,12 @@ export default async function ComparePage({
                           </span>
                         )}
                         {hero ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Image
                             src={imageUrl(hero)}
                             alt={p.address ?? "property"}
-                            loading="lazy"
-                            className="h-full w-full object-cover"
+                            fill
+                            sizes="(max-width: 768px) 50vw, 380px"
+                            className="object-cover"
                           />
                         ) : (
                           <div className="flex h-full items-center justify-center text-xs text-mute">

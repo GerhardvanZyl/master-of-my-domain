@@ -3,6 +3,7 @@ import Link from "next/link";
 import NavLinks from "@/components/NavLinks";
 import ProfileBar from "@/components/ProfileBar";
 import ProfileGate from "@/components/ProfileGate";
+import NotificationBadge from "@/components/NotificationBadge";
 import RegisterSW from "@/components/RegisterSW";
 import "./globals.css";
 
@@ -60,6 +61,7 @@ export default function RootLayout({
               </span>
             </Link>
             <NavLinks />
+            <NotificationBadge />
             <ProfileBar />
           </nav>
         </header>

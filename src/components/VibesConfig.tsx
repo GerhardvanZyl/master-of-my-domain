@@ -45,6 +45,15 @@ const GROUPS: { title: string; fields: Field[] }[] = [
     ],
   },
   {
+    title: "Rooms",
+    fields: [
+      { key: "perLivingArea", label: "+ per living area" },
+      { key: "perBedBelow4", label: "− per bedroom under 4" },
+      { key: "perMasterSqmBelow18", label: "− per m² master is under 18" },
+      { key: "perOtherBedSqmBelow11", label: "− per m² other beds avg under 11" },
+    ],
+  },
+  {
     title: "Reactions",
     fields: [
       { key: "like", label: "+ like" },

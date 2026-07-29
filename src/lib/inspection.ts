@@ -45,6 +45,62 @@ export function formatInspection(
   };
 }
 
+/**
+ * Day-label for a group heading: "Sat 1 Aug" (weekday, day, month — no time),
+ * built the same way formatInspection builds its own label.
+ */
+function dayLabel(d: Date): string {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: TZ,
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    })
+      .formatToParts(d)
+      .map((x) => [x.type, x.value]),
+  );
+  return `${p.weekday} ${p.day} ${p.month}`;
+}
+
+/**
+ * Groups items by Melbourne calendar day of their `nextInspection`, for the
+ * /inspect planning page. Day groups sorted chronologically ascending, items
+ * within a day sorted by time ascending. Anything with no / unparseable
+ * nextInspection, or whose day has already passed (formatInspection().upcoming
+ * === false), lands in one trailing group keyed `""` — render that as
+ * "No time yet" rather than a stale/empty date heading.
+ */
+export function groupByInspectionDay<T extends { nextInspection?: string | null }>(
+  items: T[],
+): { day: string; items: T[] }[] {
+  const byDay = new Map<string, { label: string; items: T[] }>();
+  const noTime: T[] = [];
+
+  for (const item of items) {
+    const info = formatInspection(item.nextInspection);
+    if (!info || !info.upcoming) {
+      noTime.push(item);
+      continue;
+    }
+    const d = new Date(item.nextInspection!);
+    const key = melDay(d);
+    if (!byDay.has(key)) byDay.set(key, { label: dayLabel(d), items: [] });
+    byDay.get(key)!.items.push(item);
+  }
+
+  const dayGroups = [...byDay.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([, g]) => ({
+      day: g.label,
+      items: g.items.sort(
+        (a, b) => new Date(a.nextInspection!).getTime() - new Date(b.nextInspection!).getTime(),
+      ),
+    }));
+
+  return noTime.length > 0 ? [...dayGroups, { day: "", items: noTime }] : dayGroups;
+}
+
 if (process.argv[1]?.endsWith("inspection.ts")) {
   const assert = (c: unknown, m: string) => {
     if (!c) throw new Error(m);
@@ -59,5 +115,29 @@ if (process.argv[1]?.endsWith("inspection.ts")) {
   );
   assert(formatInspection("2000-01-01T11:00:00+10:00")!.upcoming === false, "past");
   assert(formatInspection("2999-01-01T11:00:00+10:00")!.upcoming === true, "future");
+
+  const items = [
+    { label: "sat-late", nextInspection: "2026-08-01T14:00:00+10:00" },
+    { label: "sat-early", nextInspection: "2026-08-01T09:00:00+10:00" },
+    { label: "sun", nextInspection: "2026-08-02T10:00:00+10:00" },
+    { label: "no-time", nextInspection: null },
+    { label: "past", nextInspection: "2000-01-01T10:00:00+10:00" },
+    { label: "garbage", nextInspection: "nope" },
+  ];
+  const groups = groupByInspectionDay(items);
+  assert(groups.length === 3, `expected 3 groups, got ${groups.length}`);
+  assert(groups[0].day === "Sat 1 Aug", `day0 was ${groups[0].day}`);
+  assert(
+    groups[0].items.map((i) => i.label).join(",") === "sat-early,sat-late",
+    `within-day order was ${groups[0].items.map((i) => i.label).join(",")}`,
+  );
+  assert(groups[1].day === "Sun 2 Aug", `day1 was ${groups[1].day}`);
+  assert(groups[1].items.map((i) => i.label).join(",") === "sun", "day1 items");
+  assert(groups[2].day === "", `trailing group day was ${JSON.stringify(groups[2].day)}`);
+  assert(
+    groups[2].items.map((i) => i.label).sort().join(",") === "garbage,no-time,past",
+    `trailing group items were ${groups[2].items.map((i) => i.label).join(",")}`,
+  );
+
   console.log("OK inspection", r.label);
 }

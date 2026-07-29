@@ -25,11 +25,13 @@ export async function GET(
   if (abs !== root && !abs.startsWith(root + path.sep)) {
     return new Response("Forbidden", { status: 403 });
   }
-  if (!fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
-    return new Response("Not found", { status: 404 });
-  }
+  // Async read: the sync trio (existsSync + statSync + readFileSync) parked the
+  // single Node thread on disk I/O, so a burst of grid thumbnails also stalled
+  // whatever page render was queued behind them. A directory throws EISDIR,
+  // which covers the old isFile() check.
+  const buf = await fs.promises.readFile(abs).catch(() => null);
+  if (!buf) return new Response("Not found", { status: 404 });
 
-  const buf = fs.readFileSync(abs);
   const type = MIME[path.extname(abs).toLowerCase()] ?? "application/octet-stream";
   return new Response(new Uint8Array(buf), {
     headers: {

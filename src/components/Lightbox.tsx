@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { imageUrl } from "@/lib/images";
 import type { PhotoLite } from "@/lib/photo";
 import TagSelect from "./TagSelect";
@@ -44,6 +45,21 @@ export default function Lightbox({
     if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
   };
 
+  // Fetch AND decode the neighbours while you're looking at the current photo,
+  // so prev/next paints on the same frame as the click instead of waiting on a
+  // ~300KB fetch + a 1620px decode. decode() is the part that matters — a warm
+  // HTTP cache alone still leaves a visible hitch on the swipe.
+  useEffect(() => {
+    if (index == null || images.length < 2) return;
+    for (const d of [1, -1]) {
+      const n = images[(index + d + images.length) % images.length];
+      if (!n) continue;
+      const im = new window.Image();
+      im.src = imageUrl(n);
+      im.decode?.().catch(() => {});
+    }
+  }, [index, images]);
+
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
@@ -65,6 +81,8 @@ export default function Lightbox({
   // — trapping the overlay inside a tall section so it fell off the viewport.
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
       className="fixed inset-0 z-[90] flex flex-col bg-black/90 p-4"
       onClick={onClose}
     >
@@ -91,8 +109,9 @@ export default function Lightbox({
         {images.length > 1 && (
           <button
             onClick={() => step(-1)}
-            className="absolute left-0 rounded-full bg-white/10 px-4 py-3 text-2xl text-white hover:bg-white/20"
-            aria-label="Previous"
+            className="nav-btn absolute left-1 z-10 sm:left-3"
+            aria-label="Previous photo"
+            title="Previous (←)"
           >
             ‹
           </button>
@@ -106,8 +125,9 @@ export default function Lightbox({
         {images.length > 1 && (
           <button
             onClick={() => step(1)}
-            className="absolute right-0 rounded-full bg-white/10 px-4 py-3 text-2xl text-white hover:bg-white/20"
-            aria-label="Next"
+            className="nav-btn absolute right-1 z-10 sm:right-3"
+            aria-label="Next photo"
+            title="Next (→)"
           >
             ›
           </button>
@@ -127,14 +147,17 @@ export default function Lightbox({
               aria-label={`Photo ${i + 1}`}
               className={`h-14 w-20 shrink-0 overflow-hidden rounded border-2 transition ${
                 i === index
-                  ? "border-white"
+                  ? "border-[#5FBF92] shadow-[0_0_10px_2px_rgba(95,191,146,.5)]"
                   : "border-transparent opacity-55 hover:opacity-100"
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              {/* Optimised: a 40-photo listing was pulling 40 × ~300KB full-size
+                  originals just to fill 80×56 boxes. */}
+              <Image
                 src={imageUrl(im)}
                 alt=""
+                width={160}
+                height={112}
                 loading="lazy"
                 className="h-full w-full object-cover"
               />

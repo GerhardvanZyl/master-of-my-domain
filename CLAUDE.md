@@ -12,6 +12,9 @@ in this repo.
   · `scripts/` CLI helpers · `data/` runtime DB + images (gitignored).
 - Run: `npm run dev`. Migrate: `npm run db:migrate`. Scrape from CLI:
   `npm run scrape -- <url>`.
+- For day-to-day browsing use `npm run build && npm start` (same port, 3225):
+  the home grid renders in ~90ms in production vs ~1.2s under `next dev`. Stop
+  the dev server first — they share `.next`.
 - `extension/` — a Chrome MV3 capture extension: while you browse a Domain/REA
   listing it POSTs the page's embedded data to `POST /api/ingest`, which saves
   it to the same DB. This is the primary ingest path; `npm run scrape` (Playwright
@@ -64,6 +67,11 @@ label, and group membership ignores duplicates.
 
 ## Conventions
 - Keep the DDL in `src/db/ddl.ts` in sync with `src/db/schema.ts`.
+- `price_history` rows with `event = 'Sold'`: `date` is the real sale date when
+  known, the detection date otherwise (no way to tell them apart from the row
+  alone). `npm run mark-sold` is the sanctioned way to record a sale — pass
+  `--date` when you know the real one instead of hand-writing another
+  `_apply-status*.ts`.
 - Scrapers must degrade gracefully (store `raw_json`, set `scrape_status`) rather
   than throw — one site changing its markup shouldn't break a scrape.
 - Tests: `npm test` (units/adapters/scoring/pipeline/ingest — no network needed).

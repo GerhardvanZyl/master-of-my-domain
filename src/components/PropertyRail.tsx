@@ -40,9 +40,12 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 export default function PropertyRail({
   property,
   ratings: initialRatings,
+  notes,
 }: {
   property: Property;
   ratings: Ratings;
+  /** Slot rendered between the vibes score and the reaction cards. */
+  notes?: React.ReactNode;
 }) {
   const { profile } = useProfile();
   const [ratings, setRatings] = useState<Ratings>(initialRatings);
@@ -113,6 +116,34 @@ export default function PropertyRail({
           {err}
         </div>
       )}
+
+      <div className="rounded-2xl bg-forest p-4 text-linen">
+        <div className="mb-3 flex items-center justify-between">
+          <span className="text-[12.5px] font-semibold tracking-wide opacity-70">
+            ✨ VIBES SCORE
+          </span>
+          <span className="font-serif text-3xl leading-none">{total}</span>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          {breakdown.map((b, i) => (
+            <div key={`${b.label}-${i}`} className="flex items-center justify-between gap-2.5 text-xs">
+              <span className="leading-tight opacity-80">{b.label}</span>
+              <span
+                className="shrink-0 font-bold"
+                style={{ color: b.pts < 0 ? "#E8A08F" : "#A9D8B8" }}
+              >
+                {b.pts > 0 && b.label !== "Base score" ? "+" : ""}
+                {b.pts}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-3 border-t border-linen/15 pt-2.5 text-[11px] opacity-60">
+          Tune these weights on the <b>Vibes config</b> page.
+        </div>
+      </div>
+
+      {notes}
 
       {!profile ? (
         <div className="card p-4 text-[13px] text-mute">
@@ -200,6 +231,36 @@ export default function PropertyRail({
         </>
       )}
 
+      <Card title="Inspected">
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={() =>
+              patchProperty({
+                attendedAt: prop.attendedAt ? null : new Date().toISOString(),
+              })
+            }
+            className={`flex-1 rounded-[10px] border px-3 py-2.5 text-[13px] font-medium ${
+              prop.attendedAt
+                ? "border-forest bg-[#F2F6F2] text-forest"
+                : "border-line bg-white text-mute"
+            }`}
+          >
+            {prop.attendedAt ? "✓ Visited" : "Mark as visited"}
+          </button>
+          {prop.attendedAt && (
+            <input
+              type="date"
+              value={prop.attendedAt.slice(0, 10)}
+              onChange={(e) => {
+                if (!e.target.value) return;
+                patchProperty({ attendedAt: new Date(e.target.value).toISOString() });
+              }}
+              className="field w-[150px] text-xs"
+            />
+          )}
+        </div>
+      </Card>
+
       <div className="card p-4">
         <div className="grid grid-cols-2 gap-4">
           {([
@@ -244,32 +305,6 @@ export default function PropertyRail({
               />
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className="rounded-2xl bg-forest p-4 text-linen">
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-[12.5px] font-semibold tracking-wide opacity-70">
-            ✨ VIBES SCORE
-          </span>
-          <span className="font-serif text-3xl leading-none">{total}</span>
-        </div>
-        <div className="flex flex-col gap-1.5">
-          {breakdown.map((b, i) => (
-            <div key={`${b.label}-${i}`} className="flex items-center justify-between gap-2.5 text-xs">
-              <span className="leading-tight opacity-80">{b.label}</span>
-              <span
-                className="shrink-0 font-bold"
-                style={{ color: b.pts < 0 ? "#E8A08F" : "#A9D8B8" }}
-              >
-                {b.pts > 0 && b.label !== "Base score" ? "+" : ""}
-                {b.pts}
-              </span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 border-t border-linen/15 pt-2.5 text-[11px] opacity-60">
-          Tune these weights on the <b>Vibes config</b> page.
         </div>
       </div>
 

@@ -25,6 +25,10 @@ export interface VibeConfig {
   looksUgly: number; // −10
   smallKitchen: number; // −10
   tinyKitchen: number; // −50
+  perLivingArea: number; // +5 per living area
+  perBedBelow4: number; // −5 per bedroom under 4
+  perMasterSqmBelow18: number; // −2 per sqm the master is under 18 m²
+  perOtherBedSqmBelow11: number; // −2 per sqm the other beds average under 11 m²
 }
 
 export const DEFAULT_VIBE_CONFIG: VibeConfig = {
@@ -46,6 +50,10 @@ export const DEFAULT_VIBE_CONFIG: VibeConfig = {
   looksUgly: 10,
   smallKitchen: 10,
   tinyKitchen: 50,
+  perLivingArea: 5,
+  perBedBelow4: 5,
+  perMasterSqmBelow18: 2,
+  perOtherBedSqmBelow11: 2,
 };
 
 export interface Rating {
@@ -67,6 +75,10 @@ type Scorable = Pick<
   | "hasEaves"
   | "pergolaCovered"
   | "hasLawn"
+  | "beds"
+  | "commonAreasCount"
+  | "masterBedSqm"
+  | "avgOtherBedSqm"
 >;
 
 export interface BreakdownRow {
@@ -103,6 +115,20 @@ export function vibeBreakdown(
   if (p.hasEaves === 0) push("No all-around eaves", -cfg.noEaves);
   if (p.pergolaCovered === 0) push("No covered pergola", -cfg.noPergola);
   if (p.hasLawn === 0) push("No lawn", -cfg.noLawn);
+  if (p.commonAreasCount)
+    push(`${p.commonAreasCount} living areas`, p.commonAreasCount * cfg.perLivingArea);
+  if (p.beds != null && p.beds < 4)
+    push(`Only ${p.beds} bedrooms`, -(4 - p.beds) * cfg.perBedBelow4);
+  if (p.masterBedSqm != null && p.masterBedSqm < 18)
+    push(
+      `Master bed ${p.masterBedSqm} m²`,
+      -(18 - p.masterBedSqm) * cfg.perMasterSqmBelow18,
+    );
+  if (p.avgOtherBedSqm != null && p.avgOtherBedSqm < 11)
+    push(
+      `Other beds avg ${p.avgOtherBedSqm} m²`,
+      -(11 - p.avgOtherBedSqm) * cfg.perOtherBedSqmBelow11,
+    );
   // Ratings: both profiles' rows count, so a mutual "meh" deducts twice.
   for (const r of ratings) {
     const who = r.profile ? `${r.profile}: ` : "";

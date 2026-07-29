@@ -81,7 +81,16 @@ export async function syncImages(
   let ordinal = existing.reduce((m, r) => Math.max(m, r.ordinal + 1), 0);
 
   for (const img of normImages) {
-    if (bySourceUrl.has(img.sourceUrl)) {
+    const existingRow = bySourceUrl.get(img.sourceUrl);
+    if (existingRow) {
+      // Backfill alt on a re-visit: upgrades already-captured rows once the
+      // extension/CLI starts sending alt text, without touching anything else.
+      if (existingRow.alt == null && img.alt) {
+        db.update(images)
+          .set({ alt: img.alt })
+          .where(eq(images.id, existingRow.id))
+          .run();
+      }
       result.kept++;
       continue;
     }
@@ -126,6 +135,7 @@ export async function syncImages(
         width,
         height,
         bytes: buf.length,
+        alt: img.alt ?? null,
         createdAt: new Date().toISOString(),
       })
       .run();

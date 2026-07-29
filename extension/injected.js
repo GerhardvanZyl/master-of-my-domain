@@ -40,6 +40,13 @@
     const globals =
       window.__INITIAL_STATE__ || window.ArgonautExchange || window.REA || null;
     const imgUrls = [...new Set([...document.images].map((i) => i.src))];
+    // Domain encodes its own gallery position in alt ("{address}, Image N"),
+    // where N=0 is the cover. Sibling map alongside imgUrls (kept as-is for
+    // backward compat) so pickHero can prefer Domain's own ordering.
+    const imgAlts = {};
+    for (const i of document.images) {
+      if (i.alt) imgAlts[i.src] = i.alt;
+    }
     const og = document.querySelector('meta[property="og:title"]');
     return {
       url: location.href,
@@ -47,6 +54,7 @@
       jsonLd,
       globals,
       imgUrls,
+      imgAlts,
       title: document.title,
       ogTitle: og ? og.getAttribute("content") : undefined,
     };

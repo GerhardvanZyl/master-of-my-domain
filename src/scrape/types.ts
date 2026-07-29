@@ -3,6 +3,8 @@ import type { SourceSite } from "@/db/schema";
 export interface NormalizedImage {
   sourceUrl: string;
   ordinal: number;
+  /** Gallery alt text ("{address}, Image N"), if captured. */
+  alt?: string | null;
 }
 
 export interface NormalizedProperty {
@@ -46,6 +48,8 @@ export interface RawPageData {
   jsonLd?: unknown[];
   globals?: unknown;
   imgUrls?: string[];
+  /** src -> alt text, for images whose alt was non-empty. */
+  imgAlts?: Record<string, string>;
   title?: string;
   ogTitle?: string;
 }

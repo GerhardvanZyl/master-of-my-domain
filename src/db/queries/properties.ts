@@ -7,13 +7,30 @@ import type { Property, PriceHistory, PropertyRating } from "../schema";
 import { IMAGES_DIR } from "@/lib/env";
 import { priorityScore } from "@/lib/priority";
 
-export interface PropertyListItem extends Property {
+/**
+ * Grid row. `raw_json` + `description` are deliberately absent: PropertyGrid is
+ * a client component, so every column it receives is serialised into the RSC
+ * payload twice (HTML + flight data) for ~290 rows — those two fields alone
+ * were 234KB of the 709KB payload and nothing on the grid reads them. The
+ * detail/compare pages fetch the full row via getProperty/getPropertiesByIds.
+ */
+export interface PropertyListItem extends Omit<Property, "rawJson" | "description"> {
   imageCount: number;
   thumbPath: string | null;
   /** Listing no longer appears in Domain search results (sold/withdrawn). */
   delisted: boolean;
   /** Specific removal reason when known: "sold" | "withdrawn" | "delisted". */
   saleStatus: string | null;
+  /** Most recent price_history row that carries an actual amount (price fallback). */
+  lastPricedEvent: { event: string | null; date: string | null; priceDisplay: string | null } | null;
+  /**
+   * Real sale date ("YYYY-MM-DD") of the most recent event whose name starts
+   * with "Sold" — set even when there's no price (price-withheld sales still
+   * get a dated 'Sold' row via `npm run mark-sold`). Deliberately NOT sourced
+   * from `lastPricedEvent`, which filters to rows carrying a `$` amount and
+   * would silently drop price-withheld sales.
+   */
+  soldDate: string | null;
   ratings: Pick<PropertyRating, "profile" | "vibe" | "look" | "kitchen" | "score">[];
 }
 
@@ -22,6 +39,28 @@ const DELISTED_STATUSES = ["delisted", "sold", "withdrawn"];
 
 function aspect(width: number | null, height: number | null): number | null {
   return width && height ? width / height : null;
+}
+
+/**
+ * A photo of the property or its surrounds, as opposed to the marketing junk
+ * agents pad the gallery with. Verified against the ~7.8k stored images:
+ *   - agent headshots are 120–180px squares, agent "cards" are 1080px squares
+ *   - agency logos are wide strips (720×50, 120×42)
+ *   - real Domain photos are 3:2 (1620×1080) and floorplans are portrait or
+ *     A-paper landscape — none of them square, none under 500px
+ * Drops 1959 of 7770 images and leaves every property with at least one photo.
+ * Dimensions are unknown for nothing in the DB today; if that changes, keep the
+ * image rather than hide it.
+ */
+export function isPropertyPhoto(
+  width: number | null,
+  height: number | null,
+): boolean {
+  const a = aspect(width, height);
+  if (a == null || !width || !height) return true;
+  if (Math.max(width, height) < 500) return false; // headshots, icons, small logos
+  if (a >= 2.2 || a <= 0.45) return false; // banner strips
+  return !(a > 0.95 && a < 1.05); // square = agent card / logo
 }
 
 /**
@@ -81,10 +120,27 @@ export function pickFloorplan<
 }
 
 /**
- * Hero image: an explicit pick (notes='hero') wins; else the photo Domain leads
- * with — its lowest-photoIndex 3:2 shot; else the lowest-index real landscape
- * (16:9 aerial etc.); else the first image. Cover candidates are restricted to
- * the listing's dominant listingId so contamination and floorplans/logos can't win.
+ * Domain's gallery alt text carries its own cover index: `"{address}, Image N"`
+ * (N=0 is the cover). Tolerant to extra whitespace / casing; anchored on the
+ * trailing counter so it doesn't misfire on an address that happens to contain
+ * the word "image" elsewhere.
+ */
+const ALT_IMAGE_INDEX_RE = /\bimage\s*(\d+)\s*$/i;
+
+function altIndex(alt: string | null | undefined): number | null {
+  if (!alt) return null;
+  const m = alt.match(ALT_IMAGE_INDEX_RE);
+  return m ? Number(m[1]) : null;
+}
+
+/**
+ * Hero image: an explicit pick (notes='hero') wins; else the lowest "Image N"
+ * index parsed from Domain's own alt text; else the photo Domain leads with —
+ * its lowest-photoIndex 3:2 shot; else the lowest-index real landscape (16:9
+ * aerial etc.); else the first image. Cover candidates are restricted to the
+ * listing's dominant listingId so contamination (e.g. "similar listings"
+ * thumbnails, which carry a different address and their own Image 0) and
+ * floorplans/logos can't win.
  */
 export function pickHero<
   T extends {
@@ -92,14 +148,17 @@ export function pickHero<
     height: number | null;
     notes?: string | null;
     sourceUrl?: string | null;
+    alt?: string | null;
   },
 >(imgs: T[]): T | null {
   const explicit = imgs.find((i) => i.notes === "hero");
   if (explicit) return explicit;
-  const idx = (i: T) => urlIds(i.sourceUrl)?.photoIndex ?? Number.MAX_SAFE_INTEGER;
   const lid = (i: T) => urlIds(i.sourceUrl)?.listingId ?? null;
-  // Lowest Domain gallery index among candidates sharing the dominant listingId.
-  const pickFrom = (cands: T[]): T | null => {
+  const photoIdx = (i: T) => urlIds(i.sourceUrl)?.photoIndex ?? Number.MAX_SAFE_INTEGER;
+  // Lowest index (per `idx`) among candidates sharing the dominant listingId —
+  // the listingId itself always comes from the CDN filename, even when ranking
+  // by alt index, so contamination is dropped the same way for every rung.
+  const pickFrom = (cands: T[], idx: (i: T) => number): T | null => {
     if (!cands.length) return null;
     const counts = new Map<string, number>();
     for (const c of cands) {
@@ -111,8 +170,12 @@ export function pickHero<
     return own.reduce((a, b) => (idx(a) <= idx(b) ? a : b));
   };
   return (
-    pickFrom(imgs.filter((i) => isHeroPhoto(i.width, i.height))) ??
-    pickFrom(imgs.filter((i) => isRealLandscape(i.width, i.height))) ??
+    pickFrom(
+      imgs.filter((i) => altIndex(i.alt) != null),
+      (i) => altIndex(i.alt) ?? Number.MAX_SAFE_INTEGER,
+    ) ??
+    pickFrom(imgs.filter((i) => isHeroPhoto(i.width, i.height)), photoIdx) ??
+    pickFrom(imgs.filter((i) => isRealLandscape(i.width, i.height)), photoIdx) ??
     imgs[0] ??
     null
   );
@@ -161,6 +224,7 @@ export function listProperties(): PropertyListItem[] {
       ordinal: images.ordinal,
       width: images.width,
       height: images.height,
+      alt: images.alt,
       notes: imageTags.notes,
     })
     .from(images)
@@ -173,7 +237,11 @@ export function listProperties(): PropertyListItem[] {
   const counts = new Map<string, number>();
   const byProp = new Map<string, (typeof imgs)[number][]>();
   for (const i of imgs) {
-    counts.set(i.propertyId, (counts.get(i.propertyId) ?? 0) + 1);
+    // Count only what the gallery will actually show (see getPropertyImages),
+    // so the card's "N photos" badge matches the carousel.
+    if (isPropertyPhoto(i.width, i.height)) {
+      counts.set(i.propertyId, (counts.get(i.propertyId) ?? 0) + 1);
+    }
     (byProp.get(i.propertyId) ?? byProp.set(i.propertyId, []).get(i.propertyId)!).push(i);
   }
   const thumbOf = (id: string): string | null =>
@@ -214,13 +282,52 @@ export function listProperties(): PropertyListItem[] {
       .map((r) => [r.url, r.status] as const),
   );
 
+  // Last sale/listing event that carries a real dollar amount. The grid falls
+  // back to this when Domain has replaced the guide with a bare status.
+  const lastPriced = new Map<string, PropertyListItem["lastPricedEvent"]>();
+  for (const h of db
+    .select({
+      propertyId: priceHistory.propertyId,
+      event: priceHistory.event,
+      date: priceHistory.date,
+      priceDisplay: priceHistory.priceDisplay,
+    })
+    .from(priceHistory)
+    .orderBy(priceHistory.date)
+    .all()) {
+    if (!/\$\s?[\d,]/.test(h.priceDisplay ?? "")) continue;
+    if (/rent|lease/i.test(h.event ?? "")) continue;
+    // Rows come back oldest-first, so the last write wins = most recent.
+    lastPriced.set(h.propertyId, { event: h.event, date: h.date, priceDisplay: h.priceDisplay });
+  }
+
+  // Real sale date, independent of whether a price is known — deliberately a
+  // separate pass from lastPriced above (see PropertyListItem.soldDate doc).
+  const soldDateByProp = new Map<string, string>();
+  for (const h of db
+    .select({
+      propertyId: priceHistory.propertyId,
+      event: priceHistory.event,
+      date: priceHistory.date,
+    })
+    .from(priceHistory)
+    .orderBy(priceHistory.date)
+    .all()) {
+    if (!/^sold/i.test(h.event ?? "")) continue;
+    if (!h.date) continue;
+    // Rows come back oldest-first, so the last write wins = most recent.
+    soldDateByProp.set(h.propertyId, h.date);
+  }
+
   return props
-    .map((p) => ({
+    .map(({ rawJson: _raw, description: _desc, ...p }) => ({
       ...p,
       imageCount: counts.get(p.id) ?? 0,
       thumbPath: thumbOf(p.id),
       delisted: delistedStatus.has(p.listingUrl),
       saleStatus: delistedStatus.get(p.listingUrl) ?? null,
+      lastPricedEvent: lastPriced.get(p.id) ?? null,
+      soldDate: soldDateByProp.get(p.id) ?? null,
       ratings: ratingsByProp.get(p.id) ?? [],
     }))
     // Priority order: nearest the $850k target first, more bedrooms boosts.
@@ -233,6 +340,11 @@ export function listProperties(): PropertyListItem[] {
 
 export function getProperty(id: string): Property | undefined {
   return db.select().from(properties).where(eq(properties.id, id)).get();
+}
+
+/** Existence check without pulling raw_json/description (see PropertyListItem note above). */
+export function propertyExists(id: string): boolean {
+  return db.select({ id: properties.id }).from(properties).where(eq(properties.id, id)).get() != null;
 }
 
 /** Removal status for a listing URL: "sold" | "withdrawn" | "delisted" | null. */
@@ -319,6 +431,7 @@ export interface ImageWithTag {
   ordinal: number;
   width: number | null;
   height: number | null;
+  alt: string | null;
   roomType: string | null;
   notes: string | null;
 }
@@ -333,6 +446,7 @@ export function getPropertyImages(propertyId: string): ImageWithTag[] {
       ordinal: images.ordinal,
       width: images.width,
       height: images.height,
+      alt: images.alt,
       roomType: imageTags.roomType,
       notes: imageTags.notes,
     })
@@ -340,7 +454,11 @@ export function getPropertyImages(propertyId: string): ImageWithTag[] {
     .leftJoin(imageTags, eq(imageTags.imageId, images.id))
     .where(eq(images.propertyId, propertyId))
     .orderBy(images.ordinal)
-    .all();
+    .all()
+    // Galleries, lightboxes and the room compare all read through here, so one
+    // filter keeps agent headshots and agency logos out of every carousel.
+    // Tagging scripts talk to the DB directly and still see everything.
+    .filter((i) => isPropertyPhoto(i.width, i.height));
 }
 
 export function deleteProperty(id: string): void {

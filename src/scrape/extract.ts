@@ -141,6 +141,18 @@ export async function readRawFromPage(
   const imgUrls = await page
     .$$eval("img", (imgs) => imgs.map((i) => (i as HTMLImageElement).src))
     .catch(() => [] as string[]);
+  // Sibling src->alt map (Domain encodes its own gallery position in alt),
+  // same as the extension's injected.js collect() — kept in parity so the
+  // Playwright CLI path gets rung 2 of pickHero too.
+  const imgAlts = await page
+    .$$eval("img", (imgs) => {
+      const out: Record<string, string> = {};
+      for (const i of imgs as HTMLImageElement[]) {
+        if (i.alt) out[i.src] = i.alt;
+      }
+      return out;
+    })
+    .catch(() => ({}) as Record<string, string>);
   const ogTitle = await page
     .$eval('meta[property="og:title"]', (el) => el.getAttribute("content"))
     .catch(() => null);
@@ -150,6 +162,7 @@ export async function readRawFromPage(
     jsonLd,
     globals: globals ?? undefined,
     imgUrls: [...new Set(imgUrls)],
+    imgAlts,
     title,
     ogTitle: ogTitle ?? undefined,
   };

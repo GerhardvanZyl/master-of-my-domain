@@ -85,3 +85,40 @@ body {
 @utility btn-primary {
   @apply rounded-xl bg-forest px-5 py-2.5 text-sm font-semibold text-linen;
 }
+
+/* Carousel prev/next. The old translucent-white pills vanished against light
+   photos, so: solid dark disc, mint border (the forest green lifted to read on
+   black) and a soft green glow. Sized for a thumb, not a mouse pointer. */
+@utility nav-btn {
+  @apply flex h-11 w-11 items-center justify-center rounded-full border-2
+    border-[#5FBF92] bg-[rgba(12,20,16,.78)] pb-[3px] text-2xl leading-none text-white
+    shadow-[0_0_0_1px_rgba(0,0,0,.5),0_0_16px_3px_rgba(95,191,146,.4)] transition
+    hover:border-[#8FE7BC] hover:bg-[rgba(12,20,16,.94)]
+    hover:shadow-[0_0_0_1px_rgba(0,0,0,.5),0_0_22px_6px_rgba(95,191,146,.65)]
+    focus-visible:outline-none focus-visible:border-[#8FE7BC] active:scale-95;
+}
+
+/* Native offscreen skipping for the long property grid — the browser drops
+   style/layout/paint for cards outside the viewport, which is what keeps
+   scrolling smooth at ~290 cards. `contain-intrinsic-size: auto <h>` makes it
+   remember each card's real height once measured, so the scrollbar doesn't
+   jump when you scroll back up.
+   ponytail: this is the whole virtualisation story. Reach for a windowing
+   library only if the list ever runs to thousands of rows. */
+@utility skip-offscreen {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
+@utility skip-offscreen-row {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 94px;
+}
+
+/* Touch: the horizontal drag on a slider was being claimed as a page/carousel
+   pan, so only taps registered. pan-y leaves vertical scrolling alone and gives
+   the slider the horizontal gesture. Extra height = finger-sized hit area.
+   ponytail: kept native thumb rendering so `accent-color` still works. */
+input[type="range"] {
+  touch-action: pan-y;
+  height: 28px;
+}

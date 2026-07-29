@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { imageUrl } from "@/lib/images";
 import type { PhotoLite } from "@/lib/photo";
 import Lightbox from "./Lightbox";
@@ -34,11 +35,14 @@ export default function HeroGallery({
       >
         {hero ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            {/* priority: this is the detail page's largest contentful paint. */}
+            <Image
               src={imageUrl(hero)}
               alt={alt}
-              className="h-full w-full object-cover"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 60vw"
+              className="object-cover"
             />
             {images.length > 1 && (
               <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white transition group-hover:bg-black/80">
@@ -63,12 +67,12 @@ export default function HeroGallery({
               aria-label="Open photo"
               className="relative block h-24 overflow-hidden rounded-[12px] bg-fill transition hover:opacity-90 sm:h-28"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={imageUrl(images[idx])}
                 alt=""
-                loading="lazy"
-                className="h-full w-full object-cover"
+                fill
+                sizes="(max-width: 1024px) 33vw, 220px"
+                className="object-cover"
               />
             </button>
           ))}

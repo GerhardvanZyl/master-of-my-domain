@@ -7,9 +7,10 @@ import { firstInt, parsePrice } from "../src/scrape/adapters/base";
 import { deepCollect, collectImageUrls, firstDeep } from "../src/scrape/extract";
 import { parseFlags } from "../src/lib/args";
 import { imageUrl } from "../src/lib/images";
-import { formatPrice, bedBathCar, fmtNum } from "../src/lib/format";
+import { formatPrice, bedBathCar, fmtNum, fmtSoldDate, fmtSoldDateLong } from "../src/lib/format";
 import { priorityScore } from "../src/lib/priority";
 import { pickHero } from "../src/db/queries/properties";
+import { soldDate } from "../src/scrape/adapters/domain";
 
 // --- firstInt ---
 assert.equal(firstInt(4), 4);
@@ -128,7 +129,13 @@ assert.ok(
 // --- pickHero (lead with Domain's own cover, never a floorplan/logo) ---
 const U = (id: string, pi: number, crop = 1) =>
   `https://rimh2.domainstatic.com.au/x/${id}_${pi}_${crop}_260101_010101-w1-h1`;
-type HImg = { width: number | null; height: number | null; notes?: string | null; sourceUrl?: string | null };
+type HImg = {
+  width: number | null;
+  height: number | null;
+  notes?: string | null;
+  sourceUrl?: string | null;
+  alt?: string | null;
+};
 // Ordinal order (as ingested) leads with the floorplan; pickHero must skip it
 // and return Domain's lowest-photoIndex 3:2 photo instead.
 const heroImgs: HImg[] = [
@@ -159,5 +166,96 @@ assert.equal(
   U("200", 1),
   "landscape fallback also leads with lowest index, skips floorplans",
 );
+
+// --- pickHero rung 2: alt "Image N" (Domain's own cover index) ---
+// Alt index (0) beats a lower CDN-filename photoIndex (1) — alt wins the tie.
+assert.equal(
+  pickHero([
+    { width: 1600, height: 1067, sourceUrl: U("300", 1) }, // no alt, filename index 1
+    { width: 1600, height: 1067, sourceUrl: U("300", 2), alt: "123 Main St, Image 0" },
+  ])?.sourceUrl,
+  U("300", 2),
+  "alt Image 0 beats a lower CDN-filename index",
+);
+// Explicit notes='hero' still wins over any alt index.
+assert.equal(
+  pickHero([
+    { width: 1600, height: 1067, sourceUrl: U("300", 5), notes: "hero" },
+    { width: 1600, height: 1067, sourceUrl: U("300", 2), alt: "123 Main St, Image 0" },
+  ])?.sourceUrl,
+  U("300", 5),
+  "explicit notes='hero' still beats alt",
+);
+// Similar-listings contamination: a foreign listingId's own "Image 0" alt must
+// not win over the dominant (own-listing) candidates, even with a lower index.
+assert.equal(
+  pickHero([
+    { width: 1600, height: 1067, sourceUrl: U("400", 3), alt: "123 Main St, Image 3" },
+    { width: 1600, height: 1067, sourceUrl: U("400", 1), alt: "123 Main St, Image 1" },
+    { width: 1600, height: 1067, sourceUrl: U("999", 9), alt: "456 Other Rd, Image 0" }, // foreign listing, similar-listings thumb
+  ])?.sourceUrl,
+  U("400", 1),
+  "foreign-listingId alt Image 0 (similar-listing contamination) does not win",
+);
+// No alts anywhere at all: falls through to the existing CDN-filename ladder.
+assert.equal(
+  pickHero(heroImgs)?.sourceUrl,
+  U("100", 1),
+  "no alts anywhere = old behaviour unchanged",
+);
+
+// --- soldDate (real sale date extracted from a Domain listing payload) ---
+assert.equal(
+  soldDate({ soldDetails: { soldDate: "2025-07-12" } }),
+  "2025-07-12",
+  "nested soldDetails.soldDate key",
+);
+assert.equal(
+  soldDate({ dateSold: 1720656000 }), // unix seconds
+  "2024-07-11",
+  "unix-seconds dateSold key normalises to ISO",
+);
+assert.equal(
+  soldDate({ description: "Sold on 12 Jul 2025 for a great price to a lovely family." }),
+  "2025-07-12",
+  "free-text 'Sold on <date>' fallback",
+);
+assert.equal(
+  soldDate({ description: "SOLD by SHAHEEL! Sold at auction 12 July 2025 in front of a crowd." }),
+  "2025-07-12",
+  "free-text 'sold ... <date>' within 30 chars",
+);
+assert.equal(soldDate(null), null, "null payload -> null");
+assert.equal(soldDate(undefined), null, "undefined payload -> null");
+assert.equal(soldDate("just a string, no sold date here"), null, "garbage -> null");
+assert.equal(soldDate({ notes: "nothing relevant" }), null, "no matching field anywhere -> null");
+assert.equal(
+  soldDate({ soldDate: "not a real date" }),
+  null,
+  "unparseable date string -> null",
+);
+assert.equal(
+  soldDate({ soldDate: "3000-01-01" }),
+  null,
+  "future date is rejected",
+);
+assert.equal(
+  soldDate({
+    jsonLd: [
+      {
+        "@type": "Product",
+        offers: { availability: "https://schema.org/SoldOut", priceValidUntil: "2025-08-01" },
+      },
+    ],
+  }),
+  "2025-08-01",
+  "JSON-LD sold offer date",
+);
+
+// --- fmtSoldDate / fmtSoldDateLong ---
+assert.equal(fmtSoldDate("2026-07-28"), "28 Jul 26");
+assert.equal(fmtSoldDateLong("2026-07-28"), "28 Jul 2026");
+assert.equal(fmtSoldDate(null), null);
+assert.equal(fmtSoldDateLong(null), null);
 
 console.log("✓ units.test: all assertions passed");

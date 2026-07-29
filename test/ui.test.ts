@@ -100,7 +100,12 @@ function seed(dbPath: string) {
   // (unknown → yes) is deterministic regardless of the real scraped value.
   db.exec("UPDATE properties SET shortlist_tag=NULL, pros=NULL, cons=NULL, has_eaves=NULL");
   db.prepare("UPDATE properties SET shortlist_tag='rejected' WHERE id=?").run(props[0].id);
-  const total = (db.prepare("SELECT count(*) n FROM properties").get() as { n: number }).n;
+  // Home grid is Melbourne only — NSW listings live on /sydney.
+  const total = (
+    db
+      .prepare("SELECT count(*) n FROM properties WHERE state IS NULL OR state <> 'NSW'")
+      .get() as { n: number }
+  ).n;
   db.close();
   return { props, total };
 }
@@ -120,14 +125,21 @@ async function hydrated(page: Page) {
   await page.waitForSelector('header [data-active="true"]');
 }
 
-/** Run an action and wait for the write it triggers to actually land. */
-async function saved(page: Page, action: () => Promise<void>) {
+/**
+ * Run an action and wait for the write it triggers to actually land.
+ * `urlMatch` narrows which PATCH counts — several places fire optimistic
+ * fire-and-forget writes, and an unrelated one resolving inside this window
+ * used to satisfy the wait before the write under test had landed.
+ */
+async function saved(
+  page: Page,
+  action: () => Promise<void>,
+  urlMatch = /\/api\/properties\//,
+) {
   // .catch keeps a floating rejection from crashing the whole process as an
   // unhandledRejection if `action()` times out before the response arrives.
   const res = page
-    .waitForResponse(
-      (r) => r.request().method() === "PATCH" && r.url().includes("/api/properties/"),
-    )
+    .waitForResponse((r) => r.request().method() === "PATCH" && urlMatch.test(r.url()))
     .catch(() => null);
   await action();
   const r = await res;
@@ -173,7 +185,7 @@ async function main() {
 
   // Keep the suite offline and fast: nothing external is under test.
   await ctx.route(
-    /fonts\.(googleapis|gstatic)\.com|tile\.openstreetmap\.org|maps\.google\.com|google\.com\/maps/,
+    /fonts\.(googleapis|gstatic)\.com|tile\.openstreetmap\.org|basemaps\.cartocdn\.com|maps\.google\.com|google\.com\/maps/,
     (r) => r.abort(),
   );
 
@@ -253,6 +265,46 @@ async function main() {
     await page.waitForFunction(() => document.querySelectorAll("article").length > 1);
   });
 
+  // The card body has an onClick that opens the listing, guarded so its own
+  // controls (and text selection) don't trigger a navigation.
+  await t("clicking a card body opens the listing; its buttons don't", async () => {
+    const card = page.locator(sel.card).first();
+    // saved(): the tile's rating write is fire-and-forget, and leaving it in
+    // flight while we navigate lets it resolve inside a later test's
+    // waitForResponse window.
+    await saved(page, () =>
+      card.getByRole("button", { name: "Like", exact: true }).click(),
+    );
+    assert.equal(
+      await card.getByRole("button", { name: "Like", exact: true }).getAttribute("aria-pressed"),
+      "true",
+      "tile rating should paint immediately",
+    );
+    assert.match(page.url(), /\/$/, "rating must not navigate");
+    // Click a dead spot in the card body (the beds count in the bd/ba/car row,
+    // not a control or the address link) and land on the listing.
+    const bedCount = card.locator(".border-y b").first();
+    await bedCount.click();
+    await page.waitForURL(/\/property\//);
+    await page.goBack();
+    await hydrated(page);
+
+    // Selecting text inside the card must not navigate — the onClick handler
+    // bails out when window.getSelection() is non-empty. Double-clicking the
+    // h3 address itself would navigate (it's a real <Link> now, by design, so
+    // ctrl/middle-click and prefetch keep working), so select some other dead
+    // spot in the card body instead — same one used above.
+    // Target the price text, not the bd/ba/car row: those are single digits
+    // padded by spaces, and a double-click there happily selects just the
+    // whitespace — a green test that proves nothing.
+    const card2 = page.locator(sel.card).first();
+    await card2.locator(".text-forest.font-semibold, .font-semibold.text-forest").first().dblclick();
+    const urlBefore = page.url();
+    const selection = await page.evaluate(() => window.getSelection()?.toString() ?? "");
+    assert.ok(selection.trim().length > 0, "double-click should select text");
+    assert.equal(page.url(), urlBefore, "selecting text must not navigate");
+  });
+
   console.log("\ncompare");
   await t("selecting two properties opens a compare table with a ✦ winner", async () => {
     const buttons = page.getByRole("button", { name: "Compare", exact: true });
@@ -291,9 +343,9 @@ async function main() {
     for (let i = 0; i < 3; i++) {
       const before = await btn.getAttribute("data-value");
       if (before === "yes") break;
-      // Await the PATCH so the write lands before we later reload (else the
-      // reload navigates away mid-request and the value never persists).
-      await saved(page, () => btn.click());
+      // Await the property PATCH (not /rating) so the write lands before we
+      // later reload — else the reload navigates away mid-request.
+      await saved(page, () => btn.click(), /\/api\/properties\/[^/]+$/);
       trace.push(`click${i}: ${before} -> ${await btn.getAttribute("data-value")}`);
     }
     assert.equal(

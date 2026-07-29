@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 
 const LINKS = [
   ["/", "Properties"],
+  ["/inspect", "Inspect"],
   ["/compare", "Compare"],
   ["/rooms", "Rooms"],
   ["/map", "Map"],
+  ["/inbox", "Inbox"],
   ["/config", "Vibes config"],
 ] as const;
 

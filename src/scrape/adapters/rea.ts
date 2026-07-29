@@ -84,6 +84,7 @@ export const ReaAdapter: Adapter = {
     const images: NormalizedImage[] = urls.map((sourceUrl, ordinal) => ({
       sourceUrl,
       ordinal,
+      alt: raw.imgAlts?.[sourceUrl] ?? null,
     }));
 
     const property: NormalizedProperty = {

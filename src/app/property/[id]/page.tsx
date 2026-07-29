@@ -16,12 +16,15 @@ import PropertyMap from "@/components/PropertyMap";
 import MapModal from "@/components/MapModal";
 import NotesEditor from "@/components/NotesEditor";
 import PropertyRail from "@/components/PropertyRail";
+import PropertyPager from "@/components/PropertyPager";
 import MediaUploader from "@/components/MediaUploader";
 import MetadataEditor from "@/components/MetadataEditor";
+import ShareButton from "@/components/ShareButton";
 import { listMedia } from "@/lib/media";
 import { imageUrl } from "@/lib/images";
-import { formatPrice, fmtNum, fmtDistance, fmtMinutes, isTransitEstimated } from "@/lib/format";
+import { formatPrice, fmtAud, fmtNum, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDateLong } from "@/lib/format";
 import { formatInspection } from "@/lib/inspection";
+import type { ReactNode } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -117,25 +120,123 @@ export default async function PropertyDetail({
   const floorplan = pickFloorplan(images);
   const saleStatus = getSaleStatus(property.listingUrl);
   const delisted = saleStatus !== null;
-  const soldRow = history.find((h) => /sold/i.test(h.event ?? ""));
+  // getPriceHistory returns oldest-first; the property's own historical sale
+  // timeline (previous owners, e.g. "Sold - PRIVATE TREATY") also matches
+  // /sold/i, so take the MOST RECENT match — this listing's own sale, not a
+  // 2015 entry that happens to appear earlier in the array.
+  const soldRow = [...history].reverse().find((h) => /sold/i.test(h.event ?? ""));
+  const soldDateText = soldRow?.date ? fmtSoldDateLong(soldRow.date) : null;
+
+  // ponytail: adv price strings are plain "$X,XXX,XXX" guides (no k/m
+  // shorthand in this dataset) — a plain digit scrape is enough to compute
+  // the ▲/▼ delta against the next row down, no need for a real parser.
+  const parseDollars = (s: string | null | undefined): number | null => {
+    if (!s) return null;
+    const m = s.match(/[\d,]{4,}/);
+    if (!m) return null;
+    const n = Number(m[0].replace(/,/g, ""));
+    return Number.isFinite(n) && n > 0 ? n : null;
+  };
+
+  type PriceRow = {
+    key: string;
+    date: string | null;
+    event: string;
+    priceText: ReactNode;
+    priceNumeric: number | null;
+  };
+
+  const priceRows: PriceRow[] = [];
+  if (property.advPriceCurrent) {
+    priceRows.push({
+      key: "adv-current",
+      date: null,
+      event: "Current guide",
+      priceText: property.advPriceCurrent,
+      priceNumeric: parseDollars(property.advPriceCurrent),
+    });
+  }
+  if (property.advPricePrevious) {
+    priceRows.push({
+      key: "adv-previous",
+      date: null,
+      event: property.advPricePreviousLabel?.replace(/^Price /, "") || "Previous guide",
+      priceText: (
+        <>
+          was <span className="line-through">{property.advPricePrevious}</span>
+        </>
+      ),
+      priceNumeric: parseDollars(property.advPricePrevious),
+    });
+  }
+  for (const h of [...history].reverse()) {
+    // getPriceHistory orders ascending by date — reverse for newest-first.
+    priceRows.push({
+      key: h.id,
+      date: h.date,
+      event: h.event ?? "—",
+      priceText: h.priceDisplay || (h.priceNumeric ? fmtAud(h.priceNumeric) : "—"),
+      priceNumeric: h.priceNumeric,
+    });
+  }
+  const priceRowsWithChange = priceRows.map((r, i) => {
+    const older = priceRows[i + 1];
+    let change: { text: string; up: boolean } | null = null;
+    if (r.priceNumeric != null && older?.priceNumeric != null && older.priceNumeric !== r.priceNumeric) {
+      const delta = r.priceNumeric - older.priceNumeric;
+      const pct = (Math.abs(delta) / older.priceNumeric) * 100;
+      change = {
+        text: `${delta > 0 ? "▲" : "▼"} ${fmtAud(Math.abs(delta))} (${pct.toFixed(1)}%)`,
+        up: delta > 0,
+      };
+    }
+    return { ...r, change };
+  });
+
+  const attendedLabel = property.attendedAt
+    ? new Intl.DateTimeFormat("en-AU", {
+        timeZone: "Australia/Melbourne",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(property.attendedAt))
+    : null;
 
   return (
     <section className="rise">
-      <Link
-        href="/"
-        className="mb-4 inline-block text-[13px] font-medium text-[#5B5A52] hover:text-forest"
-      >
-        ← All properties
-      </Link>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <Link
+          href="/"
+          className="inline-block text-[13px] font-medium text-[#5B5A52] hover:text-forest"
+        >
+          ← All properties
+        </Link>
+        <div className="flex items-center gap-2.5">
+          <ShareButton propertyId={property.id} />
+          <PropertyPager currentId={property.id} />
+        </div>
+      </div>
 
       {delisted && (
         <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#e0b4ac] bg-[#fbeeeb] px-4 py-3 text-sm font-medium text-[#B84A3A]">
           <span className="text-base">⚠</span>
           {saleStatus === "sold" ? (
             <span>
-              Sold — no longer listed on Domain
-              {soldRow?.priceDisplay ? ` (${soldRow.priceDisplay})` : ""}. Your
-              ratings and notes are kept.
+              {soldDateText ? (
+                <>
+                  Sold {soldDateText} — no longer listed on Domain
+                  {soldRow?.priceDisplay
+                    ? ` (${soldRow.priceDisplay.replace(/^sold\s*-\s*/i, "")})`
+                    : ""}
+                  . Your ratings and notes are kept.
+                </>
+              ) : (
+                <>
+                  Sold — no longer listed on Domain
+                  {soldRow?.priceDisplay ? ` (${soldRow.priceDisplay})` : ""}. Your
+                  ratings and notes are kept.
+                </>
+              )}
             </span>
           ) : saleStatus === "withdrawn" ? (
             <span>
@@ -216,42 +317,6 @@ export default async function PropertyDetail({
 
           <MediaUploader propertyId={property.id} initial={media} />
 
-          <div className="card p-[18px]">
-            <h2 className="mb-3.5 font-serif text-[22px]">Home &amp; grounds</h2>
-            <dl className="flex flex-col gap-2.5 text-[13.5px]">
-              {homeFacts.map(([k, v], i) => (
-                <div
-                  key={k}
-                  className={`flex justify-between gap-4 ${
-                    i < homeFacts.length - 1 ? "border-b border-hairline pb-2.5" : ""
-                  }`}
-                >
-                  <dt className="min-w-0 text-mute">{k}</dt>
-                  <dd className="min-w-0 break-words text-right font-medium">{v}</dd>
-                </div>
-              ))}
-            </dl>
-            <div className="mt-3.5">
-              <MetadataEditor
-                propertyId={property.id}
-                initial={{
-                  hasEaves: property.hasEaves,
-                  masterBedSqm: property.masterBedSqm,
-                  avgOtherBedSqm: property.avgOtherBedSqm,
-                  commonAreasCount: property.commonAreasCount,
-                  balconySqm: property.balconySqm,
-                  backGardenSqm: property.backGardenSqm,
-                  pergolaCovered: property.pergolaCovered,
-                  hasLawn: property.hasLawn,
-                  lawnType: property.lawnType,
-                  floodOverlay: property.floodOverlay,
-                  bushfireOverlay: property.bushfireOverlay,
-                  altitudeM: property.altitudeM,
-                }}
-              />
-            </div>
-          </div>
-
           {property.description && (
             <div className="card p-[18px]">
               <h2 className="mb-2 font-serif text-[22px]">Listing description</h2>
@@ -261,18 +326,27 @@ export default async function PropertyDetail({
             </div>
           )}
 
-          {history.length > 0 && (
+          {priceRowsWithChange.length > 0 && (
             <div className="card p-[18px]">
               <h2 className="mb-2.5 font-serif text-[22px]">Price history</h2>
               <table className="w-full text-sm">
                 <tbody>
-                  {history.map((h) => (
-                    <tr key={h.id} className="border-b border-hairline last:border-0">
-                      <td className="py-1.5 pr-4 text-mute">{h.date ?? "—"}</td>
-                      <td className="py-1.5 pr-4">{h.event ?? "—"}</td>
-                      <td className="py-1.5 text-right font-medium">
-                        {formatPrice(h.priceDisplay, h.priceNumeric)}
+                  {priceRowsWithChange.map((r) => (
+                    <tr key={r.key} className="border-b border-hairline last:border-0">
+                      <td className="py-1.5 pr-4 text-mute">{r.date ?? "—"}</td>
+                      <td className="py-1.5 pr-4">
+                        {r.event}
+                        {r.change && (
+                          <span
+                            className={`ml-2 text-[11.5px] font-medium ${
+                              r.change.up ? "text-forest" : "text-[#B84A3A]"
+                            }`}
+                          >
+                            {r.change.text}
+                          </span>
+                        )}
                       </td>
+                      <td className="py-1.5 text-right font-medium">{r.priceText}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -313,6 +387,11 @@ export default async function PropertyDetail({
                 </div>
               ) : null;
             })()}
+            {attendedLabel && (
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-sand px-3 py-1 text-[13px] font-medium text-mute">
+                ✓ Visited {attendedLabel}
+              </div>
+            )}
             <a
               href={property.listingUrl}
               target="_blank"
@@ -330,13 +409,6 @@ export default async function PropertyDetail({
                 <div className="text-[11px] text-mute">{k}</div>
               </div>
             ))}
-          </div>
-
-          <PropertyRail property={property} ratings={ratings} />
-
-          <div className="card p-4">
-            <div className="label-cap mb-2.5">My notes</div>
-            <NotesEditor propertyId={property.id} initial={property.domainNotes} />
           </div>
 
           {floorplan && (
@@ -357,6 +429,53 @@ export default async function PropertyDetail({
               </a>
             </div>
           )}
+
+          <div className="card p-4">
+            <div className="label-cap mb-2.5">Home &amp; grounds</div>
+            <dl className="flex flex-col gap-2.5 text-[13px]">
+              {homeFacts.map(([k, v], i) => (
+                <div
+                  key={k}
+                  className={`flex justify-between gap-4 ${
+                    i < homeFacts.length - 1 ? "border-b border-hairline pb-2.5" : ""
+                  }`}
+                >
+                  <dt className="min-w-0 text-mute">{k}</dt>
+                  <dd className="min-w-0 break-words text-right font-medium">{v}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="mt-3.5">
+              <MetadataEditor
+                propertyId={property.id}
+                initial={{
+                  hasEaves: property.hasEaves,
+                  masterBedSqm: property.masterBedSqm,
+                  avgOtherBedSqm: property.avgOtherBedSqm,
+                  commonAreasCount: property.commonAreasCount,
+                  balconySqm: property.balconySqm,
+                  backGardenSqm: property.backGardenSqm,
+                  pergolaCovered: property.pergolaCovered,
+                  hasLawn: property.hasLawn,
+                  lawnType: property.lawnType,
+                  floodOverlay: property.floodOverlay,
+                  bushfireOverlay: property.bushfireOverlay,
+                  altitudeM: property.altitudeM,
+                }}
+              />
+            </div>
+          </div>
+
+          <PropertyRail
+            property={property}
+            ratings={ratings}
+            notes={
+              <div className="card p-4">
+                <div className="label-cap mb-2.5">My notes</div>
+                <NotesEditor propertyId={property.id} initial={property.domainNotes} />
+              </div>
+            }
+          />
 
           {property.aiComment && (
             <div className="rounded-[14px] border border-sand-line bg-sand p-4">
