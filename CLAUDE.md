@@ -9,7 +9,9 @@ in this repo.
 - Next.js App Router + TypeScript + Tailwind. SQLite via better-sqlite3 (Drizzle
   for typed queries). Playwright (playwright-core) for scraping.
 - `src/db` schema + queries · `src/scrape` adapters/pipeline · `src/app` UI + API
-  · `scripts/` CLI helpers · `data/` runtime DB + images (gitignored).
+  · `scripts/` CLI helpers · `data/` runtime DB + images (tracked in git, apart
+  from the specific entries `.gitignore` lists: the SQLite WAL sidecars and
+  `data/_tagbench.jsonl`).
 - Run: `npm run dev`. Migrate: `npm run db:migrate`. Scrape from CLI:
   `npm run scrape -- <url>`.
 - For day-to-day browsing use `npm run build && npm start` (same port, 3225):
@@ -43,8 +45,36 @@ never guess a room from a filename or URL: Read the actual image.**
 - `npm run group:add -- --group=<groupId> --image=<imageId>` → adds an image to
   a similarity group (ignores duplicates).
 - `npm run tag:status` → coverage summary (tagged/untagged counts, rooms, groups).
+- `npm run tag:auto -- --threshold=<0..1> [--property=<id>] [--limit=N] [--model=<name>] [--dry-run]`
+  → local vision model (LM Studio) tags what it is confident about, prints the
+  rest as a review queue in the same JSON shape as `tag:list`. Only ever
+  touches **untagged** images, writes `tagged_by='local-vlm'` and
+  `notes='local:<model>'`, and reports written/skipped/queued/errored counts.
+  `--threshold` is mandatory and has no default — a malformed value
+  (`--threshold=` or non-numeric) exits non-zero rather than guessing. Exits
+  non-zero if the model server is unreachable, having printed the partial
+  queue; a single bad photo is skipped, not fatal.
+- `npm run tag:bench [-- --properties=<id,id,...> --count=10 --limit=N --model=<name>]`
+  → benchmarks a local model against your existing tags; writes nothing to
+  the DB. Defaults to the 10 photo-richest properties (445 photos, ~20-60min
+  full run). `--properties` is a comma-separated list, not a repeatable flag.
+
+Both need LM Studio serving a vision model at `http://127.0.0.1:1234/v1`
+(override with `LOCAL_LLM_URL` — include the `/v1` suffix, since `/chat/completions`
+is appended to whatever this resolves to); the model id comes from
+`LOCAL_VLM_MODEL` in `.env.local`, or `--model`.
 
 ### The loop
+0. **Local first pass.** The threshold is recorded in
+   `docs/superpowers/specs/2026-07-30-local-model-offload-design.md` once a
+   benchmark has picked one — if it is not recorded there yet, run
+   `npm run tag:bench` first to choose one; do not guess a number. Then run
+   `npm run tag:auto -- --threshold=<T>` (needs LM Studio's server running).
+   Confident photos are tagged by the local model and marked
+   `tagged_by = 'local-vlm'`. It prints the low-confidence photos as JSON in
+   the same shape as `tag:list` — those are the ones you Read yourself,
+   continuing at step 1 below. If the server is not running the command exits
+   non-zero and writes nothing; fall back to step 1 and tag everything by hand.
 1. `npm run tag:list`. If empty, everything is tagged — stop.
 2. For each image: **Read `absPath`**, decide the room type, then
    `npm run tag:set --image=<id> --room=<type>`.

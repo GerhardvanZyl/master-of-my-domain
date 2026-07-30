@@ -28,3 +28,9 @@ public/rootCA.crt
 # SQLite WAL sidecar files (transient — never commit)
 data/app.db-shm
 data/app.db-wal
+
+# local-model benchmark output (regenerable, grows on every run)
+data/_tagbench.jsonl
+
+# subagent-driven-development scratch (ledger, briefs, review packages)
+/.superpowers/

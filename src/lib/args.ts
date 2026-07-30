@@ -16,3 +16,51 @@ export function parseFlags(argv: string[]): Record<string, string | boolean> {
   }
   return out;
 }
+
+/**
+ * Strict flag parsers shared by scripts that gate real work on a numeric
+ * flag (tag:bench's --count/--limit, tag:auto's --threshold/--limit). A
+ * garbage value here must fail loudly rather than silently degrade to "no
+ * limit" or "gate at 0" — that was bug M7, twice (tag-bench.ts, then
+ * tag-auto.ts), so the parsing lives here once instead of being copied.
+ */
+
+/**
+ * Parses `raw` as a positive number. Returns `undefined` if the flag was not
+ * passed at all — that's a legitimate "no limit". Throws if the flag WAS
+ * passed but is not a well-formed positive number: a bare flag (`true`),
+ * empty/whitespace string, non-numeric, zero, negative, NaN, or Infinity.
+ */
+export function parsePositiveNumber(
+  raw: string | boolean | undefined,
+  flagName: string,
+): number | undefined {
+  if (raw === undefined) return undefined;
+  const n = typeof raw === "string" && raw.trim() !== "" ? Number(raw) : NaN;
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new Error(
+      `Invalid --${flagName}=${JSON.stringify(raw)} — expected a positive number.`,
+    );
+  }
+  return n;
+}
+
+/**
+ * Parses `raw` as a number in [0, 1] inclusive. Unlike parsePositiveNumber,
+ * this flag is mandatory for its callers — a missing value throws the same
+ * as a malformed one, since there is deliberately no default for a
+ * confidence gate. 0 and 1 are valid, legitimate boundary values and must be
+ * accepted, not treated as falsy/missing.
+ */
+export function parseUnitInterval(
+  raw: string | boolean | undefined,
+  flagName: string,
+): number {
+  const n = typeof raw === "string" && raw.trim() !== "" ? Number(raw) : NaN;
+  if (!Number.isFinite(n) || n < 0 || n > 1) {
+    throw new Error(
+      `Invalid --${flagName}=${JSON.stringify(raw)} — expected a number between 0 and 1.`,
+    );
+  }
+  return n;
+}

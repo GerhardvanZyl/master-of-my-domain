@@ -46,6 +46,73 @@ export function listUntaggedImages(opts: {
   }));
 }
 
+/**
+ * True if any image row exists for this property id. Distinguishes "unknown
+ * property id" from "known property id with nothing untagged" — those are
+ * different problems and tag-auto reports them differently.
+ */
+export function propertyHasImages(propertyId: string): boolean {
+  return (
+    sqlite
+      .prepare("SELECT 1 FROM images WHERE property_id = ? LIMIT 1")
+      .get(propertyId) !== undefined
+  );
+}
+
+export interface TaggedImage extends UntaggedImage {
+  roomType: RoomType;
+}
+
+/**
+ * Images that already have a room_type — the ground truth a local model gets
+ * benchmarked against. Read-only.
+ */
+export function listTaggedImages(
+  opts: { propertyIds?: string[]; limit?: number } = {},
+): TaggedImage[] {
+  const clauses = ["t.room_type IS NOT NULL"];
+  const args: unknown[] = [];
+  if (opts.propertyIds && opts.propertyIds.length > 0) {
+    clauses.push(
+      `i.property_id IN (${opts.propertyIds.map(() => "?").join(",")})`,
+    );
+    args.push(...opts.propertyIds);
+  }
+  let sql = `SELECT i.id AS imageId, i.property_id AS propertyId,
+      p.address AS address, i.ordinal AS ordinal, i.local_path AS localPath,
+      t.room_type AS roomType
+    FROM images i
+    JOIN properties p ON p.id = i.property_id
+    JOIN image_tags t ON t.image_id = i.id
+    WHERE ${clauses.join(" AND ")}
+    ORDER BY i.property_id, i.ordinal`;
+  if (opts.limit && opts.limit > 0) sql += ` LIMIT ${Math.floor(opts.limit)}`;
+
+  const rows = sqlite.prepare(sql).all(...args) as Omit<
+    TaggedImage,
+    "absPath"
+  >[];
+  return rows.map((r) => ({
+    ...r,
+    absPath: path.resolve(DATA_DIR, r.localPath),
+  }));
+}
+
+/** The n properties with the most tagged photos — the default benchmark sample. */
+export function topTaggedProperties(n: number): string[] {
+  const rows = sqlite
+    .prepare(
+      `SELECT i.property_id AS id, COUNT(*) AS c
+       FROM images i JOIN image_tags t ON t.image_id = i.id
+       WHERE t.room_type IS NOT NULL
+       GROUP BY i.property_id
+       ORDER BY c DESC, i.property_id
+       LIMIT ?`,
+    )
+    .all(Math.floor(n)) as { id: string }[];
+  return rows.map((r) => r.id);
+}
+
 export function setImageTag(input: {
   imageId: string;
   roomType: RoomType;
@@ -76,6 +143,41 @@ export function setImageTag(input: {
       taggedAt: new Date().toISOString(),
       notes: input.notes ?? null,
     });
+}
+
+/**
+ * Insert a room tag ONLY if the image has no tag yet — never overwrites.
+ * Unlike setImageTag, this cannot clobber a tag written by a human (UI
+ * PATCH /api/images/[id]/tag, or `tag:set`) after a caller snapshotted its
+ * work list but before it got around to writing this particular image.
+ * Returns whether a row was actually inserted.
+ */
+export function setImageTagIfAbsent(input: {
+  imageId: string;
+  roomType: RoomType;
+  confidence?: number | null;
+  notes?: string | null;
+  taggedBy?: string;
+}): boolean {
+  const exists = sqlite
+    .prepare("SELECT 1 FROM images WHERE id = ?")
+    .get(input.imageId);
+  if (!exists) throw new Error(`No image with id ${input.imageId}`);
+  const result = sqlite
+    .prepare(
+      `INSERT INTO image_tags (image_id, room_type, confidence, tagged_by, tagged_at, notes)
+       VALUES (@imageId, @roomType, @confidence, @taggedBy, @taggedAt, @notes)
+       ON CONFLICT(image_id) DO NOTHING`,
+    )
+    .run({
+      imageId: input.imageId,
+      roomType: input.roomType,
+      confidence: input.confidence ?? null,
+      taggedBy: input.taggedBy ?? "claude-code",
+      taggedAt: new Date().toISOString(),
+      notes: input.notes ?? null,
+    });
+  return result.changes > 0;
 }
 
 /** Find an existing group by case-insensitive label, or create one. */

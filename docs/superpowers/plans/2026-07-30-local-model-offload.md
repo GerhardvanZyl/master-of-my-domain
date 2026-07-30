@@ -185,7 +185,12 @@ assert.ok(
   parts[1].image_url.url.startsWith("data:image/png;base64,"),
   "png extension maps to the png mime type",
 );
-assert.ok(parts[1].image_url.url.length > 30, "image bytes are actually encoded");
+const b64 = parts[1].image_url.url.slice("data:image/png;base64,".length);
+assert.deepEqual(
+  Buffer.from(b64, "base64"),
+  fs.readFileSync(tmpImg),
+  "the image's exact bytes are encoded, not truncated",
+);
 
 // --- askLocal: no image means no image part ---
 stubFetch(okReply);
@@ -919,7 +924,9 @@ No code. This task's deliverable is a number, and Task 7 cannot be completed wit
 ```bash
 npm run tag:bench 2>progress.log | tee bench-report.txt
 ```
-10 properties, roughly 250-300 photos. Expect single-digit seconds per photo on a fully-offloaded 8B VLM, so 15-45 minutes. Let it finish.
+10 properties, **445 photos** (measured in Task 4 — `topTaggedProperties` picks the photo-richest listings, which average 44.5 tagged photos against the repo-wide 27.2, so the sample runs larger than a naive average suggests). Expect single-digit seconds per photo on a fully-offloaded 8B VLM, so 20-60 minutes. Let it finish.
+
+Sampling was checked for skew and is sound: `other` is 33.3% of the top-10 sample versus 35.6% repo-wide, so the photo-richest listings are not disproportionately floorplans and marketing shots. No need to randomise.
 
 - [ ] **Step 2: Read the confusion matrix**
 
@@ -942,7 +949,7 @@ git add docs/superpowers/specs/2026-07-30-local-model-offload-design.md
 git commit -m "docs: record local VLM benchmark result and chosen threshold"
 ```
 
-Do not commit `bench-report.txt` or `progress.log`; delete them, or note that `data/` is already gitignored if you move them there.
+Delete `bench-report.txt` and `progress.log` afterwards — do not commit them. Note that `/data/` is **not** gitignored in this repo (the entry is commented out and 8,331 files under `data/` are tracked), so moving them there would commit them. `data/_tagbench.jsonl` has its own `.gitignore` entry; nothing else under `data/` is safe to assume ignored.
 
 ---
 
@@ -1100,7 +1107,7 @@ In `package.json`, after `"tag:bench"`:
 - [ ] **Step 6: Verify the no-overwrite constraint by inspection**
 
 Run: `grep -n "listTaggedImages\|listUntaggedImages" scripts/tag-auto.ts`
-Expected: exactly one match, `listUntaggedImages`. If `listTaggedImages` appears here, existing tags are reachable and the constraint is broken.
+Expected: two matches (the import and the call site), **both** `listUntaggedImages`, and zero occurrences of `listTaggedImages`. If `listTaggedImages` appears here, existing tags are reachable and the constraint is broken.
 
 - [ ] **Step 7: Dry-run against real data**
 
