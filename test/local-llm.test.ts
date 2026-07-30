@@ -262,6 +262,31 @@ assert.equal(lastBody.messages.at(-1).content[1].type, "image_url", "the photo i
 stubFetch({ choices: [{ message: { content: '{"room":"garage","confidence":0.9}' } }] });
 await assert.rejects(classifyRoom(tmpImg, "m"), /invalid room/i);
 
+// --- tag:auto refuses to run without a threshold ---
+import { execFileSync } from "node:child_process";
+
+function runTagAuto(args: string[]): { status: number; out: string } {
+  try {
+    const out = execFileSync("npx", ["tsx", "scripts/tag-auto.ts", ...args], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+      // shell: true is required on Windows — execFileSync cannot exec npx.cmd
+      // directly (ENOENT), since it isn't a real PE executable.
+      shell: true,
+    });
+    return { status: 0, out };
+  } catch (e: any) {
+    return { status: e.status ?? 1, out: `${e.stdout ?? ""}${e.stderr ?? ""}` };
+  }
+}
+
+for (const bad of [[], ["--threshold=abc"], ["--threshold=1.5"], ["--threshold=-1"]]) {
+  const r = runTagAuto(bad);
+  assert.notEqual(r.status, 0, `tag:auto must reject ${JSON.stringify(bad)}`);
+  assert.match(r.out, /threshold/i, "the error explains the threshold");
+  assert.match(r.out, /tag:bench/, "the error points at the benchmark");
+}
+
 globalThis.fetch = realFetch;
 fs.unlinkSync(tmpImg);
 
