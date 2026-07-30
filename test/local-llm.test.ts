@@ -115,6 +115,32 @@ await assert.rejects(
   "a down server produces one clear error",
 );
 
+// --- askLocal: a timeout is distinguishable from a down server (C1) ---
+// AbortSignal.timeout() rejects with a DOMException named "TimeoutError" —
+// tag-bench must be able to skip just this photo instead of aborting the
+// whole run, so the message must not match the /not reachable/i abort regex.
+globalThis.fetch = (async () => {
+  throw new DOMException("The operation was aborted due to timeout", "TimeoutError");
+}) as unknown as typeof fetch;
+await assert.rejects(
+  askLocal({ model: "m", prompt: "p", schema: SCHEMA, baseUrl: "http://127.0.0.1:9/v1", timeoutMs: 5 }),
+  (e: Error) => {
+    assert.match(e.message, /timed out/i, "says the call timed out");
+    assert.doesNotMatch(
+      e.message,
+      /not reachable/i,
+      "a timeout is distinguishable from a down server",
+    );
+    assert.doesNotMatch(
+      e.message,
+      /Could not read image/,
+      "a timeout is distinguishable from an unreadable image",
+    );
+    return true;
+  },
+  "a slow call times out with a skip-this-photo message, not an abort message",
+);
+
 // --- askLocal: HTTP error surfaces the status ---
 stubFetch({ error: "model not loaded" }, false, 404);
 await assert.rejects(
@@ -238,5 +264,76 @@ await assert.rejects(classifyRoom(tmpImg, "m"), /invalid room/i);
 
 globalThis.fetch = realFetch;
 fs.unlinkSync(tmpImg);
+
+// ---------------------------------------------------------------------------
+// bench-report: pure arithmetic seam for tag:bench (I4) — this is the only
+// insurance the report's numbers ever get, so it is not a smoke test.
+// ---------------------------------------------------------------------------
+import { pct, renderReport, type BenchRow } from "../src/lib/bench-report";
+
+// --- pct: division by zero is "n/a", never a NaN% ---
+assert.equal(pct(0, 0), "n/a", "0/0 must not render as NaN%");
+assert.equal(pct(3, 4), "75.0% (3/4)");
+
+// --- 10 hand-computed rows, chosen so kitchen's precision and recall differ ---
+// kitchen truth: rows 1,2,3,4 (actual=4). kitchen got: rows 1,2,4 (predicted=3,
+// row 3 was misclassified as "living"). tp = rows 1,2,4 = 3.
+// precision = 3/3 = 100.0%, recall = 3/4 = 75.0% — pinned below.
+const benchRows: BenchRow[] = [
+  { imageId: "1", truth: "kitchen", got: "kitchen", confidence: 0.97 },
+  { imageId: "2", truth: "kitchen", got: "kitchen", confidence: 0.92 },
+  { imageId: "3", truth: "kitchen", got: "living", confidence: 0.6 },
+  { imageId: "4", truth: "kitchen", got: "kitchen", confidence: 0.85 },
+  { imageId: "5", truth: "bedroom", got: "bedroom", confidence: 0.99 },
+  { imageId: "6", truth: "bedroom", got: "bathroom", confidence: 0.55 },
+  { imageId: "7", truth: "bathroom", got: "bathroom", confidence: 0.91 },
+  { imageId: "8", truth: "living", got: "bedroom", confidence: 0.75 },
+  { imageId: "9", truth: "living", got: "living", confidence: 0.83 },
+  { imageId: "10", truth: "exterior", got: "exterior", confidence: 0.96 },
+];
+
+const report = renderReport(benchRows, 0, {
+  model: "test-vlm",
+  elapsedMs: 60_000,
+  outPath: "/tmp/_tagbench.jsonl",
+  propertyCount: 3,
+  photoCount: 10,
+  timestamp: "2026-07-30T00:00:00.000Z",
+});
+
+// --- precision != recall for kitchen, both hand-computed values pinned ---
+const kitchenLine = report
+  .split("\n")
+  .find((l) => l.trim().startsWith("kitchen") && l.includes("precision"));
+assert.ok(kitchenLine, "report has a per-room line for kitchen");
+assert.match(kitchenLine!, /precision 100\.0% \(3\/3\)/, "kitchen precision pinned at 3/3");
+assert.match(kitchenLine!, /recall 75\.0% \(3\/4\)/, "kitchen recall pinned at 3/4");
+assert.notEqual(
+  kitchenLine!.match(/precision ([\d.]+)%/)![1],
+  kitchenLine!.match(/recall ([\d.]+)%/)![1],
+  "precision and recall genuinely differ for kitchen, not accidentally equal",
+);
+
+// --- confidence bucket counts sum to rows.length ---
+const bucketNs = [...report.matchAll(/conf \S+\s+n=\s*(\d+)/g)].map((m) => Number(m[1]));
+assert.ok(bucketNs.length > 0, "at least one confidence bucket line rendered");
+assert.equal(
+  bucketNs.reduce((a, b) => a + b, 0),
+  benchRows.length,
+  "every row lands in exactly one confidence bucket",
+);
+
+// --- at every threshold, auto-tagged + queued-for-review === rows.length ---
+const thresholdLines = [...report.matchAll(
+  /auto-tags [\d.]+% \((\d+)\/\d+\).*?(\d+) queued for review/g,
+)];
+assert.equal(thresholdLines.length, 5, "one line per threshold (0.70..0.95)");
+for (const [, autoStr, queuedStr] of thresholdLines) {
+  assert.equal(
+    Number(autoStr) + Number(queuedStr),
+    benchRows.length,
+    "auto-tagged + queued must account for every row at each threshold",
+  );
+}
 
 console.log("✓ local-llm.test: all assertions passed");

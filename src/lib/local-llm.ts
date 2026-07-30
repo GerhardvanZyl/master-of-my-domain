@@ -66,15 +66,25 @@ export async function askLocal(opts: AskLocalOptions): Promise<unknown> {
     },
   };
 
+  const timeoutMs = opts.timeoutMs ?? 120_000;
   let res: Response;
   try {
     res = await fetch(`${base}/chat/completions`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(opts.timeoutMs ?? 120_000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (e) {
+    // AbortSignal.timeout() rejects with a DOMException named "TimeoutError".
+    // That is a single slow call, not a down server — callers (tag-bench) must
+    // be able to skip just this photo instead of aborting the whole run, so
+    // the message must NOT match /not reachable/i.
+    if (e && typeof e === "object" && "name" in e && e.name === "TimeoutError") {
+      throw new Error(
+        `Local model call to ${base} timed out after ${timeoutMs}ms — the server may be stalled (context reset, model swap, OOM). Skipping this photo.`,
+      );
+    }
     const why = e instanceof Error ? e.message : String(e);
     throw new Error(
       `Local model server not reachable at ${base} — is LM Studio's server running with a model loaded? (${why})`,
