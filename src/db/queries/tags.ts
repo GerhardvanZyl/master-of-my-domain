@@ -132,6 +132,41 @@ export function setImageTag(input: {
     });
 }
 
+/**
+ * Insert a room tag ONLY if the image has no tag yet — never overwrites.
+ * Unlike setImageTag, this cannot clobber a tag written by a human (UI
+ * PATCH /api/images/[id]/tag, or `tag:set`) after a caller snapshotted its
+ * work list but before it got around to writing this particular image.
+ * Returns whether a row was actually inserted.
+ */
+export function setImageTagIfAbsent(input: {
+  imageId: string;
+  roomType: RoomType;
+  confidence?: number | null;
+  notes?: string | null;
+  taggedBy?: string;
+}): boolean {
+  const exists = sqlite
+    .prepare("SELECT 1 FROM images WHERE id = ?")
+    .get(input.imageId);
+  if (!exists) throw new Error(`No image with id ${input.imageId}`);
+  const result = sqlite
+    .prepare(
+      `INSERT INTO image_tags (image_id, room_type, confidence, tagged_by, tagged_at, notes)
+       VALUES (@imageId, @roomType, @confidence, @taggedBy, @taggedAt, @notes)
+       ON CONFLICT(image_id) DO NOTHING`,
+    )
+    .run({
+      imageId: input.imageId,
+      roomType: input.roomType,
+      confidence: input.confidence ?? null,
+      taggedBy: input.taggedBy ?? "claude-code",
+      taggedAt: new Date().toISOString(),
+      notes: input.notes ?? null,
+    });
+  return result.changes > 0;
+}
+
 /** Find an existing group by case-insensitive label, or create one. */
 export function ensureGroup(input: {
   label: string;

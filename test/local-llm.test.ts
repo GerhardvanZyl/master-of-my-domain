@@ -263,21 +263,36 @@ stubFetch({ choices: [{ message: { content: '{"room":"garage","confidence":0.9}'
 await assert.rejects(classifyRoom(tmpImg, "m"), /invalid room/i);
 
 // --- tag:auto refuses to run without a threshold ---
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
+import Database from "better-sqlite3";
+import { DDL, migrateColumns } from "../src/db/ddl";
 
-function runTagAuto(args: string[]): { status: number; out: string } {
-  try {
-    const out = execFileSync("npx", ["tsx", "scripts/tag-auto.ts", ...args], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-      // shell: true is required on Windows — execFileSync cannot exec npx.cmd
-      // directly (ENOENT), since it isn't a real PE executable.
-      shell: true,
-    });
-    return { status: 0, out };
-  } catch (e: any) {
-    return { status: e.status ?? 1, out: `${e.stdout ?? ""}${e.stderr ?? ""}` };
-  }
+// process.execPath + tsx's own CLI entry point avoids both the Windows
+// npx.cmd ENOENT problem (execFileSync can't exec a .cmd shim directly) and
+// running the child through a shell at all.
+const TSX_BIN = path.join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs");
+const TAG_AUTO = path.join(process.cwd(), "scripts", "tag-auto.ts");
+
+// A throwaway DB_PATH for every subprocess this file spawns — never
+// data/app.db. Individual tests below override it with their own sandbox.
+const defaultGuardDir = fs.mkdtempSync(path.join(os.tmpdir(), "pc-tagauto-guard-"));
+const DEFAULT_ENV = {
+  DATA_DIR: defaultGuardDir,
+  DB_PATH: path.join(defaultGuardDir, "app.db"),
+  IMAGES_DIR: path.join(defaultGuardDir, "images"),
+};
+
+function runTagAuto(
+  args: string[],
+  envOverrides: Record<string, string> = DEFAULT_ENV,
+): { status: number; out: string } {
+  const res = spawnSync(process.execPath, [TSX_BIN, TAG_AUTO, ...args], {
+    encoding: "utf8",
+    env: { ...process.env, ...envOverrides },
+  });
+  const status = res.status ?? (res.error ? 1 : 0);
+  return { status, out: `${res.stdout ?? ""}${res.stderr ?? ""}` };
 }
 
 for (const bad of [[], ["--threshold=abc"], ["--threshold=1.5"], ["--threshold=-1"]]) {
@@ -285,6 +300,143 @@ for (const bad of [[], ["--threshold=abc"], ["--threshold=1.5"], ["--threshold=-
   assert.notEqual(r.status, 0, `tag:auto must reject ${JSON.stringify(bad)}`);
   assert.match(r.out, /threshold/i, "the error explains the threshold");
   assert.match(r.out, /tag:bench/, "the error points at the benchmark");
+}
+
+// ---------------------------------------------------------------------------
+// tag:auto integration: write path, dry-run, and threshold boundaries.
+// Never touches data/app.db — each test builds its own isolated sandbox DB
+// (same DDL tag-auto reads), a couple of untagged images with real tiny PNG
+// bytes on disk, and a throwaway node:http server standing in for LM Studio.
+// ---------------------------------------------------------------------------
+
+const TINY_PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  "base64",
+);
+
+function makeSandbox(nImages: number): {
+  dir: string;
+  dbPath: string;
+  env: Record<string, string>;
+} {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pc-tagauto-sandbox-"));
+  const imagesDir = path.join(dir, "images");
+  fs.mkdirSync(imagesDir, { recursive: true });
+  const dbPath = path.join(dir, "app.db");
+
+  const db = new Database(dbPath);
+  db.pragma("journal_mode = WAL");
+  db.exec(DDL);
+  migrateColumns(db);
+
+  const now = new Date().toISOString();
+  db.prepare(
+    `INSERT INTO properties (id, source_site, listing_url, address, scraped_at, created_at, updated_at)
+     VALUES ('prop1', 'domain', 'https://example.com/sandbox', '1 Sandbox St', ?, ?, ?)`,
+  ).run(now, now, now);
+
+  for (let i = 0; i < nImages; i++) {
+    const localPath = `images/photo${i}.png`;
+    fs.writeFileSync(path.join(dir, localPath), TINY_PNG);
+    db.prepare(
+      `INSERT INTO images (id, property_id, source_url, local_path, ordinal, created_at)
+       VALUES (?, 'prop1', ?, ?, ?, ?)`,
+    ).run(`img${i}`, `https://example.com/img${i}.png`, localPath, i, now);
+  }
+  db.close();
+
+  return {
+    dir,
+    dbPath,
+    env: { DATA_DIR: dir, DB_PATH: dbPath, IMAGES_DIR: imagesDir },
+  };
+}
+
+/**
+ * Stand in for LM Studio without a real network round trip. This sandbox
+ * cannot route loopback TCP from a spawned child back to a socket owned by
+ * its own (nested) parent process — verified directly: a plain node:http
+ * server hosted in this test process is unreachable from a tag-auto.ts
+ * child spawned via spawnSync, with both `fetch` and raw `net.connect`,
+ * with and without `dangerouslyDisableSandbox`, and even after a 25s wait
+ * (the client-side connect() callback fires immediately but the server
+ * never sees the connection and no bytes ever cross — a hard block, not a
+ * race). So instead of a real socket, a `--import` preload module patches
+ * `globalThis.fetch` inside the CHILD's own process, before tag-auto.ts's
+ * top-level code runs — no network I/O at all, same effect as the
+ * `stubFetch()` used earlier in this file, just applied to a subprocess.
+ */
+function fetchStubPreloadUrl(dir: string, verdict: { room: string; confidence: number }): string {
+  const p = path.join(dir, "stub-fetch-preload.mjs");
+  fs.writeFileSync(
+    p,
+    `globalThis.fetch = async () => ({
+  ok: true,
+  status: 200,
+  json: async () => (${JSON.stringify({
+    choices: [{ message: { content: JSON.stringify(verdict) } }],
+  })}),
+  text: async () => "",
+});
+`,
+  );
+  return pathToFileURL(p).href;
+}
+
+// --- (a) --dry-run classifies and reports but writes zero rows ---
+{
+  const sandbox = makeSandbox(2);
+  const preload = fetchStubPreloadUrl(sandbox.dir, { room: "kitchen", confidence: 0.95 });
+  const r = runTagAuto(["--threshold=0.5", "--dry-run", "--model=test-vlm"], {
+    ...sandbox.env,
+    NODE_OPTIONS: `--import=${preload}`,
+  });
+  assert.equal(r.status, 0, `dry-run exits 0, got: ${r.out}`);
+  assert.match(r.out, /would tag 2/, "dry-run reports what it would have tagged");
+  const check = new Database(sandbox.dbPath, { readonly: true });
+  const taggedCount = (
+    check.prepare("SELECT COUNT(*) c FROM image_tags").get() as { c: number }
+  ).c;
+  check.close();
+  assert.equal(taggedCount, 0, "--dry-run must write zero rows to the DB");
+  fs.rmSync(sandbox.dir, { recursive: true, force: true });
+}
+
+// --- (b) a real write sets tagged_by='local-vlm' and notes='local:<model>' ---
+{
+  const sandbox = makeSandbox(1);
+  const preload = fetchStubPreloadUrl(sandbox.dir, { room: "bedroom", confidence: 0.97 });
+  const r = runTagAuto(["--threshold=0.5", "--model=test-vlm"], {
+    ...sandbox.env,
+    NODE_OPTIONS: `--import=${preload}`,
+  });
+  assert.equal(r.status, 0, `real run exits 0, got: ${r.out}`);
+  const check = new Database(sandbox.dbPath, { readonly: true });
+  const row = check
+    .prepare("SELECT room_type, tagged_by, notes FROM image_tags WHERE image_id = 'img0'")
+    .get() as { room_type: string; tagged_by: string; notes: string } | undefined;
+  check.close();
+  assert.ok(row, "the confident verdict was written");
+  assert.equal(row!.room_type, "bedroom");
+  assert.equal(row!.tagged_by, "local-vlm", "taggedBy is local-vlm, not claude-code/user");
+  assert.equal(row!.notes, "local:test-vlm", "notes identify the model that wrote the tag");
+  fs.rmSync(sandbox.dir, { recursive: true, force: true });
+}
+
+// --- (c) --threshold=0 and --threshold=1 are accepted, not rejected as falsy/missing ---
+{
+  const sandbox = makeSandbox(0); // nothing untagged: exercises the guard, not classification
+  for (const t of ["0", "1"]) {
+    const r = runTagAuto([`--threshold=${t}`], sandbox.env);
+    assert.equal(r.status, 0, `--threshold=${t} must be accepted, got: ${r.out}`);
+    assert.doesNotMatch(
+      r.out,
+      /Usage: npm run tag:auto/,
+      `--threshold=${t} must not hit the usage-rejection path`,
+    );
+    assert.match(r.out, /Nothing untagged/, `--threshold=${t} reaches the real run, not the guard`);
+  }
+  fs.rmSync(sandbox.dir, { recursive: true, force: true });
 }
 
 globalThis.fetch = realFetch;

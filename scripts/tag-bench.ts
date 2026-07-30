@@ -1,7 +1,7 @@
 import "../src/lib/load-env";
 import fs from "node:fs";
 import path from "node:path";
-import { parseFlags } from "../src/lib/args";
+import { parseFlags, parsePositiveNumber } from "../src/lib/args";
 import { listTaggedImages, topTaggedProperties } from "../src/db/queries/tags";
 import { classifyRoom, DEFAULT_VISION_MODEL } from "../src/lib/room-classify";
 import { DATA_DIR } from "../src/lib/env";
@@ -18,15 +18,12 @@ const model = typeof f.model === "string" ? f.model : DEFAULT_VISION_MODEL;
 
 /** M7: a typo'd --count/--limit must fail loudly, not silently disable the LIMIT clause. */
 function parsePositiveInt(raw: unknown, flagName: string): number | undefined {
-  if (raw === undefined) return undefined;
-  const n = typeof raw === "string" ? Number(raw) : NaN;
-  if (!Number.isFinite(n) || n <= 0) {
-    console.error(
-      `Invalid --${flagName}=${JSON.stringify(raw)} — expected a positive number.`,
-    );
+  try {
+    return parsePositiveNumber(raw as string | boolean | undefined, flagName);
+  } catch (e) {
+    console.error(e instanceof Error ? e.message : String(e));
     process.exit(1);
   }
-  return n;
 }
 
 const count = parsePositiveInt(f.count, "count") ?? 10;

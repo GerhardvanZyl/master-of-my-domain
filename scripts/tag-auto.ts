@@ -1,6 +1,9 @@
 import "../src/lib/load-env";
-import { parseFlags } from "../src/lib/args";
-import { listUntaggedImages, setImageTag } from "../src/db/queries/tags";
+import {
+  parseFlags,
+  parsePositiveNumber,
+  parseUnitInterval,
+} from "../src/lib/args";
 import {
   classifyRoom,
   passesGate,
@@ -10,30 +13,89 @@ import {
 /**
  * First-pass room tagging by a local vision model. Only ever reads UNTAGGED
  * images, so existing tags cannot be overwritten. Confident verdicts are
- * written; the rest are printed as a review queue for Claude to Read.
+ * written insert-if-absent (so a hand tag made mid-run, via the UI or
+ * `tag:set`, always wins over this script); the rest are printed as a
+ * review queue for Claude to Read.
+ *
+ * All flag validation happens before any DB access — the query module (and
+ * with it the SQLite connection) is imported dynamically, only after every
+ * flag has passed, so "no DB access on a bad flag" holds literally.
  */
 
-const f = parseFlags(process.argv.slice(2));
-const threshold =
-  typeof f.threshold === "string" ? Number(f.threshold) : Number.NaN;
+const USAGE =
+  "Usage: npm run tag:auto -- --threshold=<0..1> [--property=<id>] [--limit=N] [--model=<name>] [--dry-run]\n" +
+  "\nThere is no default threshold on purpose. Run `npm run tag:bench` first and\n" +
+  "read the value off its confidence table.";
 
-if (!Number.isFinite(threshold) || threshold < 0 || threshold > 1) {
-  console.error(
-    "Usage: npm run tag:auto -- --threshold=<0..1> [--property=<id>] [--limit=N] [--model=<name>] [--dry-run]\n" +
-      "\nThere is no default threshold on purpose. Run `npm run tag:bench` first and\n" +
-      "read the value off its confidence table.",
-  );
+function fail(msg: string): never {
+  console.error(`${msg}\n\n${USAGE}`);
   process.exit(1);
 }
 
+/** Runs a strict parser and turns any throw into the standard usage failure. */
+function must<T>(fn: () => T): T {
+  try {
+    return fn();
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : String(e));
+  }
+}
+
+const KNOWN_FLAGS = new Set([
+  "threshold",
+  "property",
+  "limit",
+  "model",
+  "dry-run",
+]);
+
+const TRUTHY_DRY_RUN = new Set(["true", "1", "yes", "on"]);
+
+/**
+ * `--dry-run` must fail closed: anything other than the bare flag or a
+ * recognised truthy spelling is rejected rather than silently defaulting to
+ * "write". A typo'd value must not quietly behave like the flag was never
+ * given.
+ */
+function parseDryRun(raw: string | boolean | undefined): boolean {
+  if (raw === undefined) return false;
+  if (raw === true) return true;
+  if (TRUTHY_DRY_RUN.has(raw.trim().toLowerCase())) return true;
+  throw new Error(
+    `Invalid --dry-run=${JSON.stringify(raw)} — expected true/1/yes/on (or bare --dry-run).`,
+  );
+}
+
+const f = parseFlags(process.argv.slice(2));
+
+const unknownFlags = Object.keys(f).filter((k) => !KNOWN_FLAGS.has(k));
+if (unknownFlags.length > 0) {
+  fail(`Unknown flag(s): ${unknownFlags.map((k) => `--${k}`).join(", ")}`);
+}
+
+const threshold = must(() => parseUnitInterval(f.threshold, "threshold"));
+const limit = must(() => parsePositiveNumber(f.limit, "limit"));
+const dryRun = must(() => parseDryRun(f["dry-run"]));
 const model = typeof f.model === "string" ? f.model : DEFAULT_VISION_MODEL;
-const dryRun = f["dry-run"] === true || f["dry-run"] === "true";
-const images = listUntaggedImages({
-  propertyId: typeof f.property === "string" ? f.property : undefined,
-  limit: typeof f.limit === "string" ? Number(f.limit) : undefined,
-});
+const propertyId = typeof f.property === "string" ? f.property : undefined;
+
+// Only now, with every flag validated, do we touch the database.
+const { listUntaggedImages, setImageTagIfAbsent } = await import(
+  "../src/db/queries/tags"
+);
+
+const images = listUntaggedImages({ propertyId, limit });
 
 if (images.length === 0) {
+  if (propertyId) {
+    // Silent narrowing (an unknown/mistyped --property quietly matching
+    // nothing) is the same bug class as silent widening — fail loudly.
+    console.error(
+      `No untagged images found for --property=${propertyId} — check the id.`,
+    );
+    process.stdout.write("[]\n");
+    process.exit(1);
+  }
   console.error("Nothing untagged. Done.");
   process.stdout.write("[]\n");
   process.exit(0);
@@ -45,9 +107,12 @@ console.error(
 
 const queue: Array<Record<string, unknown>> = [];
 let wrote = 0;
+let skipped = 0;
 let failed = 0;
+let consecutiveFailures = 0;
+const started = Date.now();
 
-for (const img of images) {
+for (const [i, img] of images.entries()) {
   let v;
   try {
     v = await classifyRoom(img.absPath, model);
@@ -57,34 +122,64 @@ for (const img of images) {
     if (/not reachable/i.test(msg)) {
       console.error(msg);
       console.error(`Stopped after writing ${wrote} tags.`);
-      // A caller must get the partial queue rather than nothing — the same
-      // JSON shape as the normal exit path, printed before we abort.
-      process.stdout.write(JSON.stringify(queue, null, 2) + "\n");
-      process.exit(1);
+      process.exitCode = 1;
+      break;
     }
     failed++;
+    consecutiveFailures++;
     console.error(`  ! ${img.imageId}: ${msg}`);
+    // A run-wide failure mode (model unloaded, wrong --model, OOM, HTTP 500)
+    // doesn't match /not reachable/i and must not be allowed to grind
+    // through the whole set one bad photo at a time.
+    if (consecutiveFailures >= 10) {
+      console.error(
+        `Aborting: ${consecutiveFailures} consecutive failures — is the model still loaded and vision-capable?`,
+      );
+      console.error(`Stopped after writing ${wrote} tags.`);
+      process.exitCode = 1;
+      break;
+    }
     continue;
   }
+  consecutiveFailures = 0;
 
   if (passesGate(v, threshold)) {
-    if (!dryRun) {
-      setImageTag({
+    if (dryRun) {
+      wrote++;
+    } else {
+      const inserted = setImageTagIfAbsent({
         imageId: img.imageId,
         roomType: v.room,
         confidence: v.confidence,
         taggedBy: "local-vlm",
         notes: `local:${model}`,
       });
+      if (inserted) wrote++;
+      else skipped++; // tagged by someone else while this run was in flight
     }
-    wrote++;
   } else {
     queue.push({ ...img, suggested: v.room, confidence: v.confidence });
+  }
+
+  if ((i + 1) % 25 === 0) {
+    const rate = (Date.now() - started) / 1000 / (i + 1);
+    console.error(
+      `  …${i + 1}/${images.length} (${rate.toFixed(1)}s/photo, ~${Math.round((rate * (images.length - i - 1)) / 60)}min left)`,
+    );
   }
 }
 
 console.error(
-  `${dryRun ? "[dry-run] would tag" : "tagged"} ${wrote}, queued ${queue.length} for review, ${failed} errored`,
+  `${dryRun ? "[dry-run] would tag" : "tagged"} ${wrote}, ${skipped} skipped (already tagged), queued ${queue.length} for review, ${failed} errored`,
 );
-// Same JSON shape as tag:list, so Claude's existing loop consumes it unchanged.
+// Same JSON shape as tag:list, so Claude's existing loop consumes it
+// unchanged. Printed on every exit path (success, dead-server abort, or
+// circuit-breaker abort) via process.exitCode rather than process.exit(), so
+// a large queue can never be truncated by an early hard exit.
 process.stdout.write(JSON.stringify(queue, null, 2) + "\n");
+
+// A run that classified nothing is a failure, not a silent success — a
+// caller must not see exit 0 + "[]" and read that as "everything tagged".
+if (wrote === 0 && queue.length === 0 && failed > 0) {
+  process.exitCode = 1;
+}
