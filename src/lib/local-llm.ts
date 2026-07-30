@@ -39,10 +39,14 @@ export async function askLocal(opts: AskLocalOptions): Promise<unknown> {
   const base = opts.baseUrl ?? process.env.LOCAL_LLM_URL ?? DEFAULT_BASE;
   const content: unknown[] = [{ type: "text", text: opts.prompt }];
   if (opts.imagePath) {
-    content.push({
-      type: "image_url",
-      image_url: { url: dataUrl(opts.imagePath) },
-    });
+    let url: string;
+    try {
+      url = dataUrl(opts.imagePath);
+    } catch (e) {
+      const why = e instanceof Error ? e.message : String(e);
+      throw new Error(`Could not read image at ${opts.imagePath}: ${why}`);
+    }
+    content.push({ type: "image_url", image_url: { url } });
   }
 
   const body = {

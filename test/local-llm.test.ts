@@ -15,10 +15,12 @@ fs.writeFileSync(tmpImg, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x01, 0x02]));
 const realFetch = globalThis.fetch;
 let lastUrl = "";
 let lastBody: any = null;
+let lastInit: any = null;
 
 function stubFetch(reply: unknown, ok = true, status = 200) {
   globalThis.fetch = (async (url: string, init: any) => {
     lastUrl = String(url);
+    lastInit = init;
     lastBody = JSON.parse(init.body);
     return {
       ok,
@@ -52,6 +54,9 @@ const parsed = await askLocal({
 });
 assert.deepEqual(parsed, { room: "kitchen", confidence: 0.91 }, "returns parsed JSON");
 assert.equal(lastUrl, "http://127.0.0.1:9999/v1/chat/completions", "posts to chat/completions");
+assert.equal(lastInit.method, "POST", "posts, not gets");
+assert.equal(lastInit.headers["content-type"], "application/json", "sends JSON content-type");
+assert.ok(lastInit.signal instanceof AbortSignal, "wires an AbortSignal for the request timeout");
 assert.equal(lastBody.model, "test-model");
 assert.equal(lastBody.temperature, 0, "deterministic: temperature 0");
 assert.equal(
@@ -61,6 +66,11 @@ assert.equal(
 );
 assert.equal(lastBody.response_format.json_schema.name, "room_verdict");
 assert.equal(lastBody.response_format.json_schema.strict, true);
+assert.deepEqual(
+  lastBody.response_format.json_schema.schema,
+  SCHEMA,
+  "the exact schema payload is sent, not mangled or dropped",
+);
 
 const parts = lastBody.messages.at(-1).content;
 assert.equal(parts[0].type, "text");
@@ -126,6 +136,31 @@ stubFetch({ choices: [] });
 await assert.rejects(
   askLocal({ model: "m", prompt: "p", schema: SCHEMA, baseUrl: "http://x/v1" }),
   /no message content/,
+);
+
+// --- askLocal: a missing image file names the path, not "the server is down" ---
+// Distinguishable from the unreachable-server error: Task 5/7 skip the photo on
+// this one but abort the whole run on a down server, matching on /not reachable/i.
+stubFetch(okReply);
+const missingImg = path.join(os.tmpdir(), "local-llm-test-missing.png");
+await assert.rejects(
+  askLocal({
+    model: "m",
+    prompt: "p",
+    imagePath: missingImg,
+    schema: SCHEMA,
+    baseUrl: "http://x/v1",
+  }),
+  (e: Error) => {
+    assert.ok(e.message.includes(missingImg), "names the file that could not be read");
+    assert.doesNotMatch(
+      e.message,
+      /not reachable/i,
+      "a bad photo is distinguishable from a down server",
+    );
+    return true;
+  },
+  "an unreadable image fails with an actionable, distinguishable message",
 );
 
 globalThis.fetch = realFetch;
