@@ -185,7 +185,12 @@ assert.ok(
   parts[1].image_url.url.startsWith("data:image/png;base64,"),
   "png extension maps to the png mime type",
 );
-assert.ok(parts[1].image_url.url.length > 30, "image bytes are actually encoded");
+const b64 = parts[1].image_url.url.slice("data:image/png;base64,".length);
+assert.deepEqual(
+  Buffer.from(b64, "base64"),
+  fs.readFileSync(tmpImg),
+  "the image's exact bytes are encoded, not truncated",
+);
 
 // --- askLocal: no image means no image part ---
 stubFetch(okReply);
