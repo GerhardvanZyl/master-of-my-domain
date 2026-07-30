@@ -924,7 +924,9 @@ No code. This task's deliverable is a number, and Task 7 cannot be completed wit
 ```bash
 npm run tag:bench 2>progress.log | tee bench-report.txt
 ```
-10 properties, roughly 250-300 photos. Expect single-digit seconds per photo on a fully-offloaded 8B VLM, so 15-45 minutes. Let it finish.
+10 properties, **445 photos** (measured in Task 4 — `topTaggedProperties` picks the photo-richest listings, which average 44.5 tagged photos against the repo-wide 27.2, so the sample runs larger than a naive average suggests). Expect single-digit seconds per photo on a fully-offloaded 8B VLM, so 20-60 minutes. Let it finish.
+
+Sampling was checked for skew and is sound: `other` is 33.3% of the top-10 sample versus 35.6% repo-wide, so the photo-richest listings are not disproportionately floorplans and marketing shots. No need to randomise.
 
 - [ ] **Step 2: Read the confusion matrix**
 
