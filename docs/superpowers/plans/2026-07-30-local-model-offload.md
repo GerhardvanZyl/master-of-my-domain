@@ -942,7 +942,7 @@ git add docs/superpowers/specs/2026-07-30-local-model-offload-design.md
 git commit -m "docs: record local VLM benchmark result and chosen threshold"
 ```
 
-Do not commit `bench-report.txt` or `progress.log`; delete them, or note that `data/` is already gitignored if you move them there.
+Delete `bench-report.txt` and `progress.log` afterwards — do not commit them. Note that `/data/` is **not** gitignored in this repo (the entry is commented out and 8,331 files under `data/` are tracked), so moving them there would commit them. `data/_tagbench.jsonl` has its own `.gitignore` entry; nothing else under `data/` is safe to assume ignored.
 
 ---
 
