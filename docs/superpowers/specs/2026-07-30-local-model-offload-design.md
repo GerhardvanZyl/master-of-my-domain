@@ -39,16 +39,32 @@ not from arithmetic in this document.
 
 ## Architecture
 
-Four pieces. One new module, one query addition, two scripts.
+As delivered: two scripts over four shared modules plus additions to two existing
+ones. (The original design said "one new module"; review findings during
+implementation justified `bench-report.ts` and `tagging-run.ts` — see Known
+follow-ups.)
 
 ```
 scripts/tag-bench.ts ──┐
-                       ├──> src/lib/local-llm.ts ──HTTP──> LM Studio (127.0.0.1:1234)
-scripts/tag-auto.ts  ──┘            │
-                                    └── shared prompt constant
-scripts/tag-auto.ts ──> src/db/queries/tags.ts (setImageTagIfAbsent — existing write path)
-scripts/tag-bench.ts ──> src/db/queries/tags.ts (listTaggedImages — new, read-only)
+scripts/tag-auto.ts  ──┴──> src/lib/room-classify.ts   ROOM_PROMPT, ROOM_SCHEMA,
+                              │                        classifyRoom, passesGate
+                              └──> src/lib/local-llm.ts ──HTTP──> LM Studio
+                                     (askLocal, 127.0.0.1:1234/v1)
+
+both scripts ──> src/lib/tagging-run.ts   classifyFailure: abort vs skip, and the
+                                          shared consecutive-failure breaker
+both scripts ──> src/lib/args.ts          parseUnitInterval, parsePositiveNumber
+tag-bench.ts ──> src/lib/bench-report.ts  renderReport (pure, unit-tested)
+
+scripts/tag-auto.ts  ──> src/db/queries/tags.ts  listUntaggedImages,
+                                                 setImageTagIfAbsent, propertyHasImages
+scripts/tag-bench.ts ──> src/db/queries/tags.ts  listTaggedImages,
+                                                 topTaggedProperties  (read-only)
 ```
+
+`ROOM_PROMPT` lives in `room-classify.ts`, not in `local-llm.ts` — the transport
+knows nothing about rooms. A Phase 2 text job reuses `askLocal` directly and
+defines its own prompt constant alongside it.
 
 ### `src/lib/local-llm.ts` — the local-model layer
 
@@ -83,8 +99,11 @@ Required by the benchmark. Nothing else in the DB layer changes.
 
 ### `scripts/tag-bench.ts` — measurement, writes nothing
 
-- Property selection: `--property=<id>` repeatable; with none given, the 10
-  properties with the most tagged photos.
+- Property selection: `--properties=<id,id,...>`, a comma-separated list — NOT a
+  repeatable `--property=`, because `parseFlags` cannot represent a repeated flag
+  without changing its return type and every existing caller's narrowing. The
+  singular spelling is rejected outright rather than ignored. With none given, the
+  10 properties with the most tagged photos, which measured at 445 photos.
 - Classifies each photo through `askLocal` with schema
   `{ room: enum(ROOM_TYPES), confidence: number 0..1 }`.
 - Prints to stdout:
@@ -156,5 +175,82 @@ are worth extracting needs its own design conversation.
   already gives a review queue with no new schema.
 - Retry and backoff. A local server on loopback either answers or is down.
 - A provider interface. One env var covers the realistic alternatives.
-- A concurrent request pool. Add it when 270 sequential images takes long enough
+- A concurrent request pool. Add it when 445 sequential images takes long enough
   to be annoying, which is a measurement, not a prediction.
+
+## Known follow-ups
+
+Findings raised during implementation review and deliberately deferred, each with
+the ruling. Recorded here because the execution ledger lives in a gitignored
+scratch directory and does not survive the merge.
+
+**Do before the first real run**
+
+- **Smoke-test with `--limit=5` before the full 445.** No code on this branch has
+  ever exchanged a byte with a real vision model — only with stubs. The failure
+  modes cluster at the first call: image format, model id, whether the loaded model
+  honours JSON-schema-constrained output. Five photos costs a minute and tells you
+  whether a 20-60 minute run is worth starting.
+- **418 of the 445 sample files are `.webp` and 5 are `.gif`.** If the model's
+  vision stack rejects webp, every photo errors and the breaker aborts at 10 with a
+  model-flavoured message. "All photos error immediately" means image format, not a
+  bad threshold.
+- **Do not read `0 of those wrong (0.0% error rate)` as proven-safe.** The 445
+  photos come from only 10 properties and are therefore correlated; a zero-wrong
+  bucket is compatible with a true error rate above 1%, which is thousands of wrong
+  tags at library scale. Treat a zero-wrong bucket as "below roughly 1%".
+
+**Deferred with rulings**
+
+- **`--properties=` and bare `--properties` fall back to the default sample
+  instead of failing.** Same silent-widening class as the guard added for the
+  empty-list case, and inconsistent with `src/lib/args.ts`, which rejects empty
+  values for every other flag. Read-only, costs a 20-60 minute run on a sample you
+  did not ask for. Pre-existing, not a regression. Ruling: real, deferred.
+- **`src/lib/tagging-run.ts` has no test coverage.** Deleting its
+  unreadable-image classification — the entirety of one review fix — leaves the
+  whole suite green. The producer-side message texts *are* pinned, which is why
+  this is not worse, but this module now decides abort-vs-skip for both scripts and
+  is precisely the divergence-prone code that sharing was meant to protect. Roughly
+  eight lines of pure-function assertions would close it. Ruling: real, deferred,
+  highest-value item on this list.
+- **`tag-auto`'s circuit breaker has no automated test.** Deferred by decision
+  during execution; partly mitigated now that both scripts share one breaker.
+- **`propertyHasImages` answers "has images", not "is a real id".** A freshly
+  ingested property with no images yet would still be reported as a bad id. The
+  repo's existing convention (`SELECT 1 FROM properties WHERE id = ?`) is the right
+  probe. Ruling: cosmetic today.
+- **`tag-bench` opens the DB before validating flags** (static import), so a bad
+  flag touches `data/app.db` before exiting. `tag-auto` uses a dynamic import
+  specifically to avoid this. Harmless on a current-schema DB. Ruling: consistency
+  wart, deferred.
+- **`image_tags.room_type` has no CHECK constraint** and `listTaggedImages` casts
+  it to a typed union without validating. The live DB is clean (7 distinct values,
+  all in vocabulary, no NULLs), and the failure mode is benign — an off-vocabulary
+  row makes measured agreement *pessimistic*, biasing the threshold toward caution.
+  A DDL migration on a tracked 9MB binary is not worth it for this.
+- **Report cosmetics:** empty confidence buckets are suppressed with no total
+  printed; the confusion matrix has row totals but no column totals.
+- **`--from-jsonl` to re-render an aborted benchmark.** Genuine YAGNI until a run
+  actually aborts partway; rendering the report before exit already covers the
+  common case.
+
+**Structural facts worth remembering**
+
+- **`src/db/client.ts` runs the DDL, `migrateColumns`, and a WAL pragma on every
+  connection open.** So any script that merely *reads* the database rewrites its
+  bytes, and `data/app.db` is a **tracked** file. A clean `git status` is therefore
+  not proof that a read-only script stayed read-only — the proof is a before/after
+  `tagStatus()` comparison.
+- **`/data/` is commented out in `.gitignore`.** 8,331 files under `data/` are
+  tracked, including `app.db` and `claude-credentials.md`. Only the WAL sidecars
+  and `data/_tagbench.jsonl` are ignored.
+- **`notes='local:<model>'` is not durable provenance.** `scripts/hero-set.ts`
+  overwrites `notes` with `'hero'`, and `setImageTag` nulls `notes` when a caller
+  omits it — so `tag:set` on a hero image erases its marker too. `tagged_by =
+  'local-vlm'` is the more reliable handle, and there is no sanctioned command to
+  list or revert local-vlm tags; that would be raw SQL today.
+- **`npm test` is not fully hermetic** (pre-existing): `test/units.test.ts` imports
+  `src/db/queries/properties`, which opens the real `data/app.db` at module scope.
+  Every other DB-touching test sets `DB_PATH` to a temp copy. This branch's own
+  tests are correctly sandboxed.
