@@ -1107,7 +1107,7 @@ In `package.json`, after `"tag:bench"`:
 - [ ] **Step 6: Verify the no-overwrite constraint by inspection**
 
 Run: `grep -n "listTaggedImages\|listUntaggedImages" scripts/tag-auto.ts`
-Expected: exactly one match, `listUntaggedImages`. If `listTaggedImages` appears here, existing tags are reachable and the constraint is broken.
+Expected: two matches (the import and the call site), **both** `listUntaggedImages`, and zero occurrences of `listTaggedImages`. If `listTaggedImages` appears here, existing tags are reachable and the constraint is broken.
 
 - [ ] **Step 7: Dry-run against real data**
 
