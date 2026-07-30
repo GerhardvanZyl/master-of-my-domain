@@ -20,6 +20,7 @@
     "tag:list": "tsx scripts/tag-list.ts",
     "tag:set": "tsx scripts/tag-set.ts",
     "tag:status": "tsx scripts/tag-status.ts",
+    "tag:bench": "tsx scripts/tag-bench.ts",
     "meta:list": "tsx scripts/meta-list.ts",
     "meta:set": "tsx scripts/meta-set.ts",
     "group:ensure": "tsx scripts/group-ensure.ts",
