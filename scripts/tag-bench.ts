@@ -6,6 +6,13 @@ import { listTaggedImages, topTaggedProperties } from "../src/db/queries/tags";
 import { classifyRoom, DEFAULT_VISION_MODEL } from "../src/lib/room-classify";
 import { DATA_DIR } from "../src/lib/env";
 import { renderReport, type BenchRow } from "../src/lib/bench-report";
+import {
+  classifyFailure,
+  circuitBreakerMessage,
+  progressLine,
+  shouldReportProgress,
+  CONSECUTIVE_FAILURE_LIMIT,
+} from "../src/lib/tagging-run";
 
 /**
  * Measures a local vision model against the room tags already in the DB.
@@ -14,6 +21,20 @@ import { renderReport, type BenchRow } from "../src/lib/bench-report";
  */
 
 const f = parseFlags(process.argv.slice(2));
+
+// F3: an unrecognised flag (e.g. the singular --property, a typo for the
+// sibling command's plural --properties) must fail loudly instead of
+// silently running the full default sample.
+const KNOWN_FLAGS = new Set(["model", "count", "limit", "properties"]);
+const unknownFlags = Object.keys(f).filter((k) => !KNOWN_FLAGS.has(k));
+if (unknownFlags.length > 0) {
+  console.error(
+    `Unknown flag(s): ${unknownFlags.map((k) => `--${k}`).join(", ")}. ` +
+      `Did you mean --properties (plural, comma-separated)?`,
+  );
+  process.exit(1);
+}
+
 const model = typeof f.model === "string" ? f.model : DEFAULT_VISION_MODEL;
 
 /** M7: a typo'd --count/--limit must fail loudly, not silently disable the LIMIT clause. */
@@ -33,6 +54,20 @@ const propertiesFlag = typeof f.properties === "string" ? f.properties : undefin
 const ids = propertiesFlag
   ? propertiesFlag.split(",").map((s) => s.trim()).filter(Boolean)
   : topTaggedProperties(count);
+
+// F1: an empty id list here is NOT "no filter" — listTaggedImages treats an
+// empty propertyIds array as "no IN (...) clause" and returns the entire
+// 7,822-photo library. Anything that reduces `ids` to empty (--properties=,
+// or a --count that floors to 0, e.g. --count=0.5) must fail loudly instead
+// of silently ballooning into a multi-hour full-library run reported under a
+// header that still says "0 properties".
+if (ids.length === 0) {
+  const offendingFlag = propertiesFlag !== undefined ? "--properties" : "--count";
+  console.error(
+    `No properties selected via ${offendingFlag} — refusing to benchmark the entire photo library.`,
+  );
+  process.exit(1);
+}
 
 const images = listTaggedImages({ propertyIds: ids, limit });
 if (images.length === 0) {
@@ -84,7 +119,8 @@ for (const [i, img] of images.entries()) {
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    if (/not reachable/i.test(msg)) {
+    const kind = classifyFailure(msg);
+    if (kind === "not-reachable") {
       // A dead server is not a per-image problem — stop instead of printing
       // 445 copies. C1: still render whatever the run measured before exiting.
       // Count this photo as errored so the abort banner doesn't read
@@ -96,23 +132,25 @@ for (const [i, img] of images.entries()) {
       break;
     }
     failed++;
-    consecutiveFailures++;
     console.error(`  ! ${img.imageId}: ${msg}`);
-    // I2: a mid-run failure mode (model unloaded, OOM, timeouts) that doesn't
-    // match /not reachable/i must not be allowed to grind through the whole
-    // sample one bad photo at a time.
-    if (consecutiveFailures >= 10) {
-      abortReason = `Aborting: ${consecutiveFailures} consecutive failures — is the model still loaded and vision-capable?`;
-      console.error(abortReason);
-      aborted = true;
-      break;
+    // F2: an unreadable file (pruned/missing image) is a per-photo data
+    // problem, not evidence the model is unwell — it must not feed the
+    // breaker, or ten pruned files misdiagnose a filesystem problem as a
+    // dead/unloaded model. It still counts toward `failed` above.
+    if (kind !== "unreadable-image") {
+      consecutiveFailures++;
+      // I2: a mid-run failure mode (model unloaded, OOM, timeouts) must not
+      // be allowed to grind through the whole sample one bad photo at a time.
+      if (consecutiveFailures >= CONSECUTIVE_FAILURE_LIMIT) {
+        abortReason = circuitBreakerMessage(consecutiveFailures);
+        console.error(abortReason);
+        aborted = true;
+        break;
+      }
     }
   }
-  if ((i + 1) % 25 === 0) {
-    const rate = (Date.now() - started) / 1000 / (i + 1);
-    console.error(
-      `  …${i + 1}/${images.length} (${rate.toFixed(1)}s/photo, ~${Math.round((rate * (images.length - i - 1)) / 60)}min left)`,
-    );
+  if (shouldReportProgress(i)) {
+    console.error(progressLine(i, images.length, started));
   }
 }
 

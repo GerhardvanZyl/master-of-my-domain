@@ -59,9 +59,10 @@ never guess a room from a filename or URL: Read the actual image.**
   the DB. Defaults to the 10 photo-richest properties (445 photos, ~20-60min
   full run). `--properties` is a comma-separated list, not a repeatable flag.
 
-Both need LM Studio serving a vision model at `http://127.0.0.1:1234`
-(override with `LOCAL_LLM_URL`); the model id comes from `LOCAL_VLM_MODEL` in
-`.env.local`, or `--model`.
+Both need LM Studio serving a vision model at `http://127.0.0.1:1234/v1`
+(override with `LOCAL_LLM_URL` — include the `/v1` suffix, since `/chat/completions`
+is appended to whatever this resolves to); the model id comes from
+`LOCAL_VLM_MODEL` in `.env.local`, or `--model`.
 
 ### The loop
 0. **Local first pass.** The threshold is recorded in

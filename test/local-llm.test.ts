@@ -292,13 +292,19 @@ const DEFAULT_ENV = {
 function runTagAuto(
   args: string[],
   envOverrides: Record<string, string> = DEFAULT_ENV,
-): { status: number; out: string } {
+): { status: number; out: string; stdout: string; stderr: string } {
   const res = spawnSync(process.execPath, [TSX_BIN, TAG_AUTO, ...args], {
     encoding: "utf8",
     env: { ...process.env, ...envOverrides },
   });
   const status = res.status ?? (res.error ? 1 : 0);
-  return { status, out: `${res.stdout ?? ""}${res.stderr ?? ""}` };
+  const stdout = res.stdout ?? "";
+  const stderr = res.stderr ?? "";
+  // `out` (concatenated) is kept for the many existing assertions that don't
+  // care which stream a message landed on. F5: new tests that DO care about
+  // stream separation (the review queue must be pure JSON on stdout, with
+  // progress/errors on stderr) use `stdout`/`stderr` directly instead.
+  return { status, out: `${stdout}${stderr}`, stdout, stderr };
 }
 
 // Each case pins a CRITICAL 1 reproducer: deleting the trim/empty-string
@@ -422,6 +428,37 @@ function fetchStubPreloadUrl(dir: string, verdict: { room: string; confidence: n
   return pathToFileURL(p).href;
 }
 
+// --- F6: guards against load-env.ts's process.loadEnvFile silently
+// retargeting DB_PATH: confirms the child process actually resolves DB_PATH
+// to the sandbox path this test set, not whatever (if anything) .env.local
+// says. This MUST run before any test below that writes through a sandbox
+// DB — if this assumption is ever wrong, those tests would otherwise write
+// to the real tracked data/app.db before this guard could report it. ---
+{
+  const sandbox = makeSandbox(0);
+  const envTsUrl = pathToFileURL(path.join(process.cwd(), "src/lib/env.ts")).href;
+  const loadEnvTsUrl = pathToFileURL(path.join(process.cwd(), "src/lib/load-env.ts")).href;
+  const probePath = path.join(sandbox.dir, "probe-db-path.mjs");
+  fs.writeFileSync(
+    probePath,
+    `import ${JSON.stringify(loadEnvTsUrl)};
+import { DB_PATH } from ${JSON.stringify(envTsUrl)};
+process.stdout.write(DB_PATH);
+`,
+  );
+  const res = spawnSync(process.execPath, [TSX_BIN, probePath], {
+    encoding: "utf8",
+    env: { ...process.env, ...sandbox.env },
+  });
+  assert.equal(res.status, 0, `DB_PATH probe exits 0, got: ${res.stderr}`);
+  assert.equal(
+    res.stdout,
+    sandbox.dbPath,
+    "the sandbox DB_PATH this test set must not be overridden by load-env's process.loadEnvFile",
+  );
+  fs.rmSync(sandbox.dir, { recursive: true, force: true });
+}
+
 // --- (a) --dry-run classifies and reports but writes zero rows ---
 {
   const sandbox = makeSandbox(2);
@@ -478,6 +515,55 @@ function fetchStubPreloadUrl(dir: string, verdict: { room: string; confidence: n
   fs.rmSync(sandbox.dir, { recursive: true, force: true });
 }
 
+// --- (d) F5: a below-threshold verdict is queued as JSON on stdout — the
+// same shape tag:list uses — and NOT written to the DB. This is the actual
+// handoff interface to Claude's Read-tool loop, so a regression that dropped
+// absPath, or emitted the queue on the wrong stream, must fail a test. ---
+{
+  const sandbox = makeSandbox(1);
+  const preload = fetchStubPreloadUrl(sandbox.dir, { room: "kitchen", confidence: 0.4 });
+  const r = runTagAuto(["--threshold=0.9", "--model=test-vlm"], {
+    ...sandbox.env,
+    NODE_OPTIONS: `--import=${preload}`,
+  });
+  assert.equal(r.status, 0, `below-threshold-only run exits 0, got: ${r.out}`);
+
+  const check = new Database(sandbox.dbPath, { readonly: true });
+  const taggedCount = (
+    check.prepare("SELECT COUNT(*) c FROM image_tags").get() as { c: number }
+  ).c;
+  check.close();
+  assert.equal(taggedCount, 0, "a below-threshold verdict must not write a tag");
+
+  // stdout must be pure JSON — progress/error lines belong on stderr only.
+  let queue: Array<Record<string, unknown>> = [];
+  let parseError: unknown;
+  try {
+    queue = JSON.parse(r.stdout);
+  } catch (e) {
+    parseError = e;
+  }
+  assert.equal(
+    parseError,
+    undefined,
+    `stdout must be exactly the JSON queue, got: ${JSON.stringify(r.stdout)}`,
+  );
+  assert.equal(queue.length, 1, "one below-threshold photo is queued");
+  const entry = queue[0];
+  assert.equal(entry.imageId, "img0");
+  assert.ok(
+    typeof entry.absPath === "string" && entry.absPath.length > 0,
+    "absPath is present — this is the field Claude's Read tool needs",
+  );
+  assert.equal(entry.suggested, "kitchen");
+  assert.equal(entry.confidence, 0.4);
+  assert.ok(
+    r.stderr.length > 0,
+    "progress/summary output went to stderr, confirming the streams are genuinely separate",
+  );
+  fs.rmSync(sandbox.dir, { recursive: true, force: true });
+}
+
 // --- a tag written by another process mid-run is never overwritten (TOCTOU) ---
 // tag-auto snapshots the untagged list once via listUntaggedImages, then
 // writes minutes/photos later. Reverting setImageTagIfAbsent back to
@@ -530,34 +616,6 @@ globalThis.fetch = async () => {
   assert.equal(row.tagged_by, "user", "the hand tag made mid-run must survive untouched");
   assert.equal(row.room_type, "kitchen", "tag-auto's own verdict (bedroom) must not have overwritten it");
   assert.equal(row.notes, "hand-tagged mid-run");
-  fs.rmSync(sandbox.dir, { recursive: true, force: true });
-}
-
-// --- guards against load-env.ts's process.loadEnvFile silently retargeting
-// DB_PATH: confirms the child process actually resolves DB_PATH to the
-// sandbox path this test set, not whatever (if anything) .env.local says ---
-{
-  const sandbox = makeSandbox(0);
-  const envTsUrl = pathToFileURL(path.join(process.cwd(), "src/lib/env.ts")).href;
-  const loadEnvTsUrl = pathToFileURL(path.join(process.cwd(), "src/lib/load-env.ts")).href;
-  const probePath = path.join(sandbox.dir, "probe-db-path.mjs");
-  fs.writeFileSync(
-    probePath,
-    `import ${JSON.stringify(loadEnvTsUrl)};
-import { DB_PATH } from ${JSON.stringify(envTsUrl)};
-process.stdout.write(DB_PATH);
-`,
-  );
-  const res = spawnSync(process.execPath, [TSX_BIN, probePath], {
-    encoding: "utf8",
-    env: { ...process.env, ...sandbox.env },
-  });
-  assert.equal(res.status, 0, `DB_PATH probe exits 0, got: ${res.stderr}`);
-  assert.equal(
-    res.stdout,
-    sandbox.dbPath,
-    "the sandbox DB_PATH this test set must not be overridden by load-env's process.loadEnvFile",
-  );
   fs.rmSync(sandbox.dir, { recursive: true, force: true });
 }
 

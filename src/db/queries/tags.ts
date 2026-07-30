@@ -46,6 +46,19 @@ export function listUntaggedImages(opts: {
   }));
 }
 
+/**
+ * True if any image row exists for this property id. Distinguishes "unknown
+ * property id" from "known property id with nothing untagged" — those are
+ * different problems and tag-auto reports them differently.
+ */
+export function propertyHasImages(propertyId: string): boolean {
+  return (
+    sqlite
+      .prepare("SELECT 1 FROM images WHERE property_id = ? LIMIT 1")
+      .get(propertyId) !== undefined
+  );
+}
+
 export interface TaggedImage extends UntaggedImage {
   roomType: RoomType;
 }

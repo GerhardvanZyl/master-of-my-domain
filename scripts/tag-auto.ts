@@ -9,6 +9,13 @@ import {
   passesGate,
   DEFAULT_VISION_MODEL,
 } from "../src/lib/room-classify";
+import {
+  classifyFailure,
+  circuitBreakerMessage,
+  progressLine,
+  shouldReportProgress,
+  CONSECUTIVE_FAILURE_LIMIT,
+} from "../src/lib/tagging-run";
 
 /**
  * First-pass room tagging by a local vision model. Only ever reads UNTAGGED
@@ -86,16 +93,17 @@ const model = typeof f.model === "string" ? f.model : DEFAULT_VISION_MODEL;
 const propertyId = typeof f.property === "string" ? f.property : undefined;
 
 // Only now, with every flag validated, do we touch the database.
-const { listUntaggedImages, setImageTagIfAbsent } = await import(
-  "../src/db/queries/tags"
-);
+const { listUntaggedImages, setImageTagIfAbsent, propertyHasImages } =
+  await import("../src/db/queries/tags");
 
 const images = listUntaggedImages({ propertyId, limit });
 
 if (images.length === 0) {
-  if (propertyId) {
+  if (propertyId && !propertyHasImages(propertyId)) {
     // Silent narrowing (an unknown/mistyped --property quietly matching
     // nothing) is the same bug class as silent widening — fail loudly.
+    // But an unknown id and a known id that's just fully tagged are
+    // different problems: only the former means "check the id".
     console.error(
       `No untagged images found for --property=${propertyId} — check the id.`,
     );
@@ -124,8 +132,9 @@ for (const [i, img] of images.entries()) {
     v = await classifyRoom(img.absPath, model);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
+    const kind = classifyFailure(msg);
     // A dead server means abort, not 300 identical errors.
-    if (/not reachable/i.test(msg)) {
+    if (kind === "not-reachable") {
       console.error(msg);
       console.error(`Stopped after writing ${wrote} tags.`);
       process.exitCode = 1;
@@ -137,17 +146,15 @@ for (const [i, img] of images.entries()) {
     // not evidence the model server is sick — it must not feed the breaker,
     // or a property with 10 pruned photos aborts the whole run for no
     // model-side reason. It still counts toward `failed` above.
-    if (/Could not read image at/i.test(msg)) {
+    if (kind === "unreadable-image") {
       continue;
     }
     consecutiveFailures++;
     // A run-wide model-side failure mode (unloaded, wrong --model, OOM, HTTP
-    // 500) doesn't match /not reachable/i and must not be allowed to grind
+    // 500) doesn't match "not reachable" and must not be allowed to grind
     // through the whole set one bad photo at a time.
-    if (consecutiveFailures >= 10) {
-      console.error(
-        `Aborting: ${consecutiveFailures} consecutive failures — is the model still loaded and vision-capable?`,
-      );
+    if (consecutiveFailures >= CONSECUTIVE_FAILURE_LIMIT) {
+      console.error(circuitBreakerMessage(consecutiveFailures));
       console.error(`Stopped after writing ${wrote} tags.`);
       process.exitCode = 1;
       break;
@@ -174,11 +181,8 @@ for (const [i, img] of images.entries()) {
     queue.push({ ...img, suggested: v.room, confidence: v.confidence });
   }
 
-  if ((i + 1) % 25 === 0) {
-    const rate = (Date.now() - started) / 1000 / (i + 1);
-    console.error(
-      `  …${i + 1}/${images.length} (${rate.toFixed(1)}s/photo, ~${Math.round((rate * (images.length - i - 1)) / 60)}min left)`,
-    );
+  if (shouldReportProgress(i)) {
+    console.error(progressLine(i, images.length, started));
   }
 }
 

@@ -43,14 +43,14 @@ Four pieces. One new module, one query addition, two scripts.
 
 ```
 scripts/tag-bench.ts ──┐
-                       ├──> src/local/llm.ts ──HTTP──> LM Studio (127.0.0.1:1234)
+                       ├──> src/lib/local-llm.ts ──HTTP──> LM Studio (127.0.0.1:1234)
 scripts/tag-auto.ts  ──┘            │
                                     └── shared prompt constant
-scripts/tag-auto.ts ──> src/db/queries/tags.ts (setImageTag — existing write path)
+scripts/tag-auto.ts ──> src/db/queries/tags.ts (setImageTagIfAbsent — existing write path)
 scripts/tag-bench.ts ──> src/db/queries/tags.ts (listTaggedImages — new, read-only)
 ```
 
-### `src/local/llm.ts` — the local-model layer
+### `src/lib/local-llm.ts` — the local-model layer
 
 One export:
 
@@ -105,7 +105,7 @@ Required by the benchmark. Nothing else in the DB layer changes.
   out of reach — not merely avoided by a conditional.
 - Flags: `--threshold=<0..1>` (required, no default until the benchmark produces
   one), `--property=<id>`, `--limit=N`, `--model=<name>`, `--dry-run`.
-- `confidence >= threshold` → `setImageTag({ imageId, roomType, confidence,
+- `confidence >= threshold` → `setImageTagIfAbsent({ imageId, roomType, confidence,
   notes: "local:<model>" })` through the existing sanctioned write path, so
   machine-written tags stay identifiable by query afterwards.
 - `confidence < threshold` → the image is left untagged and printed to a review
@@ -139,7 +139,7 @@ vision-language model's judgment would test nothing.
 ## Sequence
 
 1. Install LM Studio, pull a Qwen3-VL 8B-class quant that fits, start the server.
-2. `src/local/llm.ts` + the `listTaggedImages` query.
+2. `src/lib/local-llm.ts` + the `listTaggedImages` query.
 3. `scripts/tag-bench.ts`. Run it over 10 properties. Read the confidence buckets.
 4. Pick the threshold from those buckets.
 5. `scripts/tag-auto.ts`, wired to that threshold.
