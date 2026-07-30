@@ -275,55 +275,137 @@ import { pct, renderReport, type BenchRow } from "../src/lib/bench-report";
 assert.equal(pct(0, 0), "n/a", "0/0 must not render as NaN%");
 assert.equal(pct(3, 4), "75.0% (3/4)");
 
-// --- 10 hand-computed rows, chosen so kitchen's precision and recall differ ---
-// kitchen truth: rows 1,2,3,4 (actual=4). kitchen got: rows 1,2,4 (predicted=3,
-// row 3 was misclassified as "living"). tp = rows 1,2,4 = 3.
-// precision = 3/3 = 100.0%, recall = 3/4 = 75.0% — pinned below.
+// --- 12 hand-computed rows. Every value below (buckets, threshold-0.85 auto
+// count, confusion off-diagonal, precision/recall, overall agreement) is
+// hand-derived from this exact fixture and pinned — mutation-tested against
+// deliberately broken copies of bench-report.ts. See task-5-report.md for
+// the arithmetic and the list of mutations each pin catches.
+//
+// truth      got        confidence  correct?
+// kitchen    kitchen    0.97        yes
+// kitchen    kitchen    0.92        yes
+// kitchen    living     0.60        no
+// kitchen    bathroom   0.85        no   <- sits exactly on the 0.85 boundary
+// bedroom    bedroom    0.99        yes
+// bedroom    bathroom   0.55        no
+// bathroom   bathroom   0.91        yes
+// living     bedroom    0.75        no
+// living     living     0.83        yes
+// exterior   exterior   0.96        yes
+// exterior   exterior   1.00        yes  <- exercises the 1.01 sentinel
+// dining     dining     0.90        yes  <- sits exactly in the [0.90,0.91) gap
 const benchRows: BenchRow[] = [
   { imageId: "1", truth: "kitchen", got: "kitchen", confidence: 0.97 },
   { imageId: "2", truth: "kitchen", got: "kitchen", confidence: 0.92 },
   { imageId: "3", truth: "kitchen", got: "living", confidence: 0.6 },
-  { imageId: "4", truth: "kitchen", got: "kitchen", confidence: 0.85 },
+  { imageId: "4", truth: "kitchen", got: "bathroom", confidence: 0.85 },
   { imageId: "5", truth: "bedroom", got: "bedroom", confidence: 0.99 },
   { imageId: "6", truth: "bedroom", got: "bathroom", confidence: 0.55 },
   { imageId: "7", truth: "bathroom", got: "bathroom", confidence: 0.91 },
   { imageId: "8", truth: "living", got: "bedroom", confidence: 0.75 },
   { imageId: "9", truth: "living", got: "living", confidence: 0.83 },
   { imageId: "10", truth: "exterior", got: "exterior", confidence: 0.96 },
+  { imageId: "11", truth: "exterior", got: "exterior", confidence: 1.0 },
+  { imageId: "12", truth: "dining", got: "dining", confidence: 0.9 },
 ];
 
 const report = renderReport(benchRows, 0, {
   model: "test-vlm",
   elapsedMs: 60_000,
   outPath: "/tmp/_tagbench.jsonl",
-  propertyCount: 3,
-  photoCount: 10,
+  propertyCount: 4,
+  photoCount: 12,
   timestamp: "2026-07-30T00:00:00.000Z",
 });
 
 // --- precision != recall for kitchen, both hand-computed values pinned ---
+// kitchen actual (truth=kitchen) = rows 1,2,3,4 = 4.
+// kitchen predicted (got=kitchen) = rows 1,2 = 2 (row 3 got "living", row 4 got "bathroom").
+// tp = rows 1,2 = 2. precision = 2/2 = 100.0%, recall = 2/4 = 50.0%.
 const kitchenLine = report
   .split("\n")
   .find((l) => l.trim().startsWith("kitchen") && l.includes("precision"));
 assert.ok(kitchenLine, "report has a per-room line for kitchen");
-assert.match(kitchenLine!, /precision 100\.0% \(3\/3\)/, "kitchen precision pinned at 3/3");
-assert.match(kitchenLine!, /recall 75\.0% \(3\/4\)/, "kitchen recall pinned at 3/4");
+assert.match(kitchenLine!, /precision 100\.0% \(2\/2\)/, "kitchen precision pinned at 2/2");
+assert.match(kitchenLine!, /recall 50\.0% \(2\/4\)/, "kitchen recall pinned at 2/4");
 assert.notEqual(
   kitchenLine!.match(/precision ([\d.]+)%/)![1],
   kitchenLine!.match(/recall ([\d.]+)%/)![1],
   "precision and recall genuinely differ for kitchen, not accidentally equal",
 );
 
-// --- confidence bucket counts sum to rows.length ---
+// --- confusion matrix: pin an off-diagonal cell (catches transposition) ---
+// A diagonal cell can't distinguish "row=truth,col=got" from its transpose,
+// since diag[i][i] is the same either way. Off-diagonal breaks the tie: row 4
+// is the only kitchen-truth photo the model called "bathroom", so the cell at
+// (truth=kitchen, got=bathroom) must read exactly 1. Under transposition this
+// cell would instead show (truth=bathroom, got=kitchen), which is 0 in this
+// fixture (bathroom's only row, #7, was correctly called bathroom) — so a
+// transposed matrix fails this assertion.
+const confusionKitchenLine = report
+  .split("\n")
+  .find((l) => l.startsWith("kitchen")); // truth rows have no leading whitespace; the precision line does
+assert.ok(confusionKitchenLine, "report has a confusion-matrix row for kitchen");
+// Column order follows ROOM_TYPES: kitchen, bathroom, bedroom, living, dining, exterior, other, total.
+const confusionNums = confusionKitchenLine!.match(/\d+/g)!.map(Number);
+assert.equal(confusionNums[0], 2, "confusion[kitchen][kitchen] = 2 (rows 1,2)");
+assert.equal(
+  confusionNums[1],
+  1,
+  "confusion[kitchen][bathroom] = 1 (row 4) — off-diagonal, distinguishes orientation from its transpose",
+);
+assert.equal(confusionNums.at(-1), 4, "kitchen truth row total = 4");
+
+// --- confidence buckets: pin every bucket's exact count, not just the sum ---
+// 0.95+        : rows 1(0.97),5(0.99),10(0.96),11(1.00)         = 4  (row 11 exercises the 1.01 sentinel)
+// 0.90–<0.95   : rows 2(0.92),7(0.91),12(0.90)                  = 3  (row 12 sits exactly in the [0.90,0.91) gap)
+// 0.80–<0.90   : rows 4(0.85),9(0.83)                           = 2  (row 4 sits exactly on the 0.85 threshold boundary)
+// 0.70–<0.80   : row 8(0.75)                                    = 1
+// <0.70        : rows 3(0.60),6(0.55)                           = 2
 const bucketNs = [...report.matchAll(/conf \S+\s+n=\s*(\d+)/g)].map((m) => Number(m[1]));
-assert.ok(bucketNs.length > 0, "at least one confidence bucket line rendered");
+assert.deepEqual(
+  bucketNs,
+  [4, 3, 2, 1, 2],
+  "every confidence bucket count is pinned exactly — catches the 1.01 sentinel, narrow boundary shifts, and mis-bucketing",
+);
 assert.equal(
   bucketNs.reduce((a, b) => a + b, 0),
   benchRows.length,
-  "every row lands in exactly one confidence bucket",
+  "bucket counts also sum to rows.length",
 );
 
+// --- overall agreement percentage, pinned ---
+// 8 of 12 rows correct: rows 1,2,5,7,9,10,11,12. Rows 3,4,6,8 are wrong.
+assert.match(
+  report,
+  /Overall agreement with your tags: 66\.7% \(8\/12\)/,
+  "overall agreement is pinned, not just present",
+);
+
+// --- threshold table: pin the exact auto-tag count at t=0.85 (catches >= vs >) ---
+// auto+queued===rows.length is invariant under a >= -> > flip (both sides
+// shift by 1 together), so that invariant alone can never catch a boundary
+// bug. Row 4 sits exactly at confidence 0.85, so pinning the auto count here
+// is the one assertion that distinguishes ">= 0.85" from "> 0.85".
+// auto (confidence >= 0.85) = rows 1,2,4,5,7,10,11,12 = 8.
+// Of those, row 4 (kitchen->bathroom) is wrong -> wrong=1, error rate 1/8=12.5%.
+const t085Line = report.split("\n").find((l) => l.includes("--threshold=0.85"));
+assert.ok(t085Line, "report has a threshold=0.85 line");
+assert.match(
+  t085Line!,
+  /auto-tags 66\.7% \(8\/12\)/,
+  "auto count at t=0.85 pinned exactly at 8 — a >= vs > flip on row 4 (confidence exactly 0.85) would change this to 7",
+);
+assert.match(
+  t085Line!,
+  /1 of those wrong \(12\.5% error rate\)/,
+  "wrong count and its M5 error rate are pinned at a threshold where wrong is non-zero",
+);
+assert.match(t085Line!, /4 queued for review/, "queued count at t=0.85 pinned at 4");
+
 // --- at every threshold, auto-tagged + queued-for-review === rows.length ---
+// (Necessary but not sufficient on its own — see the t=0.85 pin above for
+// the assertion that actually catches a >= vs > boundary flip.)
 const thresholdLines = [...report.matchAll(
   /auto-tags [\d.]+% \((\d+)\/\d+\).*?(\d+) queued for review/g,
 )];

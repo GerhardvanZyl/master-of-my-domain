@@ -90,7 +90,10 @@ for (const [i, img] of images.entries()) {
     if (/not reachable/i.test(msg)) {
       // A dead server is not a per-image problem — stop instead of printing
       // 445 copies. C1: still render whatever the run measured before exiting.
+      // Count this photo as errored so the abort banner doesn't read
+      // "0 errored" next to a call that in fact failed.
       console.error(msg);
+      failed++;
       aborted = true;
       abortReason = msg;
       break;

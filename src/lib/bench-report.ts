@@ -1,4 +1,4 @@
-import { ROOM_TYPES, type RoomType } from "../db/schema";
+import { ROOM_TYPES, type RoomType } from "@/db/schema";
 
 /**
  * Pure report rendering for tag:bench, split out of the CLI so the arithmetic
@@ -117,9 +117,9 @@ export function renderReport(
   // confidence === 1.0 from falling out of every bucket. Do not "fix" it.
   const buckets: [number, number, string][] = [
     [0.95, 1.01, "0.95+"],
-    [0.9, 0.95, "0.90–0.949"],
-    [0.8, 0.9, "0.80–0.899"],
-    [0.7, 0.8, "0.70–0.799"],
+    [0.9, 0.95, "0.90–<0.95"],
+    [0.8, 0.9, "0.80–<0.90"],
+    [0.7, 0.8, "0.70–<0.80"],
     [0, 0.7, "<0.70"],
   ];
   for (const [lo, hi, label] of buckets) {
