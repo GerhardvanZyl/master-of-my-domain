@@ -163,6 +163,79 @@ await assert.rejects(
   "an unreadable image fails with an actionable, distinguishable message",
 );
 
+// ---------------------------------------------------------------------------
+// room-classify: prompt, verdict validation, gate
+// ---------------------------------------------------------------------------
+import { ROOM_TYPES } from "../src/db/schema";
+import {
+  ROOM_PROMPT,
+  ROOM_SCHEMA,
+  parseRoomVerdict,
+  passesGate,
+  classifyRoom,
+} from "../src/lib/room-classify";
+
+// --- the schema pins the vocabulary to the DB's own list ---
+assert.deepEqual(
+  (ROOM_SCHEMA as any).properties.room.enum,
+  [...ROOM_TYPES],
+  "schema enum is ROOM_TYPES, not a hand-copied list",
+);
+assert.equal((ROOM_SCHEMA as any).additionalProperties, false);
+assert.deepEqual((ROOM_SCHEMA as any).required, ["room", "confidence"]);
+
+// --- the prompt names every room type and the tie-breaker rules ---
+for (const r of ROOM_TYPES) {
+  assert.ok(ROOM_PROMPT.includes(r), `prompt mentions "${r}"`);
+}
+assert.match(ROOM_PROMPT, /open-plan/i, "prompt resolves the open-plan case");
+assert.match(ROOM_PROMPT, /floorplan/i, "prompt sends floorplans to other");
+
+// --- parseRoomVerdict: happy path ---
+assert.deepEqual(parseRoomVerdict({ room: "kitchen", confidence: 0.9 }), {
+  room: "kitchen",
+  confidence: 0.9,
+});
+assert.deepEqual(parseRoomVerdict({ room: "other", confidence: 0 }), {
+  room: "other",
+  confidence: 0,
+});
+
+// --- parseRoomVerdict: rejects anything outside the vocabulary ---
+assert.throws(() => parseRoomVerdict({ room: "laundry", confidence: 0.9 }), /invalid room/i);
+assert.throws(() => parseRoomVerdict({ room: "Kitchen", confidence: 0.9 }), /invalid room/i);
+assert.throws(() => parseRoomVerdict({ confidence: 0.9 }), /invalid room/i);
+assert.throws(() => parseRoomVerdict(null), /invalid room/i);
+
+// --- parseRoomVerdict: rejects unusable confidence ---
+assert.throws(() => parseRoomVerdict({ room: "kitchen", confidence: 1.5 }), /invalid confidence/i);
+assert.throws(() => parseRoomVerdict({ room: "kitchen", confidence: -0.1 }), /invalid confidence/i);
+assert.throws(() => parseRoomVerdict({ room: "kitchen", confidence: "high" }), /invalid confidence/i);
+assert.throws(() => parseRoomVerdict({ room: "kitchen" }), /invalid confidence/i);
+
+// --- passesGate: the boundary is inclusive, and that is deliberate ---
+assert.equal(passesGate({ room: "kitchen", confidence: 0.9 }, 0.9), true, "at threshold writes");
+assert.equal(passesGate({ room: "kitchen", confidence: 0.8999 }, 0.9), false, "just below queues");
+assert.equal(passesGate({ room: "kitchen", confidence: 1 }, 0.9), true);
+assert.equal(passesGate({ room: "kitchen", confidence: 0 }, 0), true, "threshold 0 writes everything");
+assert.equal(passesGate({ room: "kitchen", confidence: 0.99 }, 1), false, "threshold 1 needs certainty");
+
+// --- classifyRoom: sends the image and the shared prompt, returns a verdict ---
+stubFetch({ choices: [{ message: { content: '{"room":"dining","confidence":0.72}' } }] });
+const verdict = await classifyRoom(tmpImg, "vision-model-x");
+assert.deepEqual(verdict, { room: "dining", confidence: 0.72 });
+assert.equal(lastBody.model, "vision-model-x", "model override is honoured");
+assert.equal(
+  lastBody.messages.at(-1).content[0].text,
+  ROOM_PROMPT,
+  "classifyRoom ships the shared prompt verbatim — the benchmark must measure what runs",
+);
+assert.equal(lastBody.messages.at(-1).content[1].type, "image_url", "the photo is attached");
+
+// --- classifyRoom: a model that ignores the schema still fails loudly ---
+stubFetch({ choices: [{ message: { content: '{"room":"garage","confidence":0.9}' } }] });
+await assert.rejects(classifyRoom(tmpImg, "m"), /invalid room/i);
+
 globalThis.fetch = realFetch;
 fs.unlinkSync(tmpImg);
 
