@@ -60,7 +60,13 @@ const TRUTHY_DRY_RUN = new Set(["true", "1", "yes", "on"]);
 function parseDryRun(raw: string | boolean | undefined): boolean {
   if (raw === undefined) return false;
   if (raw === true) return true;
-  if (TRUTHY_DRY_RUN.has(raw.trim().toLowerCase())) return true;
+  // `raw` is `string | false` here — parseFlags never actually produces
+  // `false`, but the `typeof` check (rather than an `as string` cast) keeps
+  // this correct under the type as declared, and satisfies `tsc --noEmit`
+  // (a bare `.trim()` here does not typecheck against `string | false`).
+  if (typeof raw === "string" && TRUTHY_DRY_RUN.has(raw.trim().toLowerCase())) {
+    return true;
+  }
   throw new Error(
     `Invalid --dry-run=${JSON.stringify(raw)} — expected true/1/yes/on (or bare --dry-run).`,
   );
@@ -126,10 +132,17 @@ for (const [i, img] of images.entries()) {
       break;
     }
     failed++;
-    consecutiveFailures++;
     console.error(`  ! ${img.imageId}: ${msg}`);
-    // A run-wide failure mode (model unloaded, wrong --model, OOM, HTTP 500)
-    // doesn't match /not reachable/i and must not be allowed to grind
+    // An unreadable file (pruned/missing image) is a per-photo data problem,
+    // not evidence the model server is sick — it must not feed the breaker,
+    // or a property with 10 pruned photos aborts the whole run for no
+    // model-side reason. It still counts toward `failed` above.
+    if (/Could not read image at/i.test(msg)) {
+      continue;
+    }
+    consecutiveFailures++;
+    // A run-wide model-side failure mode (unloaded, wrong --model, OOM, HTTP
+    // 500) doesn't match /not reachable/i and must not be allowed to grind
     // through the whole set one bad photo at a time.
     if (consecutiveFailures >= 10) {
       console.error(

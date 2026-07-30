@@ -265,8 +265,14 @@ await assert.rejects(classifyRoom(tmpImg, "m"), /invalid room/i);
 // --- tag:auto refuses to run without a threshold ---
 import { spawnSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
+import { createRequire } from "node:module";
 import Database from "better-sqlite3";
 import { DDL, migrateColumns } from "../src/db/ddl";
+
+// This file is ESM; the TOCTOU race test below needs require.resolve() to
+// find better-sqlite3's real installed path so a preload script written to
+// an OS temp dir (outside node_modules' resolution reach) can still import it.
+const require = createRequire(import.meta.url);
 
 // process.execPath + tsx's own CLI entry point avoids both the Windows
 // npx.cmd ENOENT problem (execFileSync can't exec a .cmd shim directly) and
@@ -295,18 +301,51 @@ function runTagAuto(
   return { status, out: `${res.stdout ?? ""}${res.stderr ?? ""}` };
 }
 
-for (const bad of [[], ["--threshold=abc"], ["--threshold=1.5"], ["--threshold=-1"]]) {
-  const r = runTagAuto(bad);
-  assert.notEqual(r.status, 0, `tag:auto must reject ${JSON.stringify(bad)}`);
+// Each case pins a CRITICAL 1 reproducer: deleting the trim/empty-string
+// guard in src/lib/args.ts, or the >0 check for --limit, would make one of
+// these silently pass instead of failing loudly.
+const BAD_INVOCATIONS: { args: string[]; mustAlsoMatch?: RegExp }[] = [
+  { args: [] },
+  { args: ["--threshold=abc"] },
+  { args: ["--threshold=1.5"] },
+  { args: ["--threshold=-1"] },
+  { args: ["--threshold="] }, // Number("") === 0 must not slip through as a legitimate zero
+  { args: ["--threshold=0.9", "--limit=abc"], mustAlsoMatch: /limit/i },
+  { args: ["--threshold=0.9", "--limit=0"], mustAlsoMatch: /limit/i }, // must not silently disable the LIMIT clause
+];
+
+for (const { args, mustAlsoMatch } of BAD_INVOCATIONS) {
+  const r = runTagAuto(args);
+  assert.notEqual(r.status, 0, `tag:auto must reject ${JSON.stringify(args)}`);
   assert.match(r.out, /threshold/i, "the error explains the threshold");
   assert.match(r.out, /tag:bench/, "the error points at the benchmark");
+  if (mustAlsoMatch) {
+    assert.match(r.out, mustAlsoMatch, `error for ${JSON.stringify(args)} names the actual bad flag`);
+  }
 }
+
+// --- --dry-run's truthy set and the unknown-flag allowlist (subprocess-only, no DB needed) ---
+{
+  const r1 = runTagAuto(["--threshold=0.9", "--dry-run=1"]);
+  assert.equal(r1.status, 0, `--dry-run=1 must be accepted, got: ${r1.out}`);
+
+  const r2 = runTagAuto(["--threshold=0.9", "--dry-run=nonsense"]);
+  assert.notEqual(r2.status, 0, "--dry-run=nonsense must be rejected");
+  assert.match(r2.out, /dry-run/i, "the error explains the bad --dry-run value");
+
+  const r3 = runTagAuto(["--threshold=0.9", "--dryrun"]);
+  assert.notEqual(r3.status, 0, "a misspelled --dryrun must be rejected, not silently ignored");
+  assert.match(r3.out, /Unknown flag/i, "the error names the unrecognised flag");
+}
+
+fs.rmSync(defaultGuardDir, { recursive: true, force: true });
 
 // ---------------------------------------------------------------------------
 // tag:auto integration: write path, dry-run, and threshold boundaries.
 // Never touches data/app.db — each test builds its own isolated sandbox DB
 // (same DDL tag-auto reads), a couple of untagged images with real tiny PNG
-// bytes on disk, and a throwaway node:http server standing in for LM Studio.
+// bytes on disk, and an in-process fetch stub standing in for LM Studio
+// (see fetchStubPreloadUrl below for why this isn't a node:http server).
 // ---------------------------------------------------------------------------
 
 const TINY_PNG = Buffer.from(
@@ -353,18 +392,18 @@ function makeSandbox(nImages: number): {
 }
 
 /**
- * Stand in for LM Studio without a real network round trip. This sandbox
- * cannot route loopback TCP from a spawned child back to a socket owned by
- * its own (nested) parent process — verified directly: a plain node:http
- * server hosted in this test process is unreachable from a tag-auto.ts
- * child spawned via spawnSync, with both `fetch` and raw `net.connect`,
- * with and without `dangerouslyDisableSandbox`, and even after a 25s wait
- * (the client-side connect() callback fires immediately but the server
- * never sees the connection and no bytes ever cross — a hard block, not a
- * race). So instead of a real socket, a `--import` preload module patches
- * `globalThis.fetch` inside the CHILD's own process, before tag-auto.ts's
- * top-level code runs — no network I/O at all, same effect as the
- * `stubFetch()` used earlier in this file, just applied to a subprocess.
+ * Stand in for LM Studio without a real network round trip. A real
+ * node:http server hosted in this test process would not work here: these
+ * tests use spawnSync, which blocks this process's event loop for the
+ * child's entire lifetime, so this process can never accept() an incoming
+ * connection while the child is running — the child's request would sit
+ * unaccepted until it times out, regardless of network reachability. (Not
+ * a sandbox/network limitation — spawn() + await against the same server
+ * and child script works fine; spawnSync specifically cannot.) So instead
+ * of a real socket, a `--import` preload module patches `globalThis.fetch`
+ * inside the CHILD's own process, before tag-auto.ts's top-level code
+ * runs — no network I/O at all, same effect as the `stubFetch()` used
+ * earlier in this file, just applied to a subprocess.
  */
 function fetchStubPreloadUrl(dir: string, verdict: { room: string; confidence: number }): string {
   const p = path.join(dir, "stub-fetch-preload.mjs");
@@ -436,6 +475,89 @@ function fetchStubPreloadUrl(dir: string, verdict: { room: string; confidence: n
     );
     assert.match(r.out, /Nothing untagged/, `--threshold=${t} reaches the real run, not the guard`);
   }
+  fs.rmSync(sandbox.dir, { recursive: true, force: true });
+}
+
+// --- a tag written by another process mid-run is never overwritten (TOCTOU) ---
+// tag-auto snapshots the untagged list once via listUntaggedImages, then
+// writes minutes/photos later. Reverting setImageTagIfAbsent back to
+// setImageTag is the exact regression this pins: it would silently clobber
+// a hand tag made (via the UI or tag:set) after the snapshot but before
+// tag-auto reaches that image. Simulated deterministically: the fetch stub
+// itself performs the "concurrent" write, as a side effect of answering the
+// FIRST classification call, before the run reaches the second image.
+{
+  const sandbox = makeSandbox(2); // img0, img1 both untagged at snapshot time
+  const betterSqlite3Url = pathToFileURL(require.resolve("better-sqlite3")).href;
+  const preloadPath = path.join(sandbox.dir, "stub-fetch-race-preload.mjs");
+  fs.writeFileSync(
+    preloadPath,
+    `import Database from ${JSON.stringify(betterSqlite3Url)};
+const db = new Database(${JSON.stringify(sandbox.dbPath)});
+let armed = false;
+globalThis.fetch = async () => {
+  if (!armed) {
+    armed = true;
+    // Simulates a hand tag (UI PATCH / tag:set) landing on img1 after
+    // tag-auto's snapshot but before its loop gets there.
+    db.prepare(
+      "INSERT INTO image_tags (image_id, room_type, confidence, tagged_by, tagged_at, notes) VALUES ('img1', 'kitchen', 1.0, 'user', ?, 'hand-tagged mid-run')",
+    ).run(new Date().toISOString());
+  }
+  return {
+    ok: true,
+    status: 200,
+    json: async () => (${JSON.stringify({
+      choices: [{ message: { content: JSON.stringify({ room: "bedroom", confidence: 0.95 }) } }] },
+    )}),
+    text: async () => "",
+  };
+};
+`,
+  );
+  const preload = pathToFileURL(preloadPath).href;
+  const r = runTagAuto(["--threshold=0.5", "--model=test-vlm"], {
+    ...sandbox.env,
+    NODE_OPTIONS: `--import=${preload}`,
+  });
+  assert.equal(r.status, 0, `run exits 0, got: ${r.out}`);
+  assert.match(r.out, /1 skipped \(already tagged\)/, "the race is reported as skipped, not written");
+  const check = new Database(sandbox.dbPath, { readonly: true });
+  const row = check
+    .prepare("SELECT room_type, tagged_by, notes FROM image_tags WHERE image_id = 'img1'")
+    .get() as { room_type: string; tagged_by: string; notes: string };
+  check.close();
+  assert.equal(row.tagged_by, "user", "the hand tag made mid-run must survive untouched");
+  assert.equal(row.room_type, "kitchen", "tag-auto's own verdict (bedroom) must not have overwritten it");
+  assert.equal(row.notes, "hand-tagged mid-run");
+  fs.rmSync(sandbox.dir, { recursive: true, force: true });
+}
+
+// --- guards against load-env.ts's process.loadEnvFile silently retargeting
+// DB_PATH: confirms the child process actually resolves DB_PATH to the
+// sandbox path this test set, not whatever (if anything) .env.local says ---
+{
+  const sandbox = makeSandbox(0);
+  const envTsUrl = pathToFileURL(path.join(process.cwd(), "src/lib/env.ts")).href;
+  const loadEnvTsUrl = pathToFileURL(path.join(process.cwd(), "src/lib/load-env.ts")).href;
+  const probePath = path.join(sandbox.dir, "probe-db-path.mjs");
+  fs.writeFileSync(
+    probePath,
+    `import ${JSON.stringify(loadEnvTsUrl)};
+import { DB_PATH } from ${JSON.stringify(envTsUrl)};
+process.stdout.write(DB_PATH);
+`,
+  );
+  const res = spawnSync(process.execPath, [TSX_BIN, probePath], {
+    encoding: "utf8",
+    env: { ...process.env, ...sandbox.env },
+  });
+  assert.equal(res.status, 0, `DB_PATH probe exits 0, got: ${res.stderr}`);
+  assert.equal(
+    res.stdout,
+    sandbox.dbPath,
+    "the sandbox DB_PATH this test set must not be overridden by load-env's process.loadEnvFile",
+  );
   fs.rmSync(sandbox.dir, { recursive: true, force: true });
 }
 
