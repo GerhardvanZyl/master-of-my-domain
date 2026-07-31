@@ -167,6 +167,7 @@ for (const [i, img] of images.entries()) {
   if (passesGate(v, threshold)) {
     if (dryRun) {
       wrote++;
+      if (v.source === "rule") ruleWrote++;
     } else {
       const inserted = setImageTagIfAbsent({
         imageId: img.imageId,

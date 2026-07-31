@@ -111,6 +111,17 @@ export function prepareImage(
         absPath,
         "-vf",
         vf,
+        // Every GIF (92 in the library) is a multi-frame source. Without
+        // this, the GIF demuxer emits one frame per loop iteration and the
+        // image2 muxer refuses to write more than one file to "pipe:1"
+        // ("Cannot write more than one file with the same name"), so every
+        // GIF failed to convert. `-update 1` looks like the fix but instead
+        // concatenates every frame into the single pipe output (measured:
+        // 10x the expected byte count) — silent corruption, not a fix. Take
+        // just the first frame instead; the same multi-frame shape applies
+        // to animated webp, so this is the right fix regardless of format.
+        "-frames:v",
+        "1",
         "-q:v",
         "4",
         "-f",
