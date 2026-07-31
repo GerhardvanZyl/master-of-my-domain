@@ -442,6 +442,8 @@ export interface ImageWithTag {
   alt: string | null;
   roomType: string | null;
   notes: string | null;
+  taggedBy: string | null;
+  confidence: number | null;
 }
 
 export function getPropertyImages(propertyId: string): ImageWithTag[] {
@@ -457,6 +459,8 @@ export function getPropertyImages(propertyId: string): ImageWithTag[] {
       alt: images.alt,
       roomType: imageTags.roomType,
       notes: imageTags.notes,
+      taggedBy: imageTags.taggedBy,
+      confidence: imageTags.confidence,
     })
     .from(images)
     .leftJoin(imageTags, eq(imageTags.imageId, images.id))

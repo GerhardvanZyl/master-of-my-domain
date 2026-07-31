@@ -33,4 +33,34 @@ export interface PhotoLite {
   localPath: string;
   roomType: string | null;
   notes?: string | null;
+  taggedBy?: string | null;
+  confidence?: number | null;
+}
+
+/** `tagged_by` values that mean "a machine picked this, nobody has reviewed it". */
+const MACHINE_TAGGED_BY = new Set(["local-vlm", "migration"]);
+
+export function isMachineTagged(taggedBy: string | null | undefined): boolean {
+  return !!taggedBy && MACHINE_TAGGED_BY.has(taggedBy);
+}
+
+/** Human-readable form of image_tags.tagged_by, for the lightbox detail line. */
+export function formatTaggedBy(taggedBy: string | null | undefined): string | null {
+  if (!taggedBy) return null;
+  switch (taggedBy) {
+    case "claude-code":
+      return "Claude Code";
+    case "user":
+      return "you";
+    case "migration":
+      return "a retag sweep";
+    case "local-vlm":
+      return "the vision model";
+    case "domain-cover":
+      return "Domain's cover heuristic";
+    case "first-photo-heuristic":
+      return "the first-photo heuristic";
+    default:
+      return taggedBy;
+  }
 }

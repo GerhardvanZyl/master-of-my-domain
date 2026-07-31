@@ -6,6 +6,7 @@ import Image from "next/image";
 import { imageUrl } from "@/lib/images";
 import { ROOM_ROW_ORDER, type PhotoLite } from "@/lib/photo";
 import Lightbox from "./Lightbox";
+import TagSelect from "./TagSelect";
 
 export interface CompareCol {
   propertyId: string;
@@ -234,6 +235,14 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                   <div className="pt-1 text-center text-xs text-neutral-400">
                     {imgs.length ? `${at + 1} / ${imgs.length}` : "—"}
                   </div>
+                  {img && (
+                    <div
+                      className="flex justify-center pt-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <TagSelect imageId={img.id} roomType={img.roomType} />
+                    </div>
+                  )}
                 </div>
               );
             })}
