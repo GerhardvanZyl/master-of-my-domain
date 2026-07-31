@@ -191,7 +191,7 @@ for (const [i, img] of images.entries()) {
 }
 
 console.error(
-  `${dryRun ? "[dry-run] would tag" : "tagged"} ${wrote} (${ruleWrote} rule-tagged SVG -> other, ${wrote - ruleWrote} model-tagged), ` +
+  `${dryRun ? "[dry-run] would tag" : "tagged"} ${wrote} (${ruleWrote} rule-tagged SVG -> exclude, ${wrote - ruleWrote} model-tagged), ` +
     `${skipped} skipped (already tagged), queued ${queue.length} for review, ${failed} errored`,
 );
 // Same JSON shape as tag:list, so Claude's existing loop consumes it

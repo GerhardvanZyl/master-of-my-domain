@@ -14,11 +14,31 @@ export const ROOM_PROMPT = `You are labelling one photo from an Australian real-
 Pick exactly one room type from this list: ${ROOM_TYPES.join(", ")}.
 
 Rules for the cases that are actually confusable:
-- An open-plan shot showing both a lounge setting and a dining table -> living.
+- An open-plan shot showing both a lounge setting (sofas or armchairs actually
+  visible) and a dining table -> living. A room showing a kitchen and a dining
+  table but NO lounge setting is NOT living: it is dining, or kitchen if the
+  kitchen clearly dominates the frame.
 - A room whose main subject is a dining table -> dining.
 - A room whose main subject is a bed -> bedroom.
-- Floorplans, site plans, locality maps, agent branding, price or text overlays,
-  and close-up detail shots with no readable room -> other.
+- Hallways, corridors, entry foyers, upstairs landings and staircases -> other.
+  This applies even when another room (e.g. a lounge) is visible through a
+  doorway or over a balustrade — the photo is of the circulation space, not
+  that other room.
+- A photo taken from inside a room looking out through open doors to a
+  courtyard or garden is classified by the interior room it was taken from,
+  when that room is identifiable (e.g. shot from a kitchen looking out ->
+  kitchen, not exterior).
+- Floorplans, site plans, locality maps, and close-up detail shots with no
+  readable room -> other.
+- An annotated aerial/drone locality shot of the neighbourhood (callouts
+  pointing at schools, shops, wetlands etc., often with the subject property
+  outlined and an agency logo) -> aerial. Do not confuse with other: aerial is
+  specifically the annotated locality shot, other is floorplans/site plans/
+  unidentifiable detail shots.
+- Agency branding, logo cards, and pure text or price/marketing panels with no
+  property content -> exclude. Do not confuse with other: exclude is content
+  that should never be shown at all, other is a real (if unidentifiable or
+  non-room) part of the listing like a floorplan.
 - Facade, street view, driveway, backyard, garden, balcony, deck, pool -> exterior.
 - Ensuite, powder room, toilet, and a laundry containing a basin -> bathroom.
   A laundry with no basin -> other.
@@ -44,7 +64,7 @@ export interface RoomVerdict {
   /**
    * "model": a real verdict from the vision model.
    * "rule": a deterministic call made without asking the model at all (e.g.
-   *   SVG -> other). Must be visibly distinguishable from a model answer —
+   *   SVG -> exclude). Must be visibly distinguishable from a model answer —
    *   never disguised as one.
    */
   source: "model" | "rule";
@@ -74,9 +94,10 @@ export function parseRoomVerdict(raw: unknown): RoomVerdict {
  * logos/branding — never a room — and ffmpeg has no SVG decoder, so there is
  * no way to hand one to the model at all. This is a rule, not a guess: it is
  * tagged as `source: "rule"` precisely so it is never mistaken for a model
- * answer downstream (tag:auto's notes, tag:bench's figures).
+ * answer downstream (tag:auto's notes, tag:bench's figures). Verdict is
+ * `exclude` (not `other`) — agency branding must never be shown in the app.
  */
-const SVG_VERDICT: RoomVerdict = { room: "other", confidence: 1, source: "rule" };
+const SVG_VERDICT: RoomVerdict = { room: "exclude", confidence: 1, source: "rule" };
 
 export async function classifyRoom(
   absPath: string,

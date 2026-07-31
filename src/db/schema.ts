@@ -8,7 +8,17 @@ import {
   primaryKey,
 } from "drizzle-orm/sqlite-core";
 
-/** Controlled vocabulary for room types. Enforced in app/CLI code. */
+/**
+ * Controlled vocabulary for room types. Enforced in app/CLI code (no CHECK
+ * constraint on image_tags.room_type in the DB — see ddl.ts).
+ *
+ * `aerial` and `exclude` are new (see room-classify.ts's ROOM_PROMPT for the
+ * full rules): `aerial` is an annotated aerial locality shot; `exclude` is a
+ * display-control value — an image tagged `exclude` is never shown anywhere
+ * in the app (agency branding, logo cards, pure text/marketing panels). One
+ * tag per image is the existing model, so `exclude` deliberately lives in
+ * this same vocabulary rather than a parallel flag column.
+ */
 export const ROOM_TYPES = [
   "kitchen",
   "bathroom",
@@ -17,6 +27,8 @@ export const ROOM_TYPES = [
   "dining",
   "exterior",
   "other",
+  "aerial",
+  "exclude",
 ] as const;
 export type RoomType = (typeof ROOM_TYPES)[number];
 

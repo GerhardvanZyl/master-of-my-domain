@@ -209,6 +209,37 @@ import {
   classifyRoom,
 } from "../src/lib/room-classify";
 
+// --- ROOM_TYPES has all nine values, pinned exactly. ROOM_SCHEMA's enum and
+// ROOM_PROMPT's vocabulary both derive from this array by reference (see the
+// assertions right below), so pinning it here is what stops the schema enum
+// and the prompt from silently drifting apart from each other or from the DB. ---
+assert.deepEqual(
+  [...ROOM_TYPES],
+  [
+    "kitchen",
+    "bathroom",
+    "bedroom",
+    "living",
+    "dining",
+    "exterior",
+    "other",
+    "aerial",
+    "exclude",
+  ],
+  "ROOM_TYPES must have exactly these nine values, in this order",
+);
+
+// src/lib/photo.ts keeps a second copy of this list, duplicated deliberately so
+// the client bundle does not pull in drizzle's table definitions — but its
+// comment says "kept in sync by hand", which is exactly how two lists drift.
+// This is the only thing stopping that.
+import { ROOM_TYPES as CLIENT_ROOM_TYPES } from "../src/lib/photo";
+assert.deepEqual(
+  [...CLIENT_ROOM_TYPES],
+  [...ROOM_TYPES],
+  "src/lib/photo.ts's client-safe ROOM_TYPES copy has drifted from src/db/schema.ts",
+);
+
 // --- the schema pins the vocabulary to the DB's own list ---
 assert.deepEqual(
   (ROOM_SCHEMA as any).properties.room.enum,
@@ -802,7 +833,7 @@ for (const [, autoStr, queuedStr] of thresholdLines) {
 }
 
 // ---------------------------------------------------------------------------
-// bench-report: anti-inflation property (W3). Rule-tagged rows (SVG -> other)
+// bench-report: anti-inflation property (W3). Rule-tagged rows (SVG -> exclude)
 // are right 100% of the time by construction, so they must never leak into
 // the figures a human reads to pick --threshold — that number gets converted
 // into an irreversible 7,822-row write. Pinned by mutation: changing
@@ -816,8 +847,8 @@ for (const [, autoStr, queuedStr] of thresholdLines) {
     { imageId: "m3", truth: "living", got: "dining", confidence: 0.6, source: "model" },
     // Two always-correct rule rows. If they leak into the model figures,
     // agreement/precision/recall/buckets/threshold-table all shift.
-    { imageId: "r1", truth: "other", got: "other", confidence: 1, source: "rule" },
-    { imageId: "r2", truth: "other", got: "other", confidence: 1, source: "rule" },
+    { imageId: "r1", truth: "exclude", got: "exclude", confidence: 1, source: "rule" },
+    { imageId: "r2", truth: "exclude", got: "exclude", confidence: 1, source: "rule" },
   ];
   const mixedReport = renderReport(mixedRows, 0, {
     model: "test-vlm",
@@ -830,7 +861,7 @@ for (const [, autoStr, queuedStr] of thresholdLines) {
 
   assert.match(
     mixedReport,
-    /Rule-tagged \(SVG → other\): 2 photos, not included in the figures below/,
+    /Rule-tagged \(SVG → exclude\): 2 photos, not included in the figures below/,
     "the rule-tagged count is reported on its own line",
   );
 
@@ -1110,7 +1141,7 @@ function jpegDimensions(buf: Buffer): { width: number; height: number } {
   fs.writeFileSync(svgFixture, "<svg><circle/></svg>");
 
   const verdict = await classifyRoom(svgFixture, "vision-model-x");
-  assert.deepEqual(verdict, { room: "other", confidence: 1, source: "rule" });
+  assert.deepEqual(verdict, { room: "exclude", confidence: 1, source: "rule" });
   assert.equal(httpCalled, false, "no HTTP call was made for an SVG");
 
   fs.rmSync(dir, { recursive: true, force: true });

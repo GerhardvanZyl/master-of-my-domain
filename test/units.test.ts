@@ -135,6 +135,7 @@ type HImg = {
   notes?: string | null;
   sourceUrl?: string | null;
   alt?: string | null;
+  roomType?: string | null;
 };
 // Ordinal order (as ingested) leads with the floorplan; pickHero must skip it
 // and return Domain's lowest-photoIndex 3:2 photo instead.
@@ -202,6 +203,24 @@ assert.equal(
   pickHero(heroImgs)?.sourceUrl,
   U("100", 1),
   "no alts anywhere = old behaviour unchanged",
+);
+
+// --- pickHero must never choose an `exclude`-tagged image, even one ---
+// explicitly marked notes='hero' (a human override doesn't undo `exclude`'s
+// "never shown anywhere" meaning) — and must fall through to the next-best
+// real candidate instead.
+assert.equal(
+  pickHero([
+    { width: 1, height: 1, notes: "hero", sourceUrl: U("500", 1), roomType: "exclude" },
+    { width: 1600, height: 1067, sourceUrl: U("500", 2) },
+  ])?.sourceUrl,
+  U("500", 2),
+  "an exclude-tagged image is skipped even over an explicit notes='hero' pick",
+);
+assert.equal(
+  pickHero([{ width: 1, height: 1, notes: "hero", sourceUrl: U("500", 1), roomType: "exclude" }]),
+  null,
+  "if every candidate is excluded, pickHero returns null rather than an excluded image",
 );
 
 // --- soldDate (real sale date extracted from a Domain listing payload) ---

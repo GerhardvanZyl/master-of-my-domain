@@ -1,5 +1,8 @@
 // Shared, client-safe photo helpers (no DB imports).
 
+// Kept in sync with src/db/schema.ts's ROOM_TYPES by hand — duplicated here
+// (rather than imported) because that module also exports drizzle table
+// definitions that must not end up in the client bundle.
 export const ROOM_TYPES = [
   "kitchen",
   "bathroom",
@@ -8,6 +11,8 @@ export const ROOM_TYPES = [
   "dining",
   "exterior",
   "other",
+  "aerial",
+  "exclude",
 ] as const;
 export type RoomType = (typeof ROOM_TYPES)[number];
 

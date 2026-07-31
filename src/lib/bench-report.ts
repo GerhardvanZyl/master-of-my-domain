@@ -13,7 +13,7 @@ export interface BenchRow {
   confidence: number;
   /**
    * "model": a real vision-model verdict. "rule": a deterministic verdict
-   * (SVG -> other) made without calling the model at all. Undefined is
+   * (SVG -> exclude) made without calling the model at all. Undefined is
    * treated as "model" for backward compatibility. Rule-tagged rows are
    * excluded from every figure below (overall agreement, confusion matrix,
    * precision/recall, confidence buckets, threshold table) — the rule is
@@ -90,7 +90,7 @@ export function renderReport(
   }
   if (ruleRows.length > 0) {
     lines.push(
-      `Rule-tagged (SVG → other): ${ruleRows.length} photos, not included in the figures below`,
+      `Rule-tagged (SVG → exclude): ${ruleRows.length} photos, not included in the figures below`,
     );
   }
 
