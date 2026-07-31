@@ -1,5 +1,6 @@
 import { ROOM_TYPES, type RoomType } from "@/db/schema";
 import { askLocal } from "./local-llm";
+import { prepareImage } from "./image-prep";
 
 /** Set LOCAL_VLM_MODEL in .env.local to the model id LM Studio reports. */
 export const DEFAULT_VISION_MODEL =
@@ -40,6 +41,13 @@ export const ROOM_SCHEMA: Record<string, unknown> = {
 export interface RoomVerdict {
   room: RoomType;
   confidence: number;
+  /**
+   * "model": a real verdict from the vision model.
+   * "rule": a deterministic call made without asking the model at all (e.g.
+   *   SVG -> other). Must be visibly distinguishable from a model answer —
+   *   never disguised as one.
+   */
+  source: "model" | "rule";
 }
 
 /** Validate a model reply. The server enforces the schema; this is the belt. */
@@ -58,18 +66,33 @@ export function parseRoomVerdict(raw: unknown): RoomVerdict {
       `Model returned an invalid confidence: ${JSON.stringify(c)}`,
     );
   }
-  return { room: room as RoomType, confidence: c };
+  return { room: room as RoomType, confidence: c, source: "model" };
 }
+
+/**
+ * SVG files in this library (377, measured) are exclusively agent
+ * logos/branding — never a room — and ffmpeg has no SVG decoder, so there is
+ * no way to hand one to the model at all. This is a rule, not a guess: it is
+ * tagged as `source: "rule"` precisely so it is never mistaken for a model
+ * answer downstream (tag:auto's notes, tag:bench's figures).
+ */
+const SVG_VERDICT: RoomVerdict = { room: "other", confidence: 1, source: "rule" };
 
 export async function classifyRoom(
   absPath: string,
   model: string = DEFAULT_VISION_MODEL,
+  opts?: { maxEdge?: number },
 ): Promise<RoomVerdict> {
+  const prepared = prepareImage(absPath, { maxEdge: opts?.maxEdge });
+  if (prepared.kind === "svg") {
+    return SVG_VERDICT;
+  }
   return parseRoomVerdict(
     await askLocal({
       model,
       prompt: ROOM_PROMPT,
-      imagePath: absPath,
+      imageBuffer: prepared.buffer,
+      imageMime: prepared.mime,
       schema: ROOM_SCHEMA,
       schemaName: "room_verdict",
     }),

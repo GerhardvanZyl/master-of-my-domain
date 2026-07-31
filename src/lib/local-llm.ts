@@ -9,6 +9,14 @@ export interface AskLocalOptions {
   system?: string;
   /** Absolute path to an image to attach. Omit for text-only calls. */
   imagePath?: string;
+  /**
+   * Already-prepared image bytes to attach instead of reading/encoding
+   * `imagePath` here — used by room-classify.ts, which runs images through
+   * image-prep.ts's ffmpeg conversion first. Takes precedence over
+   * `imagePath` when both are given. Requires `imageMime`.
+   */
+  imageBuffer?: Buffer;
+  imageMime?: string;
   /** JSON Schema the reply must satisfy — the server enforces it. */
   schema: Record<string, unknown>;
   schemaName?: string;
@@ -38,7 +46,10 @@ function dataUrl(p: string): string {
 export async function askLocal(opts: AskLocalOptions): Promise<unknown> {
   const base = opts.baseUrl ?? process.env.LOCAL_LLM_URL ?? DEFAULT_BASE;
   const content: unknown[] = [{ type: "text", text: opts.prompt }];
-  if (opts.imagePath) {
+  if (opts.imageBuffer) {
+    const url = `data:${opts.imageMime ?? "image/jpeg"};base64,${opts.imageBuffer.toString("base64")}`;
+    content.push({ type: "image_url", image_url: { url } });
+  } else if (opts.imagePath) {
     let url: string;
     try {
       url = dataUrl(opts.imagePath);
