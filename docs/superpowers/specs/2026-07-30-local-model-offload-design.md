@@ -189,12 +189,21 @@ wrong*. Measured over 118 photos, every threshold from 0.70 to 0.95 auto-tags
 100% of images with an identical error count. `--threshold` is retained only as
 a guard against a typo'd invocation.
 
-| | First run | After prompt + vocabulary fixes |
-| --- | --- | --- |
-| Agreement with hand tags | 84.5% | **93.2%** |
-| Error rate at any threshold | 15.5% | **6.8%** |
-| `dining` recall | 42.9% | 71.4% |
-| `aerial` | did not exist | 12/12 precision and recall |
+| | First run | + prompt/vocab fixes | + branding sweep |
+| --- | --- | --- | --- |
+| Agreement with hand tags | 84.5% | 93.2% | **95.8%** |
+| Error rate at any threshold | 15.5% | 6.8% | **4.2%** |
+| `dining` recall | 42.9% | 71.4% | 71.4% |
+| `aerial` | did not exist | 12/12 | 12/12 precision and recall |
+| `exclude` | did not exist | 0/3 | 3/3 precision and recall |
+
+Each improvement came from correcting *our own* inputs, not from touching the
+model. `exclude` going 0/3 → 3/3 is the clearest case: the model had been right
+all along and the ground truth was stale.
+
+The residual 4.2% is concentrated in one cluster — `living` over-predicted
+against `dining` (2), plus single `exterior`/`other` boundary cases. `bedroom`,
+`bathroom`, `aerial` and `exclude` are perfect on this sample.
 
 **Diagnosing the first run's 18 disagreements found only 2 genuine model
 errors.** The rest were our own prompt and a vocabulary that was too narrow:
