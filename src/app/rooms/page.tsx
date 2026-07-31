@@ -75,7 +75,9 @@ export default async function RoomsPage({
                   href={`/rooms?room=${encodeURIComponent(r.roomType)}`}
                   active={room === r.roomType}
                 >
-                  {r.roomType} ({r.count})
+                  {r.roomType === "exclude"
+                    ? `excluded — review (${r.count})`
+                    : `${r.roomType} (${r.count})`}
                 </Chip>
               ))}
               {rooms.length === 0 && <span className="text-sm text-mute">none</span>}

@@ -30,15 +30,18 @@ function groupByProperty(rows: RoomImage[]): PropertyColumn[] {
 }
 
 /**
- * Room types present in the DB, with image counts. `exclude` is a
- * display-control tag (agency branding/logo cards/marketing panels), never a
- * browsable room, so it never gets a chip here even if some images carry it.
+ * Room types present in the DB, with image counts. `exclude` IS included here
+ * (unlike every other filter in this file) — it's the only escape hatch for
+ * reviewing/undoing an `exclude` tag, since nothing else in the app ever
+ * renders an excluded image. Suppressing the chip would make a false-positive
+ * exclude unrecoverable outside the CLI. The page labels it distinctly so it
+ * doesn't read as a normal room.
  */
 export function roomTypeCounts(): { roomType: string; count: number }[] {
   return sqlite
     .prepare(
       `SELECT room_type AS roomType, COUNT(*) AS count
-       FROM image_tags WHERE room_type IS NOT NULL AND room_type != 'exclude'
+       FROM image_tags WHERE room_type IS NOT NULL
        GROUP BY room_type ORDER BY room_type`,
     )
     .all() as { roomType: string; count: number }[];
@@ -46,12 +49,13 @@ export function roomTypeCounts(): { roomType: string; count: number }[] {
 
 /**
  * All photos of a room type, grouped into one column per property.
- * `exclude`-tagged images must never be shown in the app, so a direct
- * `?room=exclude` URL is refused rather than relying on the chip list (above)
- * simply not linking to it.
+ * `exclude`-tagged images are hidden from every OTHER path in this file (and
+ * from getPropertyImages), but an explicit `room=exclude` request is the
+ * intended review/undo escape hatch (see roomTypeCounts above) — a photo
+ * wrongly tagged `exclude` must stay reachable and re-taggable here, or it's
+ * unrecoverable outside the CLI.
  */
 export function imagesByRoom(roomType: string): PropertyColumn[] {
-  if (roomType === "exclude") return [];
   const rows = sqlite
     .prepare(
       `SELECT i.id, i.local_path AS localPath, i.property_id AS propertyId,
