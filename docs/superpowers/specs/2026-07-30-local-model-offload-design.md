@@ -178,6 +178,52 @@ are worth extracting needs its own design conversation.
 - A concurrent request pool. Add it when 445 sequential images takes long enough
   to be annoying, which is a measurement, not a prediction.
 
+## Benchmark result (2026-07-31)
+
+Model `qwen/qwen3-vl-8b`, images converted to JPEG at long edge 1024, ~1s/photo.
+
+**The central assumption of this design was wrong.** The trust model assumed a
+confidence gate would separate reliable answers from unreliable ones. It does
+not: the model returns ≥0.95 on 98% of photos *including every one it gets
+wrong*. Measured over 118 photos, every threshold from 0.70 to 0.95 auto-tags
+100% of images with an identical error count. `--threshold` is retained only as
+a guard against a typo'd invocation.
+
+| | First run | + prompt/vocab fixes | + branding sweep |
+| --- | --- | --- | --- |
+| Agreement with hand tags | 84.5% | 93.2% | **95.8%** |
+| Error rate at any threshold | 15.5% | 6.8% | **4.2%** |
+| `dining` recall | 42.9% | 71.4% | 71.4% |
+| `aerial` | did not exist | 12/12 | 12/12 precision and recall |
+| `exclude` | did not exist | 0/3 | 3/3 precision and recall |
+
+Each improvement came from correcting *our own* inputs, not from touching the
+model. `exclude` going 0/3 → 3/3 is the clearest case: the model had been right
+all along and the ground truth was stale.
+
+The residual 4.2% is concentrated in one cluster — `living` over-predicted
+against `dining` (2), plus single `exterior`/`other` boundary cases. `bedroom`,
+`bathroom`, `aerial` and `exclude` are perfect on this sample.
+
+**Diagnosing the first run's 18 disagreements found only 2 genuine model
+errors.** The rest were our own prompt and a vocabulary that was too narrow:
+
+- 6 were annotated locality maps, which our prompt sent to `other` and the
+  human had tagged `exterior` — neither was right, hence the new `aerial` type.
+- 6 were hallways, landings and staircases, which had no category at all.
+- 3 were genuine open-plan shots where the prompt's own rule says `living`.
+- 2 were the real defect: the model answered `living` for kitchen-plus-dining
+  shots with no lounge in frame. The prompt now requires a visible lounge.
+
+The lesson worth keeping: a benchmark that scores a model against human labels
+measures *agreement between the prompt and the labelling convention*, not model
+competence. Read the disagreements before concluding anything about the model.
+
+**Decision:** accept ~7% and correct in the app rather than gate harder. Per-class
+precision is the real signal if gating is ever revisited — `bedroom`, `bathroom`,
+`exterior`, `aerial` and `dining` all measured 100%, while `living` (86%) and the
+`other`/`exclude` boundary carry nearly all the error.
+
 ## Known follow-ups
 
 Findings raised during implementation review and deliberately deferred, each with

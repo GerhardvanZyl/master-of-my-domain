@@ -8,9 +8,17 @@ import os from "node:os";
 import path from "node:path";
 import { askLocal } from "../src/lib/local-llm";
 
-// A tiny real file on disk so the base64 path is exercised for real.
+// A tiny real, ffmpeg-decodable PNG on disk so the base64 path is exercised
+// for real, and so classifyRoom() (which now always runs images through
+// image-prep.ts's ffmpeg conversion) can actually convert it.
 const tmpImg = path.join(os.tmpdir(), "local-llm-test.png");
-fs.writeFileSync(tmpImg, Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x01, 0x02]));
+fs.writeFileSync(
+  tmpImg,
+  Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAAABAAAAAQBPJcTWAAAAEklEQVR4nGNkYPjHwMDAwgAGAAsiAQRmV5cZAAAAAElFTkSuQmCC",
+    "base64",
+  ),
+);
 
 const realFetch = globalThis.fetch;
 let lastUrl = "";
@@ -201,6 +209,37 @@ import {
   classifyRoom,
 } from "../src/lib/room-classify";
 
+// --- ROOM_TYPES has all nine values, pinned exactly. ROOM_SCHEMA's enum and
+// ROOM_PROMPT's vocabulary both derive from this array by reference (see the
+// assertions right below), so pinning it here is what stops the schema enum
+// and the prompt from silently drifting apart from each other or from the DB. ---
+assert.deepEqual(
+  [...ROOM_TYPES],
+  [
+    "kitchen",
+    "bathroom",
+    "bedroom",
+    "living",
+    "dining",
+    "exterior",
+    "other",
+    "aerial",
+    "exclude",
+  ],
+  "ROOM_TYPES must have exactly these nine values, in this order",
+);
+
+// src/lib/photo.ts keeps a second copy of this list, duplicated deliberately so
+// the client bundle does not pull in drizzle's table definitions — but its
+// comment says "kept in sync by hand", which is exactly how two lists drift.
+// This is the only thing stopping that.
+import { ROOM_TYPES as CLIENT_ROOM_TYPES } from "../src/lib/photo";
+assert.deepEqual(
+  [...CLIENT_ROOM_TYPES],
+  [...ROOM_TYPES],
+  "src/lib/photo.ts's client-safe ROOM_TYPES copy has drifted from src/db/schema.ts",
+);
+
 // --- the schema pins the vocabulary to the DB's own list ---
 assert.deepEqual(
   (ROOM_SCHEMA as any).properties.room.enum,
@@ -221,10 +260,12 @@ assert.match(ROOM_PROMPT, /floorplan/i, "prompt sends floorplans to other");
 assert.deepEqual(parseRoomVerdict({ room: "kitchen", confidence: 0.9 }), {
   room: "kitchen",
   confidence: 0.9,
+  source: "model",
 });
 assert.deepEqual(parseRoomVerdict({ room: "other", confidence: 0 }), {
   room: "other",
   confidence: 0,
+  source: "model",
 });
 
 // --- parseRoomVerdict: rejects anything outside the vocabulary ---
@@ -240,16 +281,32 @@ assert.throws(() => parseRoomVerdict({ room: "kitchen", confidence: "high" }), /
 assert.throws(() => parseRoomVerdict({ room: "kitchen" }), /invalid confidence/i);
 
 // --- passesGate: the boundary is inclusive, and that is deliberate ---
-assert.equal(passesGate({ room: "kitchen", confidence: 0.9 }, 0.9), true, "at threshold writes");
-assert.equal(passesGate({ room: "kitchen", confidence: 0.8999 }, 0.9), false, "just below queues");
-assert.equal(passesGate({ room: "kitchen", confidence: 1 }, 0.9), true);
-assert.equal(passesGate({ room: "kitchen", confidence: 0 }, 0), true, "threshold 0 writes everything");
-assert.equal(passesGate({ room: "kitchen", confidence: 0.99 }, 1), false, "threshold 1 needs certainty");
+assert.equal(
+  passesGate({ room: "kitchen", confidence: 0.9, source: "model" }, 0.9),
+  true,
+  "at threshold writes",
+);
+assert.equal(
+  passesGate({ room: "kitchen", confidence: 0.8999, source: "model" }, 0.9),
+  false,
+  "just below queues",
+);
+assert.equal(passesGate({ room: "kitchen", confidence: 1, source: "model" }, 0.9), true);
+assert.equal(
+  passesGate({ room: "kitchen", confidence: 0, source: "model" }, 0),
+  true,
+  "threshold 0 writes everything",
+);
+assert.equal(
+  passesGate({ room: "kitchen", confidence: 0.99, source: "model" }, 1),
+  false,
+  "threshold 1 needs certainty",
+);
 
 // --- classifyRoom: sends the image and the shared prompt, returns a verdict ---
 stubFetch({ choices: [{ message: { content: '{"room":"dining","confidence":0.72}' } }] });
 const verdict = await classifyRoom(tmpImg, "vision-model-x");
-assert.deepEqual(verdict, { room: "dining", confidence: 0.72 });
+assert.deepEqual(verdict, { room: "dining", confidence: 0.72, source: "model" });
 assert.equal(lastBody.model, "vision-model-x", "model override is honoured");
 assert.equal(
   lastBody.messages.at(-1).content[0].text,
@@ -355,7 +412,7 @@ fs.rmSync(defaultGuardDir, { recursive: true, force: true });
 // ---------------------------------------------------------------------------
 
 const TINY_PNG = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+  "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAAABAAAAAQBPJcTWAAAAEklEQVR4nGNkYPjHwMDAwgAGAAsiAQRmV5cZAAAAAElFTkSuQmCC",
   "base64",
 );
 
@@ -774,5 +831,376 @@ for (const [, autoStr, queuedStr] of thresholdLines) {
     "auto-tagged + queued must account for every row at each threshold",
   );
 }
+
+// ---------------------------------------------------------------------------
+// bench-report: anti-inflation property (W3). Rule-tagged rows (SVG -> exclude)
+// are right 100% of the time by construction, so they must never leak into
+// the figures a human reads to pick --threshold — that number gets converted
+// into an irreversible 7,822-row write. Pinned by mutation: changing
+// bench-report.ts's `const modelRows = rows.filter(r => r.source !== "rule")`
+// to `const modelRows = rows;` must fail every assertion in this block.
+// ---------------------------------------------------------------------------
+{
+  const mixedRows: BenchRow[] = [
+    { imageId: "m1", truth: "kitchen", got: "kitchen", confidence: 0.9, source: "model" },
+    { imageId: "m2", truth: "bedroom", got: "bedroom", confidence: 0.95, source: "model" },
+    { imageId: "m3", truth: "living", got: "dining", confidence: 0.6, source: "model" },
+    // Two always-correct rule rows. If they leak into the model figures,
+    // agreement/precision/recall/buckets/threshold-table all shift.
+    { imageId: "r1", truth: "exclude", got: "exclude", confidence: 1, source: "rule" },
+    { imageId: "r2", truth: "exclude", got: "exclude", confidence: 1, source: "rule" },
+  ];
+  const mixedReport = renderReport(mixedRows, 0, {
+    model: "test-vlm",
+    elapsedMs: 30_000,
+    outPath: "/tmp/_tagbench.jsonl",
+    propertyCount: 2,
+    photoCount: 5,
+    timestamp: "2026-07-31T00:00:00.000Z",
+  });
+
+  assert.match(
+    mixedReport,
+    /Rule-tagged \(SVG → exclude\): 2 photos, not included in the figures below/,
+    "the rule-tagged count is reported on its own line",
+  );
+
+  // Overall agreement: 2 of 3 MODEL rows correct (kitchen, bedroom) — not
+  // 4/5, which is what leaking the 2 always-correct rule rows would produce.
+  assert.match(
+    mixedReport,
+    /Overall agreement with your tags: 66\.7% \(2\/3\)/,
+    "rule rows must not inflate the overall agreement denominator",
+  );
+  assert.doesNotMatch(mixedReport, /\(4\/5\)/, "the leaked-rule-rows figure must never appear anywhere");
+
+  // Confusion matrix: the "other" truth row must total 0 model rows, not 2.
+  const otherConfusionLine = mixedReport.split("\n").find((l) => l.startsWith("other"));
+  assert.ok(otherConfusionLine, "report has a confusion-matrix row for other");
+  assert.equal(
+    otherConfusionLine!.match(/\d+/g)!.at(-1),
+    "0",
+    "confusion matrix 'other' truth-row total must be 0 — the 2 rule rows must not appear",
+  );
+
+  // Precision/recall for "other": zero model rows means n/a, not the 100%/100%
+  // the 2 rule rows would manufacture.
+  const otherPRLine = mixedReport
+    .split("\n")
+    .find((l) => l.trim().startsWith("other") && l.includes("precision"));
+  assert.ok(otherPRLine, "report has a precision/recall line for other");
+  assert.match(otherPRLine!, /precision n\/a/, "rule rows must not manufacture an 'other' precision figure");
+  assert.match(otherPRLine!, /recall n\/a/, "rule rows must not manufacture an 'other' recall figure");
+
+  // Confidence buckets: the 0.95+ bucket must count only the 1 model row at
+  // 0.95, not 3 (the 2 rule rows sit at confidence 1.0, inside the same bucket).
+  const bucket95Line = mixedReport.split("\n").find((l) => l.includes("conf 0.95+"));
+  assert.ok(bucket95Line, "report has a 0.95+ confidence bucket line");
+  assert.match(
+    bucket95Line!,
+    /n=\s*1\s/,
+    "the 0.95+ bucket must count 1 model row, not 3 (1 model + 2 leaked rule rows)",
+  );
+
+  // Threshold table: at t=0.90, only the 2 model rows >= 0.90 qualify (2/3),
+  // not 4/5 if the 2 rule rows (confidence 1.0) leaked in.
+  const t090Line = mixedReport.split("\n").find((l) => l.includes("--threshold=0.90"));
+  assert.ok(t090Line, "report has a threshold=0.90 line");
+  assert.match(
+    t090Line!,
+    /auto-tags 66\.7% \(2\/3\)/,
+    "rule rows must not inflate the threshold table's auto-tag count",
+  );
+}
+
+// ---------------------------------------------------------------------------
+// image-prep: sniffFormat (magic bytes only) and prepareImage (ffmpeg
+// conversion / SVG short-circuit / unreadable-file error dialect).
+// ---------------------------------------------------------------------------
+import { execFileSync } from "node:child_process";
+import {
+  sniffFormat,
+  prepareImage,
+  FFMPEG_MISSING_MESSAGE,
+} from "../src/lib/image-prep";
+
+// --- sniffFormat: every format, from bytes only — never the filename ---
+assert.equal(
+  sniffFormat(Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10])),
+  "jpeg",
+);
+assert.equal(
+  sniffFormat(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  "png",
+);
+assert.equal(sniffFormat(Buffer.from("GIF89a", "ascii")), "gif");
+assert.equal(
+  sniffFormat(
+    Buffer.concat([
+      Buffer.from("RIFF", "ascii"),
+      Buffer.from([0x00, 0x00, 0x00, 0x00]),
+      Buffer.from("WEBP", "ascii"),
+    ]),
+  ),
+  "webp",
+);
+assert.equal(
+  sniffFormat(Buffer.from('<?xml version="1.0"?><svg></svg>', "utf8")),
+  "svg",
+  "an SVG that begins with <?xml",
+);
+assert.equal(
+  sniffFormat(Buffer.from("<svg xmlns='http://www.w3.org/2000/svg'></svg>", "utf8")),
+  "svg",
+  "an SVG that begins with <svg (no XML prolog)",
+);
+assert.equal(
+  sniffFormat(Buffer.from([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08])),
+  "unknown",
+);
+
+/**
+ * Reads a baseline JPEG's own SOFn marker to recover the dimensions ffmpeg
+ * actually produced — no new dependency; ffmpeg (already a hard requirement
+ * of this feature) is the only external tool involved anywhere in this file.
+ */
+function jpegDimensions(buf: Buffer): { width: number; height: number } {
+  if (buf.length < 4 || buf[0] !== 0xff || buf[1] !== 0xd8) {
+    throw new Error("not a JPEG: missing SOI marker");
+  }
+  let offset = 2;
+  while (offset + 4 <= buf.length) {
+    if (buf[offset] !== 0xff) throw new Error(`expected a marker at byte ${offset}`);
+    const marker = buf[offset + 1];
+    if (marker === 0xd8 || marker === 0xd9 || (marker >= 0xd0 && marker <= 0xd7)) {
+      offset += 2;
+      continue;
+    }
+    if (marker === 0xda) break; // start of scan: no SOF marker was found before it
+    const length = buf.readUInt16BE(offset + 2);
+    const isSOF =
+      marker >= 0xc0 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xc8 && marker !== 0xcc;
+    if (isSOF) {
+      return { height: buf.readUInt16BE(offset + 5), width: buf.readUInt16BE(offset + 7) };
+    }
+    offset += 2 + length;
+  }
+  throw new Error("no SOF marker found in JPEG");
+}
+
+// --- prepareImage: a real webp fixture, built via ffmpeg at test setup
+// (never read from data/images) — converts to a real JPEG capped at maxEdge ---
+{
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pc-image-prep-webp-"));
+  const webpFixture = path.join(dir, "fixture.webp");
+  // 2000x1000 synthetic source so the maxEdge cap is genuinely exercised.
+  execFileSync("ffmpeg", [
+    "-y",
+    "-loglevel",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    "color=c=red:s=2000x1000",
+    "-frames:v",
+    "1",
+    webpFixture,
+  ]);
+  assert.equal(
+    sniffFormat(fs.readFileSync(webpFixture)),
+    "webp",
+    "the fixture built for this test is really webp",
+  );
+
+  const prepared = prepareImage(webpFixture, { maxEdge: 300 });
+  assert.equal(prepared.kind, "image");
+  if (prepared.kind === "image") {
+    assert.equal(prepared.mime, "image/jpeg");
+    assert.equal(sniffFormat(prepared.buffer), "jpeg", "prepareImage's output is a real jpeg");
+    const { width, height } = jpegDimensions(prepared.buffer);
+    assert.ok(
+      width <= 300 && height <= 300,
+      `long edge must be <= maxEdge=300, got ${width}x${height}`,
+    );
+    assert.ok(
+      width === 300 || height === 300,
+      `the long edge should actually reach the cap for a 2000x1000 source, got ${width}x${height}`,
+    );
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+}
+
+// --- prepareImage: a real multi-frame GIF fixture (regression pin for C1).
+// Every GIF is multi-frame; `-f image2` writing to "pipe:1" with no frame
+// limit fails with "Cannot write more than one file with the same name" for
+// every one of them (measured: 99/99 real GIFs in the library failed before
+// -frames:v 1 was added). Built the same way as the webp fixture above —
+// never read from data/images. ---
+{
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pc-image-prep-gif-"));
+  const gifFixture = path.join(dir, "fixture.gif");
+  // A short animated testsrc so ffmpeg's GIF encoder genuinely emits
+  // multiple frames, not a degenerate single-frame GIF.
+  execFileSync("ffmpeg", [
+    "-y",
+    "-loglevel",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    "testsrc=size=320x240:rate=5:duration=2",
+    gifFixture,
+  ]);
+  const frameCount = Number(
+    execFileSync(
+      "ffprobe",
+      [
+        "-v",
+        "error",
+        "-count_frames",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "stream=nb_read_frames",
+        "-of",
+        "csv=p=0",
+        gifFixture,
+      ],
+      { encoding: "utf8" },
+    ).trim(),
+  );
+  assert.ok(frameCount > 1, `the fixture must genuinely be multi-frame, got ${frameCount} frame(s)`);
+  assert.equal(sniffFormat(fs.readFileSync(gifFixture)), "gif", "the fixture is really a gif");
+
+  const prepared = prepareImage(gifFixture, { maxEdge: 200 });
+  assert.equal(prepared.kind, "image", "a multi-frame gif must still convert, not throw");
+  if (prepared.kind === "image") {
+    assert.equal(prepared.mime, "image/jpeg");
+    assert.equal(
+      sniffFormat(prepared.buffer),
+      "jpeg",
+      "prepareImage's output is a real, single-frame, decodable jpeg",
+    );
+    const { width, height } = jpegDimensions(prepared.buffer);
+    assert.ok(width <= 200 && height <= 200, `long edge <= maxEdge=200, got ${width}x${height}`);
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+}
+
+// --- prepareImage: SVG bytes -> { kind: "svg" }, and ffmpeg is never
+// invoked. Verified by clearing PATH so ffmpeg would be unresolvable and
+// confirming prepareImage still succeeds (rather than throwing the
+// ffmpeg-missing error it would throw if it had actually tried to spawn
+// ffmpeg) — a spy can't observe this reliably because reassigning
+// child_process's execFileSync after an ES module has already imported the
+// named binding does not affect that module's calls. ---
+{
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pc-image-prep-svg-"));
+  const svgFixture = path.join(dir, "agent-logo.svg");
+  fs.writeFileSync(svgFixture, "<svg><circle/></svg>");
+
+  const originalPath = process.env.PATH;
+  process.env.PATH = "";
+  let result;
+  try {
+    result = prepareImage(svgFixture);
+  } finally {
+    process.env.PATH = originalPath;
+  }
+  assert.deepEqual(result, { kind: "svg" }, "SVG short-circuits without touching ffmpeg at all");
+  fs.rmSync(dir, { recursive: true, force: true });
+}
+
+// --- prepareImage: a nonexistent path throws "Could not read image at",
+// distinguishable from a down server ---
+{
+  const missing = path.join(os.tmpdir(), "pc-image-prep-does-not-exist.png");
+  assert.throws(
+    () => prepareImage(missing),
+    (e: Error) => {
+      assert.match(e.message, /Could not read image at/i);
+      assert.doesNotMatch(e.message, /not reachable/i);
+      assert.ok(e.message.includes(missing), "names the missing path");
+      return true;
+    },
+  );
+}
+
+// ---------------------------------------------------------------------------
+// classifyRoom on an SVG: a rule verdict, model never called
+// ---------------------------------------------------------------------------
+{
+  let httpCalled = false;
+  globalThis.fetch = (async () => {
+    httpCalled = true;
+    throw new Error("classifyRoom must not call the model for an SVG");
+  }) as unknown as typeof fetch;
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pc-classify-svg-"));
+  const svgFixture = path.join(dir, "agent-logo.svg");
+  fs.writeFileSync(svgFixture, "<svg><circle/></svg>");
+
+  const verdict = await classifyRoom(svgFixture, "vision-model-x");
+  assert.deepEqual(verdict, { room: "exclude", confidence: 1, source: "rule" });
+  assert.equal(httpCalled, false, "no HTTP call was made for an SVG");
+
+  fs.rmSync(dir, { recursive: true, force: true });
+  globalThis.fetch = realFetch;
+}
+
+// ---------------------------------------------------------------------------
+// tagging-run: classifyFailure — previously had no test coverage at all.
+// Cover every branch, including the new ffmpeg-missing one.
+// ---------------------------------------------------------------------------
+import {
+  classifyFailure,
+  CONSECUTIVE_FAILURE_LIMIT,
+  circuitBreakerMessage,
+} from "../src/lib/tagging-run";
+
+assert.equal(CONSECUTIVE_FAILURE_LIMIT, 10, "the breaker trips after 10 consecutive failures");
+
+assert.equal(
+  classifyFailure(
+    "Local model server not reachable at http://127.0.0.1:1234/v1 — is LM Studio's server running with a model loaded? (fetch failed)",
+  ),
+  "not-reachable",
+  "a down server aborts the run",
+);
+assert.equal(
+  classifyFailure(FFMPEG_MISSING_MESSAGE),
+  "ffmpeg-missing",
+  "the exact message image-prep.ts throws when ffmpeg is missing classifies as ffmpeg-missing",
+);
+assert.equal(
+  classifyFailure("Could not read image at /tmp/foo.png: ENOENT: no such file or directory"),
+  "unreadable-image",
+  "a per-photo unreadable/unconvertible file is a skip, not an abort",
+);
+assert.equal(
+  classifyFailure("Local model reply was not JSON: I think it's a kitchen!"),
+  "other",
+  "a bad reply is a per-photo failure that feeds the breaker",
+);
+assert.equal(
+  classifyFailure("Local model returned no message content"),
+  "other",
+);
+assert.equal(
+  classifyFailure(`Local model call to http://x timed out after 120000ms — the server may be stalled`),
+  "other",
+  "a timeout is a per-photo failure, not an abort",
+);
+
+// ffmpeg-missing must not be mistaken for either of the other two abort/skip
+// dialects, even though it shares the run-aborting behaviour of not-reachable.
+assert.notEqual(classifyFailure(FFMPEG_MISSING_MESSAGE), "not-reachable");
+assert.notEqual(classifyFailure(FFMPEG_MISSING_MESSAGE), "unreadable-image");
+
+assert.match(
+  circuitBreakerMessage(CONSECUTIVE_FAILURE_LIMIT),
+  /10 consecutive failures/,
+  "the breaker message names the count that tripped it",
+);
 
 console.log("✓ local-llm.test: all assertions passed");

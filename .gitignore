@@ -32,5 +32,8 @@ data/app.db-wal
 # local-model benchmark output (regenerable, grows on every run)
 data/_tagbench.jsonl
 
+# pre-migration DB snapshots
+data/app.db.backup-*
+
 # subagent-driven-development scratch (ledger, briefs, review packages)
 /.superpowers/

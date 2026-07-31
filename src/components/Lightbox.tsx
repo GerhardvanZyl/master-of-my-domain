@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { imageUrl } from "@/lib/images";
-import type { PhotoLite } from "@/lib/photo";
+import { formatTaggedBy, type PhotoLite } from "@/lib/photo";
 import TagSelect from "./TagSelect";
 
 /**
@@ -90,6 +90,8 @@ export default function Lightbox({
         <span className="text-sm text-neutral-300">
           {index + 1} / {images.length}
           {img.roomType ? ` · ${img.roomType}` : ""}
+          {formatTaggedBy(img.taggedBy) ? ` · tagged by ${formatTaggedBy(img.taggedBy)}` : ""}
+          {img.confidence != null ? ` (${Math.round(img.confidence * 100)}% confidence)` : ""}
         </span>
         <button
           onClick={onClose}

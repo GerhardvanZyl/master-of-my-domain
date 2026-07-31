@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { imageUrl } from "@/lib/images";
-import type { PhotoLite } from "@/lib/photo";
+import { isMachineTagged, type PhotoLite } from "@/lib/photo";
 import Lightbox from "./Lightbox";
 
 /** Thumbnail grid where each photo opens in a full-screen editable lightbox. */
@@ -27,8 +27,14 @@ export default function PhotoGrid({ images }: { images: PhotoLite[] }) {
               className="object-cover"
             />
             {img.roomType && (
-              <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+              <span className="absolute left-1 top-1 flex items-center gap-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
                 {img.roomType}
+                {isMachineTagged(img.taggedBy) && (
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-white/50"
+                    title="Machine-tagged — not yet reviewed"
+                  />
+                )}
               </span>
             )}
           </button>

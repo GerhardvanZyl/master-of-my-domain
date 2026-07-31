@@ -25,7 +25,7 @@ const f = parseFlags(process.argv.slice(2));
 // F3: an unrecognised flag (e.g. the singular --property, a typo for the
 // sibling command's plural --properties) must fail loudly instead of
 // silently running the full default sample.
-const KNOWN_FLAGS = new Set(["model", "count", "limit", "properties"]);
+const KNOWN_FLAGS = new Set(["model", "count", "limit", "properties", "max-edge"]);
 const unknownFlags = Object.keys(f).filter((k) => !KNOWN_FLAGS.has(k));
 if (unknownFlags.length > 0) {
   console.error(
@@ -49,6 +49,7 @@ function parsePositiveInt(raw: unknown, flagName: string): number | undefined {
 
 const count = parsePositiveInt(f.count, "count") ?? 10;
 const limit = parsePositiveInt(f.limit, "limit");
+const maxEdge = parsePositiveInt(f["max-edge"], "max-edge") ?? 1024;
 
 const propertiesFlag = typeof f.properties === "string" ? f.properties : undefined;
 const ids = propertiesFlag
@@ -77,7 +78,7 @@ if (images.length === 0) {
 
 // Progress goes to stderr so `npm run tag:bench > report.txt` keeps the report clean.
 console.error(
-  `Benchmarking ${model} over ${images.length} photos from ${ids.length} properties…`,
+  `Benchmarking ${model} over ${images.length} photos from ${ids.length} properties (--max-edge=${maxEdge})…`,
 );
 
 const outPath = path.join(DATA_DIR, "_tagbench.jsonl");
@@ -90,12 +91,13 @@ const started = Date.now();
 
 for (const [i, img] of images.entries()) {
   try {
-    const v = await classifyRoom(img.absPath, model);
+    const v = await classifyRoom(img.absPath, model, { maxEdge });
     rows.push({
       imageId: img.imageId,
       truth: img.roomType,
       got: v.room,
       confidence: v.confidence,
+      source: v.source,
     });
     consecutiveFailures = 0;
 
@@ -120,11 +122,11 @@ for (const [i, img] of images.entries()) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     const kind = classifyFailure(msg);
-    if (kind === "not-reachable") {
-      // A dead server is not a per-image problem — stop instead of printing
-      // 445 copies. C1: still render whatever the run measured before exiting.
-      // Count this photo as errored so the abort banner doesn't read
-      // "0 errored" next to a call that in fact failed.
+    if (kind === "not-reachable" || kind === "ffmpeg-missing") {
+      // A dead server or a missing ffmpeg is not a per-image problem — stop
+      // instead of printing 445 copies. C1: still render whatever the run
+      // measured before exiting. Count this photo as errored so the abort
+      // banner doesn't read "0 errored" next to a call that in fact failed.
       console.error(msg);
       failed++;
       aborted = true;
@@ -166,6 +168,7 @@ const report = renderReport(rows, failed, {
   limit,
   propertiesFlag,
   timestamp: new Date(started).toISOString(),
+  maxEdge,
   aborted,
   abortReason,
 });

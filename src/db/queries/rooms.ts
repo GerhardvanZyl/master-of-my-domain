@@ -6,6 +6,8 @@ export interface RoomImage {
   propertyId: string;
   address: string | null;
   roomType: string | null;
+  taggedBy: string | null;
+  confidence: number | null;
 }
 
 export interface PropertyColumn {
@@ -27,7 +29,14 @@ function groupByProperty(rows: RoomImage[]): PropertyColumn[] {
   return [...cols.values()];
 }
 
-/** Room types present in the DB, with image counts. */
+/**
+ * Room types present in the DB, with image counts. `exclude` IS included here
+ * (unlike every other filter in this file) — it's the only escape hatch for
+ * reviewing/undoing an `exclude` tag, since nothing else in the app ever
+ * renders an excluded image. Suppressing the chip would make a false-positive
+ * exclude unrecoverable outside the CLI. The page labels it distinctly so it
+ * doesn't read as a normal room.
+ */
 export function roomTypeCounts(): { roomType: string; count: number }[] {
   return sqlite
     .prepare(
@@ -38,12 +47,20 @@ export function roomTypeCounts(): { roomType: string; count: number }[] {
     .all() as { roomType: string; count: number }[];
 }
 
-/** All photos of a room type, grouped into one column per property. */
+/**
+ * All photos of a room type, grouped into one column per property.
+ * `exclude`-tagged images are hidden from every OTHER path in this file (and
+ * from getPropertyImages), but an explicit `room=exclude` request is the
+ * intended review/undo escape hatch (see roomTypeCounts above) — a photo
+ * wrongly tagged `exclude` must stay reachable and re-taggable here, or it's
+ * unrecoverable outside the CLI.
+ */
 export function imagesByRoom(roomType: string): PropertyColumn[] {
   const rows = sqlite
     .prepare(
       `SELECT i.id, i.local_path AS localPath, i.property_id AS propertyId,
-        p.address AS address, t.room_type AS roomType
+        p.address AS address, t.room_type AS roomType,
+        t.tagged_by AS taggedBy, t.confidence AS confidence
        FROM image_tags t
        JOIN images i ON i.id = t.image_id
        JOIN properties p ON p.id = i.property_id
@@ -72,17 +89,23 @@ export function listGroups(): GroupInfo[] {
     .all() as GroupInfo[];
 }
 
-/** A similarity group's members, one column per property. */
+/**
+ * A similarity group's members, one column per property. Excludes any member
+ * since retagged `exclude` (never shown in the app) — group membership
+ * doesn't get cleaned up on retag, so this filter is the only thing stopping
+ * a stale group from surfacing one.
+ */
 export function groupMembers(groupId: string): PropertyColumn[] {
   const rows = sqlite
     .prepare(
       `SELECT i.id, i.local_path AS localPath, i.property_id AS propertyId,
-        p.address AS address, t.room_type AS roomType
+        p.address AS address, t.room_type AS roomType,
+        t.tagged_by AS taggedBy, t.confidence AS confidence
        FROM similarity_group_members m
        JOIN images i ON i.id = m.image_id
        JOIN properties p ON p.id = i.property_id
        LEFT JOIN image_tags t ON t.image_id = i.id
-       WHERE m.group_id = ?
+       WHERE m.group_id = ? AND (t.room_type IS NULL OR t.room_type != 'exclude')
        ORDER BY p.address, i.ordinal`,
     )
     .all(groupId) as RoomImage[];

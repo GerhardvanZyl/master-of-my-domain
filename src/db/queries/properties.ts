@@ -149,8 +149,14 @@ export function pickHero<
     notes?: string | null;
     sourceUrl?: string | null;
     alt?: string | null;
+    roomType?: string | null;
   },
->(imgs: T[]): T | null {
+>(rawImgs: T[]): T | null {
+  // Defence in depth: an image tagged `exclude` must never become the hero,
+  // even if some caller forgot to pre-filter its input (see room-classify.ts
+  // / schema.ts on what `exclude` means) and even against an explicit
+  // notes='hero' pick — exclude means "never shown", full stop.
+  const imgs = rawImgs.filter((i) => i.roomType !== "exclude");
   const explicit = imgs.find((i) => i.notes === "hero");
   if (explicit) return explicit;
   const lid = (i: T) => urlIds(i.sourceUrl)?.listingId ?? null;
@@ -226,6 +232,7 @@ export function listProperties(): PropertyListItem[] {
       height: images.height,
       alt: images.alt,
       notes: imageTags.notes,
+      roomType: imageTags.roomType,
     })
     .from(images)
     .leftJoin(imageTags, eq(imageTags.imageId, images.id))
@@ -237,6 +244,7 @@ export function listProperties(): PropertyListItem[] {
   const counts = new Map<string, number>();
   const byProp = new Map<string, (typeof imgs)[number][]>();
   for (const i of imgs) {
+    if (i.roomType === "exclude") continue; // never counted, never a hero candidate
     // Count only what the gallery will actually show (see getPropertyImages),
     // so the card's "N photos" badge matches the carousel.
     if (isPropertyPhoto(i.width, i.height)) {
@@ -434,6 +442,8 @@ export interface ImageWithTag {
   alt: string | null;
   roomType: string | null;
   notes: string | null;
+  taggedBy: string | null;
+  confidence: number | null;
 }
 
 export function getPropertyImages(propertyId: string): ImageWithTag[] {
@@ -449,6 +459,8 @@ export function getPropertyImages(propertyId: string): ImageWithTag[] {
       alt: images.alt,
       roomType: imageTags.roomType,
       notes: imageTags.notes,
+      taggedBy: imageTags.taggedBy,
+      confidence: imageTags.confidence,
     })
     .from(images)
     .leftJoin(imageTags, eq(imageTags.imageId, images.id))
@@ -458,7 +470,10 @@ export function getPropertyImages(propertyId: string): ImageWithTag[] {
     // Galleries, lightboxes and the room compare all read through here, so one
     // filter keeps agent headshots and agency logos out of every carousel.
     // Tagging scripts talk to the DB directly and still see everything.
-    .filter((i) => isPropertyPhoto(i.width, i.height));
+    .filter((i) => isPropertyPhoto(i.width, i.height))
+    // `exclude` is a display-control tag (agency branding, logo cards, pure
+    // text/marketing panels) — never shown anywhere in the app.
+    .filter((i) => i.roomType !== "exclude");
 }
 
 export function deleteProperty(id: string): void {

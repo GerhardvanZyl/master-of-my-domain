@@ -31,6 +31,20 @@ never guess a room from a filename or URL: Read the actual image.**
 
 ### Room vocabulary (exact strings)
 `kitchen` · `bathroom` · `bedroom` · `living` · `dining` · `exterior` · `other`
+· `aerial` · `exclude`
+
+- `aerial` — annotated aerial/drone locality shots: callouts naming schools and
+  shopping centres, the subject property outlined, agency logo. Not `exterior`.
+- `exclude` — a display-control value, not a room: the image is hidden
+  everywhere in the app. Agency branding, logo cards, pure text/price panels.
+  Excluded images are reachable only at `/rooms?room=exclude`, which exists so
+  the decision stays reversible — everywhere else they are invisible.
+- `other` remains floorplans, site plans, circulation spaces (hallways,
+  landings, staircases) and unidentifiable detail shots.
+
+The full disambiguation rules live in `ROOM_PROMPT` (`src/lib/room-classify.ts`)
+and are shared verbatim by the model and the benchmark. Read that constant
+before tagging by hand, so your labels and the model's agree.
 
 ### Commands (the only sanctioned write path — all idempotent)
 - `npm run tag:list` → JSON array of **untagged** images. Each item has
@@ -63,6 +77,27 @@ Both need LM Studio serving a vision model at `http://127.0.0.1:1234/v1`
 (override with `LOCAL_LLM_URL` — include the `/v1` suffix, since `/chat/completions`
 is appended to whatever this resolves to); the model id comes from
 `LOCAL_VLM_MODEL` in `.env.local`, or `--model`.
+
+**ffmpeg must be on PATH.** LM Studio's vision pipeline rejects webp, and 92% of
+this library is webp, so every image is converted to JPEG (long edge 1024,
+`--max-edge` to change) before it is sent. A missing ffmpeg aborts the run with a
+message naming it; one unreadable file is skipped, not fatal. SVG files are
+never sent at all — they are agency branding and are tagged `exclude` by rule,
+marked `source: "rule"` so they are never mistaken for a model answer.
+
+**`--threshold` measures nothing useful — do not tune it.** Measured over 118
+photos, the model returns confidence ≥0.95 on 98% of images *including its
+mistakes*, so every threshold from 0.70 to 0.95 produces byte-identical output.
+It is retained as a guard against a typo'd invocation, not as a quality dial.
+Agreement with hand tags is ~93%; the plan is to accept that and correct the
+remainder in the app, not to gate harder.
+
+### Correcting tags in the app
+Click any photo to open the lightbox; the room dropdown writes immediately
+(`tagged_by='user'`). Available on the property page's photo grid and hero
+gallery, `/rooms`, and both `/compare` views. Photos tagged by machine
+(`local-vlm`, `migration`) carry a marker next to the room badge, so a tag you
+made by hand is visually distinct from one to double-check.
 
 ### The loop
 0. **Local first pass.** The threshold is recorded in

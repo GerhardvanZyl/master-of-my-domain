@@ -84,7 +84,6 @@ export default function HeroGallery({
         index={open}
         onIndexChange={setOpen}
         onClose={() => setOpen(null)}
-        editable={false}
       />
     </div>
   );

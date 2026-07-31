@@ -196,6 +196,8 @@ function roomsFromImages(imgs: ImageWithTag[]): Record<string, PhotoLite[]> {
       localPath: img.localPath,
       roomType: img.roomType,
       notes: img.notes,
+      taggedBy: img.taggedBy,
+      confidence: img.confidence,
     };
     (rooms[img.roomType] ??= []).push(lite);
     if (

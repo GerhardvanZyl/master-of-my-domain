@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { PropertyColumn } from "@/db/queries/rooms";
 import { imageUrl } from "@/lib/images";
-import type { PhotoLite } from "@/lib/photo";
+import { isMachineTagged, type PhotoLite } from "@/lib/photo";
 import Lightbox from "./Lightbox";
 
 export default function RoomColumns({ columns }: { columns: PropertyColumn[] }) {
@@ -51,8 +51,14 @@ export default function RoomColumns({ columns }: { columns: PropertyColumn[] }) 
                       className="object-cover"
                     />
                     {img.roomType && (
-                      <span className="absolute left-1 top-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium uppercase text-white">
+                      <span className="absolute left-1 top-1 flex items-center gap-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium uppercase text-white">
                         {img.roomType}
+                        {isMachineTagged(img.taggedBy) && (
+                          <span
+                            className="h-1.5 w-1.5 rounded-full bg-white/50"
+                            title="Machine-tagged — not yet reviewed"
+                          />
+                        )}
                       </span>
                     )}
                   </button>

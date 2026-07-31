@@ -121,6 +121,7 @@ console.error(
 
 const queue: Array<Record<string, unknown>> = [];
 let wrote = 0;
+let ruleWrote = 0;
 let skipped = 0;
 let failed = 0;
 let consecutiveFailures = 0;
@@ -133,8 +134,8 @@ for (const [i, img] of images.entries()) {
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     const kind = classifyFailure(msg);
-    // A dead server means abort, not 300 identical errors.
-    if (kind === "not-reachable") {
+    // A dead server or a missing ffmpeg means abort, not 300 identical errors.
+    if (kind === "not-reachable" || kind === "ffmpeg-missing") {
       console.error(msg);
       console.error(`Stopped after writing ${wrote} tags.`);
       process.exitCode = 1;
@@ -166,16 +167,19 @@ for (const [i, img] of images.entries()) {
   if (passesGate(v, threshold)) {
     if (dryRun) {
       wrote++;
+      if (v.source === "rule") ruleWrote++;
     } else {
       const inserted = setImageTagIfAbsent({
         imageId: img.imageId,
         roomType: v.room,
         confidence: v.confidence,
         taggedBy: "local-vlm",
-        notes: `local:${model}`,
+        notes: v.source === "rule" ? "rule:svg" : `local:${model}`,
       });
-      if (inserted) wrote++;
-      else skipped++; // tagged by someone else while this run was in flight
+      if (inserted) {
+        wrote++;
+        if (v.source === "rule") ruleWrote++;
+      } else skipped++; // tagged by someone else while this run was in flight
     }
   } else {
     queue.push({ ...img, suggested: v.room, confidence: v.confidence });
@@ -187,7 +191,8 @@ for (const [i, img] of images.entries()) {
 }
 
 console.error(
-  `${dryRun ? "[dry-run] would tag" : "tagged"} ${wrote}, ${skipped} skipped (already tagged), queued ${queue.length} for review, ${failed} errored`,
+  `${dryRun ? "[dry-run] would tag" : "tagged"} ${wrote} (${ruleWrote} rule-tagged SVG -> exclude, ${wrote - ruleWrote} model-tagged), ` +
+    `${skipped} skipped (already tagged), queued ${queue.length} for review, ${failed} errored`,
 );
 // Same JSON shape as tag:list, so Claude's existing loop consumes it
 // unchanged. Printed on every exit path (success, dead-server abort, or

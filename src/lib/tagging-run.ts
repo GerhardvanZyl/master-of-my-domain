@@ -10,18 +10,28 @@
 /**
  * - "not-reachable": the model server itself is down — the whole run should
  *   abort, not grind through the rest of the sample one error at a time.
- * - "unreadable-image": a missing/pruned file on disk — a per-photo data
- *   problem, not evidence the model is unwell. Counts toward the errored
- *   total but must NOT advance the consecutive-failure counter, or a
- *   property with 10 pruned photos would trip the breaker for no model-side
- *   reason.
+ * - "ffmpeg-missing": ffmpeg is not on PATH — a fatal run-level configuration
+ *   problem (image-prep.ts can't convert anything without it), not a
+ *   per-photo one. Aborts immediately, same as a dead server, but is a
+ *   distinct diagnosis so the operator knows to install ffmpeg rather than
+ *   check whether LM Studio is running.
+ * - "unreadable-image": a missing/pruned file on disk, or one that ffmpeg
+ *   itself could not convert — a per-photo data problem, not evidence the
+ *   model is unwell. Counts toward the errored total but must NOT advance
+ *   the consecutive-failure counter, or a property with 10 pruned photos
+ *   would trip the breaker for no model-side reason.
  * - "other": any other per-photo failure (bad reply, timeout, HTTP error) —
  *   counts toward the errored total AND the consecutive-failure counter.
  */
-export type FailureKind = "not-reachable" | "unreadable-image" | "other";
+export type FailureKind =
+  | "not-reachable"
+  | "ffmpeg-missing"
+  | "unreadable-image"
+  | "other";
 
 export function classifyFailure(message: string): FailureKind {
   if (/not reachable/i.test(message)) return "not-reachable";
+  if (/ffmpeg is required/i.test(message)) return "ffmpeg-missing";
   if (/Could not read image at/i.test(message)) return "unreadable-image";
   return "other";
 }
