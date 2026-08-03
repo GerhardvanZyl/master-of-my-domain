@@ -38,6 +38,7 @@ const p = {
   commonAreasCount: 2,
   masterBedSqm: 15,
   avgOtherBedSqm: null,
+  cons: "busy road\n\nno side access\n",
 };
 const ratings: Rating[] = [
   { profile: "gerhard", vibe: "like", look: "good", kitchen: null },
@@ -64,6 +65,14 @@ assert.ok(rows.some((r) => r.label === "2 living areas" && r.pts === 10));
 assert.ok(rows.some((r) => r.label === "Only 3 bedrooms" && r.pts === -5));
 assert.ok(rows.some((r) => r.label === "Master bed 15 m²" && r.pts === -6));
 assert.ok(!rows.some((r) => r.label.includes("Other beds")));
+// −3 per listed con; blank lines don't count.
+assert.ok(rows.some((r) => r.label === "2 cons listed" && r.pts === -6));
+// The vet distance is capped: 8 km costs 8, 80 km still costs the 20 km cap.
+const vet = (m: number) =>
+  vibeBreakdown({ ...p, greenCrossDistanceM: m }, [], DEFAULT_VIBE_CONFIG)
+    .find((r) => r.label === "Distance to Green Cross vet")!.pts;
+assert.equal(vet(8000), -8);
+assert.equal(vet(80_000), -20);
 // Zero-magnitude terms are dropped rather than listed as "0".
 assert.ok(rows.every((r) => r.pts !== 0));
 

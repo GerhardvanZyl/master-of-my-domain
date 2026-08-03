@@ -12,6 +12,8 @@ export interface VibeConfig {
   perAbove5000: number; // −1 per $5k above ideal
   perBelow10000: number; // −1 per $10k below ideal
   perGreenCrossKm: number; // −1 per 1 km from Green Cross Vets
+  greenCrossCapKm: number; // distance beyond this counts as this (default 20 km)
+  perCon: number; // −3 per listed con
   noPlaygrounds: number; // −5 if no playground within 500 m
   perFlinders5min: number; // −3 per 5 min travel to Flinders St
   noEaves: number; // −5 if no all-around eaves
@@ -37,6 +39,8 @@ export const DEFAULT_VIBE_CONFIG: VibeConfig = {
   perAbove5000: 1,
   perBelow10000: 1,
   perGreenCrossKm: 1,
+  greenCrossCapKm: 20,
+  perCon: 3,
   noPlaygrounds: 5,
   perFlinders5min: 3,
   noEaves: 5,
@@ -79,6 +83,7 @@ type Scorable = Pick<
   | "commonAreasCount"
   | "masterBedSqm"
   | "avgOtherBedSqm"
+  | "cons"
 >;
 
 export interface BreakdownRow {
@@ -105,8 +110,10 @@ export function vibeBreakdown(
     else if (p.priceNumeric < cfg.idealPrice)
       push("Below ideal price", -((cfg.idealPrice - p.priceNumeric) / 10000) * cfg.perBelow10000);
   }
-  if (p.greenCrossDistanceM != null)
-    push("Distance to Green Cross vet", -(p.greenCrossDistanceM / 1000) * cfg.perGreenCrossKm);
+  if (p.greenCrossDistanceM != null) {
+    const km = Math.min(p.greenCrossDistanceM / 1000, cfg.greenCrossCapKm);
+    push("Distance to Green Cross vet", -km * cfg.perGreenCrossKm);
+  }
   if (!p.playgrounds500m) push("No playground ≤500 m", -cfg.noPlaygrounds);
   if (p.ptMinutesToFlinders != null)
     push("Transit to Flinders St", -(p.ptMinutesToFlinders / 5) * cfg.perFlinders5min);
@@ -129,6 +136,9 @@ export function vibeBreakdown(
       `Other beds avg ${p.avgOtherBedSqm} m²`,
       -(11 - p.avgOtherBedSqm) * cfg.perOtherBedSqmBelow11,
     );
+  // Free-text cons are one per line (see schema.ts) — each one costs points.
+  const cons = (p.cons ?? "").split("\n").filter((l) => l.trim()).length;
+  if (cons) push(`${cons} con${cons > 1 ? "s" : ""} listed`, -cons * cfg.perCon);
   // Ratings: both profiles' rows count, so a mutual "meh" deducts twice.
   for (const r of ratings) {
     const who = r.profile ? `${r.profile}: ` : "";
