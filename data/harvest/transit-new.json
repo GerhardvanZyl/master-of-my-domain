@@ -1,26 +1,488 @@
 [
   {
-    "listingUrl": "https://www.domain.com.au/47-middle-park-drive-point-cook-vic-3030-2020808002",
-    "ptMinutesToFlinders": 70,
-    "ptRouteSummary": "Bus 497 + Werribee train",
-    "ptSteps": "Estimated from nearest tracked property (36 Middle Park Drive, ~145 m away): Walk ~10 min to Point Cook Village/Point Cook Rd, Bus 497, then change to a Werribee-line train → Flinders St (arrive ~9:01am)."
+    "listingUrl": "https://www.domain.com.au/19-wildcherry-place-point-cook-vic-3030-2021038473",
+    "ptMinutesToFlinders": 75,
+    "ptRouteSummary": "495 Werribee",
+    "ptSteps": "Depart 7:36 AM from 19 Wildcherry Place, 495 Werribee, arrive Flinders St 8:51 AM (Mon 10 Aug, 07:30 plan)."
   },
   {
-    "listingUrl": "https://www.domain.com.au/20-seychelles-street-point-cook-vic-3030-2021012526",
-    "ptMinutesToFlinders": 68,
-    "ptRouteSummary": "Bus 494 + Werribee train",
-    "ptSteps": "Estimated from nearest tracked property (37 Oceanwave Parade, ~138 m away): Walk ~7 min to Island Way/Alamanda Bvd, Bus 494, then change to a Werribee-line train → Flinders St (arrive ~8:41am)."
+    "listingUrl": "https://www.domain.com.au/20-constantine-drive-point-cook-vic-3030-2021035708",
+    "ptMinutesToFlinders": 72,
+    "ptRouteSummary": "497 Werribee",
+    "ptSteps": "Depart 7:49 AM from 20 Constantine Drive, 497 Werribee, arrive Flinders St 9:01 AM (Mon 10 Aug, 07:30 plan)."
   },
   {
-    "listingUrl": "https://www.domain.com.au/16-drysdale-crescent-point-cook-vic-3030-2021010862",
-    "ptMinutesToFlinders": 64,
-    "ptRouteSummary": "Bus 494 + Werribee train",
-    "ptSteps": "Estimated from nearest tracked property (8 Trieste Way, ~187 m away): Walk ~11 min to Lennon Bvd/Shaftsbury Bvd, Bus 494, then change to a Werribee-line train → Flinders St (arrive ~8:41am)."
+    "listingUrl": "https://www.domain.com.au/5-dolphin-crescent-point-cook-vic-3030-2021036576",
+    "ptMinutesToFlinders": 49,
+    "ptRouteSummary": "Werribee",
+    "ptSteps": "Depart 7:32 AM from 5 Dolphin Crescent, Werribee, arrive Flinders St 8:21 AM (Mon 10 Aug, 07:30 plan)."
   },
   {
-    "listingUrl": "https://www.domain.com.au/27-payson-drive-point-cook-vic-3030-2021010398",
-    "ptMinutesToFlinders": 70,
-    "ptRouteSummary": "Bus 498 + Werribee train",
-    "ptSteps": "Estimated from nearest tracked property (14 Amboy Walk, ~112 m away): Walk ~13 min to Sneydes Rd/Hacketts Rd, Bus 498, then change to a Werribee-line train → Flinders St (arrive ~9:01am)."
+    "listingUrl": "https://www.domain.com.au/61-hemsley-promenade-point-cook-vic-3030-2021033986",
+    "ptMinutesToFlinders": 66,
+    "ptRouteSummary": "494 Werribee",
+    "ptSteps": "Depart 7:35 AM from 61 Hemsley Promenade, 494 Werribee, arrive Flinders St 8:41 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/64-umbrella-way-point-cook-vic-3030-2021038112",
+    "ptMinutesToFlinders": 79,
+    "ptRouteSummary": "495 Werribee",
+    "ptSteps": "Depart 7:32 AM from 64 Umbrella Way, 495 Werribee, arrive Flinders St 8:51 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/91-baycrest-drive-point-cook-vic-3030-2021040247",
+    "ptMinutesToFlinders": 76,
+    "ptRouteSummary": "497 Werribee",
+    "ptSteps": "Depart 7:45 AM from 91 Baycrest Drive, 497 Werribee, arrive Flinders St 9:01 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/91-bensonhurst-parade-point-cook-vic-3030-2021038450",
+    "ptMinutesToFlinders": 74,
+    "ptRouteSummary": "498 Werribee",
+    "ptSteps": "Depart 7:47 AM from 91 Bensonhurst Parade, 498 Werribee, arrive Flinders St 9:01 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/95-carrick-street-point-cook-vic-3030-2021031204",
+    "ptMinutesToFlinders": 75,
+    "ptRouteSummary": "497 Werribee",
+    "ptSteps": "Depart 7:46 AM from 95 Carrick Street, 497 Werribee, arrive Flinders St 9:01 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/10-yateman-boulevard-torquay-vic-3228-2020290083",
+    "ptMinutesToFlinders": 178,
+    "ptRouteSummary": "52 55 Geelong 11",
+    "ptSteps": "Depart 7:45 AM from 10 Yateman Boulevard, 52 55 Geelong 11, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-cook-avenue-torquay-vic-3228-2020727199",
+    "ptMinutesToFlinders": 140,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:37 AM from 11 Cook Avenue, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/11-tassell-street-torquay-vic-3228-2020884426",
+    "ptMinutesToFlinders": 132,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:45 AM from 11 Tassell Street, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/119-briody-grove-eucalypt-way-torquay-vic-3228-2020989582",
+    "ptMinutesToFlinders": 176,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:47 AM from 119 Briody Grove - Eucalypt Way, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/12-wurrak-crescent-torquay-vic-3228-2020861708",
+    "ptMinutesToFlinders": 144,
+    "ptRouteSummary": "Coach 53 Geelong 48",
+    "ptSteps": "Depart 7:33 AM from 12 Wurrak Crescent, Coach 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/122-ecalypt-way-torquay-vic-3228-2020950057",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "Coach 53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from 122 Ecalypt Way, Coach 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/122-eucalypt-way-torquay-vic-3228-2021013481",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "Coach 53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from 122 Eucalypt Way, Coach 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/122-eucalypt-way-torquay-vic-3228-2021013492",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "Coach 53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from 122 Eucalypt Way, Coach 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/13-warrin-street-torquay-vic-3228-2020916246",
+    "ptMinutesToFlinders": 192,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:31 AM from 13 Warrin Street, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/132-merrijig-drive-torquay-vic-3228-2020980804",
+    "ptMinutesToFlinders": 135,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:42 AM from 132 Merrijig Drive, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/13a-rosella-road-torquay-vic-3228-2020836477",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from 13a Rosella Road, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/142-briody-grove-briody-drive-torquay-vic-3228-2020865336",
+    "ptMinutesToFlinders": 172,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:51 AM from 142 Briody Grove - Briody Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/142-briody-grove-briody-drive-torquay-vic-3228-2020865385",
+    "ptMinutesToFlinders": 172,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:51 AM from 142 Briody Grove - Briody Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/143-briody-grove-briody-drive-torquay-vic-3228-2020865361",
+    "ptMinutesToFlinders": 172,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:51 AM from 143 Briody Grove - Briody Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/145-briody-drive-torquay-vic-3228-2020977641",
+    "ptMinutesToFlinders": 177,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:46 AM from 145 Briody Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/145-briody-drive-torquay-vic-3228-2021013485",
+    "ptMinutesToFlinders": 177,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:46 AM from 145 Briody Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865312",
+    "ptMinutesToFlinders": 172,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:51 AM from 145 Briody Grove - Briody Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865328",
+    "ptMinutesToFlinders": 172,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:51 AM from 145 Briody Grove - Briody Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989559",
+    "ptMinutesToFlinders": 172,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:51 AM from 149 Briody Grove - Briody Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989587",
+    "ptMinutesToFlinders": 172,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:51 AM from 149 Briody Grove - Briody Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-street-torquay-vic-3228-2020989565",
+    "ptMinutesToFlinders": 172,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:51 AM from 149 Briody Grove - Briody Street, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/14b-loch-ard-drive-torquay-vic-3228-2021042408",
+    "ptMinutesToFlinders": 136,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:41 AM from 14B Loch Ard Drive, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/15-cahir-avenue-torquay-vic-3228-2020782316",
+    "ptMinutesToFlinders": 136,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:41 AM from 15 Cahir Avenue, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/15-smith-way-torquay-vic-3228-2020985580",
+    "ptMinutesToFlinders": 138,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:39 AM from 15 Smith Way, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/150-briody-grove-briody-street-torquay-vic-3228-2020989568",
+    "ptMinutesToFlinders": 179,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:44 AM from 150 Briody Grove - Briody Street, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/1a-aquilla-avenue-torquay-vic-3228-2021008542",
+    "ptMinutesToFlinders": 136,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:41 AM from 1A Aquilla Avenue, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/21-mirri-drive-torquay-vic-3228-2020870533",
+    "ptMinutesToFlinders": 137,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:40 AM from 21 Mirri Drive, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/22-macfarlane-street-torquay-vic-3228-2021002962",
+    "ptMinutesToFlinders": 138,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:39 AM from 22 Macfarlane Street, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/23-scentbark-street-torquay-vic-3228-2020884779",
+    "ptMinutesToFlinders": 140,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:37 AM from 23 Scentbark Street, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/26-basin-lane-torquay-vic-3228-2020850373",
+    "ptMinutesToFlinders": 146,
+    "ptRouteSummary": "Coach 53 Geelong 48",
+    "ptSteps": "Depart 7:31 AM from 26 Basin Lane, Coach 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/28-wurrak-crescent-torquay-vic-3228-2020696047",
+    "ptMinutesToFlinders": 145,
+    "ptRouteSummary": "Coach 53 Geelong 48",
+    "ptSteps": "Depart 7:32 AM from 28 Wurrak Crescent, Coach 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/2a-gogoll-crescent-torquay-vic-3228-2020584509",
+    "ptMinutesToFlinders": 142,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:35 AM from 2A Gogoll Crescent, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/2b-murnong-circuit-torquay-vic-3228-2020928592",
+    "ptMinutesToFlinders": 144,
+    "ptRouteSummary": "Coach 53 Geelong 48",
+    "ptSteps": "Depart 7:33 AM from 2b Murnong Circuit, Coach 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/30-merrijig-drive-torquay-vic-3228-2020790503",
+    "ptMinutesToFlinders": 131,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:46 AM from 30 Merrijig Drive, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/31-hibbertia-street-torquay-vic-3228-2021031859",
+    "ptMinutesToFlinders": 145,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:32 AM from 31 Hibbertia Street, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/314-100-the-esplanade-torquay-vic-3228-2020425231",
+    "ptMinutesToFlinders": 146,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:31 AM from 314/100 The Esplanade, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/32-offshore-drive-torquay-vic-3228-2020639061",
+    "ptMinutesToFlinders": 135,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:42 AM from 32 Offshore Drive, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/33-mirri-drive-torquay-vic-3228-2021007758",
+    "ptMinutesToFlinders": 135,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:42 AM from 33 Mirri Drive, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/34-lightwood-street-torquay-vic-3228-2020812250",
+    "ptMinutesToFlinders": 140,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:37 AM from 34 Lightwood Street, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/4-storrer-avenue-torquay-vic-3228-2020885542",
+    "ptMinutesToFlinders": 139,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:38 AM from 4 Storrer Avenue, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/40-offshore-drive-torquay-vic-3228-2020865722",
+    "ptMinutesToFlinders": 135,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:42 AM from 40 Offshore Drive, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/49-coast-drive-torquay-vic-3228-2020685354",
+    "ptMinutesToFlinders": 185,
+    "ptRouteSummary": "53 Geelong 75",
+    "ptSteps": "Depart 7:38 AM from 49 Coast Drive, 53 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/5-altmann-avenue-torquay-vic-3228-2021011927",
+    "ptMinutesToFlinders": 140,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:37 AM from 5 Altmann Avenue, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/50-manna-gum-drive-torquay-vic-3228-2019207575",
+    "ptMinutesToFlinders": 191,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:32 AM from 50 Manna Gum Drive, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/53-stretton-drive-torquay-vic-3228-2020830570",
+    "ptMinutesToFlinders": 144,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:33 AM from 53 Stretton Drive, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/56-grandview-road-torquay-vic-3228-2020138288",
+    "ptMinutesToFlinders": 139,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:38 AM from 56 Grandview Road, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020584815",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from 568 Rosella Road, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020587604",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from 568 Rosella Road, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020590238",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from 568 Rosella Road, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020590274",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from 568 Rosella Road, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/574-wirilda-street-torquay-vic-3228-2020584849",
+    "ptMinutesToFlinders": 141,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:36 AM from 574 Wirilda Street, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/574-wirlida-street-torquay-vic-3228-2020584915",
+    "ptMinutesToFlinders": 141,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:36 AM from 574 Wirlida Street, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/574-wirlinda-street-torquay-vic-3228-2020584965",
+    "ptMinutesToFlinders": 137,
+    "ptRouteSummary": "52 53 Geelong 48",
+    "ptSteps": "Depart 7:40 AM from 574 Wirlinda Street, 52 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/575-wirilda-street-torquay-vic-3228-2020584881",
+    "ptMinutesToFlinders": 141,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:36 AM from 575 Wirilda Street, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/6b-boscarne-avenue-torquay-vic-3228-2020907269",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from 6B Boscarne Avenue, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/84-ocean-view-crescent-torquay-vic-3228-2020878760",
+    "ptMinutesToFlinders": 188,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:35 AM from 84 Ocean View Crescent, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-bright-street-torquay-vic-3228-2021009180",
+    "ptMinutesToFlinders": 130,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:47 AM from 9 Bright Street, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-hunter-avenue-torquay-vic-3228-2020902429",
+    "ptMinutesToFlinders": 135,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:42 AM from 9 Hunter Avenue, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867237",
+    "ptMinutesToFlinders": 137,
+    "ptRouteSummary": "52 53 Geelong 48",
+    "ptSteps": "Depart 7:40 AM from 911 Stretton - Pipit Way, 52 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867246",
+    "ptMinutesToFlinders": 137,
+    "ptRouteSummary": "52 53 Geelong 48",
+    "ptSteps": "Depart 7:40 AM from 911 Stretton Pipit Way, 52 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9a-rosella-road-torquay-vic-3228-2020897635",
+    "ptMinutesToFlinders": 144,
+    "ptRouteSummary": "53 Geelong 48",
+    "ptSteps": "Depart 7:33 AM from 9A Rosella Road, 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-torquay-vic-3228-2020867283",
+    "ptMinutesToFlinders": 137,
+    "ptRouteSummary": "52 53 Geelong 48",
+    "ptSteps": "Depart 7:40 AM from CORNER 912 Stretton - Pipit, 52 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-way-torquay-vic-3228-2020867264",
+    "ptMinutesToFlinders": 137,
+    "ptRouteSummary": "52 53 Geelong 48",
+    "ptSteps": "Depart 7:40 AM from CORNER 912 Stretton - Pipit Way, 52 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/lot-122-eucalypt-way-torquay-vic-3228-2020704646",
+    "ptMinutesToFlinders": 143,
+    "ptRouteSummary": "Coach 53 Geelong 48",
+    "ptSteps": "Depart 7:34 AM from Lot 122 Eucalypt Way, Coach 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/turnkey-150-briody-grove-briody-street-torquay-vic-3228-2020989570",
+    "ptMinutesToFlinders": 172,
+    "ptRouteSummary": "52 Geelong 75",
+    "ptSteps": "Depart 7:51 AM from TURNKEY 150 Briody Grove -Briody Street, 52 Geelong 75, arrive Flinders St 10:43 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/torquay-vic-3228-2019219254",
+    "ptMinutesToFlinders": 137,
+    "ptRouteSummary": "52 53 Geelong 48",
+    "ptSteps": "Depart 7:40 AM from Torquay, VIC, 3228, 52 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/torquay-vic-3228-2019219265",
+    "ptMinutesToFlinders": 137,
+    "ptRouteSummary": "52 53 Geelong 48",
+    "ptSteps": "Depart 7:40 AM from Torquay, VIC, 3228, 52 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/torquay-vic-3228-2019219302",
+    "ptMinutesToFlinders": 137,
+    "ptRouteSummary": "52 53 Geelong 48",
+    "ptSteps": "Depart 7:40 AM from Torquay, VIC, 3228, 52 53 Geelong 48, arrive Flinders St 9:57 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/21-newhaven-drive-williams-landing-vic-3027-2021039262",
+    "ptMinutesToFlinders": 54,
+    "ptRouteSummary": "Werribee",
+    "ptSteps": "Depart 7:37 AM from 21 Newhaven Drive, Werribee, arrive Flinders St 8:31 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/28-ashwell-avenue-williams-landing-vic-3027-2021035848",
+    "ptMinutesToFlinders": 55,
+    "ptRouteSummary": "153 Werribee",
+    "ptSteps": "Depart 7:56 AM from 28 Ashwell Avenue, 153 Werribee, arrive Flinders St 8:51 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/59-penshurst-avenue-williams-landing-vic-3027-2021039619",
+    "ptMinutesToFlinders": 53,
+    "ptRouteSummary": "Werribee",
+    "ptSteps": "Depart 7:38 AM from 59 Penshurst Avenue, Werribee, arrive Flinders St 8:31 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/8-polaris-circuit-williams-landing-vic-3027-2021035372",
+    "ptMinutesToFlinders": 49,
+    "ptRouteSummary": "Werribee",
+    "ptSteps": "Depart 7:32 AM from 8 Polaris Circuit, Werribee, arrive Flinders St 8:21 AM (Mon 10 Aug, 07:30 plan)."
+  },
+  {
+    "listingUrl": "https://www.domain.com.au/9-rowan-avenue-williams-landing-vic-3027-2021038606",
+    "ptMinutesToFlinders": 54,
+    "ptRouteSummary": "152 Werribee",
+    "ptSteps": "Depart 7:57 AM from 9 Rowan Avenue, 152 Werribee, arrive Flinders St 8:51 AM (Mon 10 Aug, 07:30 plan)."
   }
 ]

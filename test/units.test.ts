@@ -9,7 +9,7 @@ import { parseFlags } from "../src/lib/args";
 import { imageUrl } from "../src/lib/images";
 import { formatPrice, bedBathCar, fmtNum, fmtSoldDate, fmtSoldDateLong } from "../src/lib/format";
 import { priorityScore } from "../src/lib/priority";
-import { pickHero } from "../src/db/queries/properties";
+import { pickHero, pickFloorplan, isPropertyPhoto, isVisibleImage } from "../src/db/queries/properties";
 import { soldDate } from "../src/scrape/adapters/domain";
 
 // --- firstInt ---
@@ -222,6 +222,42 @@ assert.equal(
   null,
   "if every candidate is excluded, pickHero returns null rather than an excluded image",
 );
+
+// --- isVisibleImage / pickFloorplan (square floorplan regression) ---
+// Regression: Domain serves many genuine floorplans at exactly 1080×1080,
+// the same shape isPropertyPhoto treats as an agent-card square. A curated
+// notes='floorplan' tag must rescue it in getPropertyImages's filtering —
+// isPropertyPhoto itself stays untouched (it's still right about untagged
+// squares being junk).
+assert.equal(
+  isPropertyPhoto(1080, 1080),
+  false,
+  "isPropertyPhoto still drops a bare 1080x1080 square (untagged agent card)",
+);
+assert.equal(
+  isVisibleImage({ width: 1080, height: 1080, notes: "floorplan" }),
+  true,
+  "a 1080x1080 image tagged notes='floorplan' survives the visibility filter",
+);
+assert.equal(
+  isVisibleImage({ width: 1080, height: 1080, notes: null }),
+  false,
+  "a 1080x1080 image with no notes is still dropped as an agent card",
+);
+assert.equal(
+  isVisibleImage({ width: 1080, height: 1080, notes: "floorplan", roomType: "exclude" }),
+  false,
+  "exclude beats even an explicit notes='floorplan' pick",
+);
+{
+  const floorplanImg = { width: 1080, height: 1080, notes: "floorplan" as const };
+  const visible = [floorplanImg, { width: 1600, height: 1067, notes: null }].filter(isVisibleImage);
+  assert.equal(
+    pickFloorplan(visible),
+    floorplanImg,
+    "a curated 1080x1080 floorplan survives getPropertyImages-style filtering and is picked by pickFloorplan",
+  );
+}
 
 // --- soldDate (real sale date extracted from a Domain listing payload) ---
 assert.equal(

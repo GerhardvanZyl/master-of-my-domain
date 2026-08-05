@@ -8,6 +8,7 @@ import type { PropertyListItem } from "@/db/queries/properties";
 import { imageUrl } from "@/lib/images";
 import { priceLine, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDate } from "@/lib/format";
 import { formatInspection } from "@/lib/inspection";
+import { commuteDestination } from "@/lib/commute";
 import { DEFAULT_VIBE_CONFIG, loadVibeConfig, saveVibeConfig, vibeScore } from "@/lib/vibes";
 import { SHORTLIST_TAGS, useProfile } from "@/lib/profile";
 import { useDebounced } from "@/lib/useDebounced";
@@ -26,7 +27,7 @@ const SORTS: { key: string; label: string; num?: NumGetter; dir: "asc" | "desc" 
   { key: "price-asc", label: "Price: low → high", num: (p) => p.priceNumeric, dir: "asc" },
   { key: "price-desc", label: "Price: high → low", num: (p) => p.priceNumeric, dir: "desc" },
   { key: "beds", label: "Beds: most first", num: (p) => p.beds, dir: "desc" },
-  { key: "transit", label: "Transit to Flinders: fastest", num: (p) => p.ptMinutesToFlinders, dir: "asc" },
+  { key: "transit", label: "Transit to CBD: fastest", num: (p) => p.ptMinutesToFlinders, dir: "asc" },
   { key: "station", label: "Train station: nearest", num: (p) => p.stationDistanceM, dir: "asc" },
   { key: "coles", label: "Coles: nearest", num: (p) => p.colesDistanceM, dir: "asc" },
   { key: "playgrounds", label: "Playgrounds ≤500m: most", num: (p) => p.playgrounds500m, dir: "desc" },
@@ -174,12 +175,14 @@ interface TileProps {
   myVibe: string | null;
   canVibe: boolean;
   attended: string | null;
+  shortlist: string | null;
   /** Passed down from the grid's top-level `useProfile()` so ~290 tiles don't
    *  each mount their own hook just for ShareButton — see ShareButton.tsx. */
   profile: string | null;
   onToggle: (id: string) => void;
   onVibe: (id: string, current: string | null, v: string) => void;
   onAttend: (id: string, current: string | null) => void;
+  onShortlist: (id: string, current: string | null) => void;
 }
 
 /**
@@ -195,15 +198,17 @@ const PropertyCard = memo(function PropertyCard({
   myVibe,
   canVibe,
   attended,
+  shortlist,
   profile,
   compact,
   mapSize,
   onToggle,
   onVibe,
   onAttend,
+  onShortlist,
 }: TileProps & { compact: boolean; mapSize: string }) {
   const nav = useCardNav(`/property/${p.id}`);
-  const tag = SHORTLIST_TAGS.find((t) => t.id === p.shortlistTag);
+  const tag = SHORTLIST_TAGS.find((t) => t.id === shortlist);
   const isNew = Date.now() - new Date(p.createdAt).getTime() < NEW_FOR_MS;
   const inspect = formatInspection(p.nextInspection);
   const price = priceLine(p);
@@ -293,6 +298,30 @@ const PropertyCard = memo(function PropertyCard({
           truncated text, drag-select already works there, and word-select is
           not worth making every row click feel late. */}
       <div data-selectable className="p-4">
+        {/* Right-aligned under the map thumbnail (which overhangs the photo by
+            -bottom-3). Floated, not a flex sibling of the h3: a float only
+            shortens the line boxes it actually overlaps, so the address keeps
+            its position AND its full width from line 2 on. As a flex row it
+            cost the address ~90px on every line and wrapped it to 3 lines at
+            mobile card width (test/ui.test.ts guards that). Native checkbox
+            rather than a toggle button — it is a multi-select, and
+            `label`/`input` are already in INTERACTIVE_SEL so the card-nav click
+            handler leaves it alone. */}
+        <label
+          title={!isSel && selectFull ? "Max 4 — remove one to add another" : "Add to compare"}
+          className={`float-right ml-2 mt-1 flex items-center gap-1.5 text-xs font-bold ${
+            !isSel && selectFull ? "cursor-not-allowed text-mute" : "cursor-pointer text-forest"
+          }`}
+        >
+          Compare
+          <input
+            type="checkbox"
+            checked={isSel}
+            disabled={!isSel && selectFull}
+            onChange={() => onToggle(p.id)}
+            className="h-4 w-4 accent-forest"
+          />
+        </label>
         <h3 className="mb-1 font-serif text-[21px] leading-tight">
           <Link
             href={`/property/${p.id}`}
@@ -349,7 +378,7 @@ const PropertyCard = memo(function PropertyCard({
                 {isTransitEstimated(p.ptSteps) && (
                   <span title="Estimated from the nearest tracked property">*</span>
                 )}{" "}
-                to Flinders St
+                to {commuteDestination(p)}
               </div>
             )}
             {(p.colesDistanceM != null || p.playgrounds500m != null) && (
@@ -360,10 +389,13 @@ const PropertyCard = memo(function PropertyCard({
               </div>
             )}
           </div>
-          {/* Emotes + Attended + Compare: inline when they fit, own full-width
-              row when they don't (so the distance text above isn't crushed). */}
-          <div className="flex w-full shrink-0 items-center justify-between gap-1.5 sm:w-auto sm:ml-auto sm:justify-normal">
-            <div className="flex items-center gap-1.5">
+          {/* Emotes + Attended + To view + Share. Always its own full-width row
+              and free to wrap onto a second line: they don't fit beside the
+              distance text at card width, and the old shrink-0 + sm:w-auto made
+              them overflow the card instead. (Compare moved up to a checkbox
+              under the map.) */}
+          <div className="flex w-full flex-wrap items-center justify-end gap-1.5">
+            <div className="mr-auto flex items-center gap-1.5">
               {VIBE_OPTS.map((o) => {
                 const on = myVibe === o.v;
                 return (
@@ -395,19 +427,19 @@ const PropertyCard = memo(function PropertyCard({
             >
               {attended ? "✓ Attended" : "Attended"}
             </button>
-            <ShareButton propertyId={p.id} profile={profile} />
             <button
-              onClick={() => onToggle(p.id)}
-              disabled={!isSel && selectFull}
-              title={!isSel && selectFull ? "Max 4 — remove one to add another" : "Add to compare"}
-              className={`shrink-0 rounded-[9px] border px-3 py-1.5 text-xs font-bold transition disabled:opacity-40 ${
-                isSel
-                  ? "border-forest bg-forest text-linen"
-                  : "border-line bg-white text-forest hover:border-forest"
+              onClick={() => onShortlist(p.id, shortlist)}
+              aria-pressed={shortlist === "must-see"}
+              title={shortlist === "must-see" ? "Remove from to-view list" : "Add to to-view list"}
+              className={`shrink-0 rounded-[9px] border px-3 py-1.5 text-xs font-bold transition ${
+                shortlist === "must-see"
+                  ? "border-forest bg-forest/15 text-forest"
+                  : "border-line bg-white text-body hover:border-forest"
               }`}
             >
-              {isSel ? "✓ Added" : "Compare"}
+              {shortlist === "must-see" ? "✓ To view" : "To view"}
             </button>
+            <ShareButton propertyId={p.id} profile={profile} />
           </div>
         </div>
       </div>
@@ -549,6 +581,8 @@ export default function PropertyGrid({
   const [vibeEdits, setVibeEdits] = useState<Record<string, string>>({});
   // Local attendance writes, id -> ISO date | null. Same optimistic pattern.
   const [attendedEdits, setAttendedEdits] = useState<Record<string, string | null>>({});
+  // Local shortlist writes, id -> tag | null. Same optimistic pattern.
+  const [shortlistEdits, setShortlistEdits] = useState<Record<string, string | null>>({});
   // Transient "cap reached" message shown in the compare tray for ~3s.
   const [capMsg, setCapMsg] = useState<string | null>(null);
   const capMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -770,6 +804,12 @@ export default function PropertyGrid({
     [attendedEdits],
   );
 
+  // The shortlist tag shown on a tile: local edit if there is one, else the server's.
+  const shortlistOf = useCallback(
+    (p: PropertyListItem) => (p.id in shortlistEdits ? shortlistEdits[p.id] : p.shortlistTag),
+    [shortlistEdits],
+  );
+
   const view = useMemo(() => {
     const maxP = dMaxPrice >= PRICE_MAX ? null : dMaxPrice;
     const needle = dQ.trim().toLowerCase();
@@ -777,7 +817,7 @@ export default function PropertyGrid({
     // once you've ticked more than a couple of suburbs.
     const subs = suburb.length ? new Set(suburb) : null;
     let list = properties.filter((p) => {
-      if (tagFilter && p.shortlistTag !== tagFilter) return false;
+      if (tagFilter && shortlistOf(p) !== tagFilter) return false;
       if (subs && (!p.suburb || !subs.has(p.suburb))) return false;
       if (minBeds && (p.beds ?? 0) < minBeds) return false;
       if (minBaths && (p.baths ?? 0) < minBaths) return false;
@@ -804,7 +844,7 @@ export default function PropertyGrid({
       if (cfg?.num) list = [...list].sort(byNum(cfg.num, cfg.dir));
     }
     return list;
-  }, [properties, suburb, minBeds, minBaths, minParking, dMaxPrice, dQ, sort, scoreOf, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, attendedOf, myScore]);
+  }, [properties, suburb, minBeds, minBaths, minParking, dMaxPrice, dQ, sort, scoreOf, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, attendedOf, shortlistOf, myScore]);
 
   // Hand the current on-screen order to the detail page's prev/next pager, so
   // stepping through listings follows the filter+sort you're actually looking
@@ -850,6 +890,18 @@ export default function PropertyGrid({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ attendedAt: next }),
     }).catch((e) => console.warn("attended save failed", e));
+  }, []);
+
+  // Toggle "must-see" for a tile. Same optimistic, fire-and-forget pattern as
+  // setAttended above — no router.refresh().
+  const setShortlist = useCallback((id: string, current: string | null) => {
+    const next = current === "must-see" ? null : "must-see";
+    setShortlistEdits((prev) => ({ ...prev, [id]: next }));
+    fetch(`/api/properties/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shortlistTag: next }),
+    }).catch((e) => console.warn("shortlist save failed", e));
   }, []);
 
   // Rate a property's "vibe" for the active profile straight from its tile.
@@ -1204,9 +1256,11 @@ export default function PropertyGrid({
               profile={profile}
               myVibe={vibeOf(p)}
               attended={attendedOf(p)}
+              shortlist={shortlistOf(p)}
               onToggle={toggle}
               onVibe={setVibe}
               onAttend={setAttended}
+              onShortlist={setShortlist}
             />
           ))}
         </div>

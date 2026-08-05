@@ -24,6 +24,7 @@ import { listMedia } from "@/lib/media";
 import { imageUrl } from "@/lib/images";
 import { formatPrice, fmtAud, fmtNum, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDateLong } from "@/lib/format";
 import { formatInspection } from "@/lib/inspection";
+import { commuteDestination } from "@/lib/commute";
 import type { ReactNode } from "react";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +57,7 @@ export default async function PropertyDetail({
         : "—",
     ],
     [
-      `Transit to ${property.state === "NSW" ? "Museum Stn" : "Flinders St"} (7:30am)`,
+      `Transit to ${commuteDestination(property)} (7:30am)`,
       property.ptMinutesToFlinders != null
         ? fmtMinutes(property.ptMinutesToFlinders) +
           (isTransitEstimated(property.ptSteps) ? "*" : "") +

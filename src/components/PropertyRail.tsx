@@ -232,6 +232,21 @@ export default function PropertyRail({
       )}
 
       <Card title="Inspected">
+        <button
+          onClick={() =>
+            patchProperty({
+              shortlistTag: prop.shortlistTag === "must-see" ? null : "must-see",
+            })
+          }
+          aria-pressed={prop.shortlistTag === "must-see"}
+          className={`mb-3 w-full rounded-[10px] border px-3 py-2.5 text-[13px] font-medium ${
+            prop.shortlistTag === "must-see"
+              ? "border-forest bg-[#F2F6F2] text-forest"
+              : "border-line bg-white text-mute"
+          }`}
+        >
+          {prop.shortlistTag === "must-see" ? "✓ To view" : "Add to to-view list"}
+        </button>
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={() =>

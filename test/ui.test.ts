@@ -307,9 +307,9 @@ async function main() {
 
   console.log("\ncompare");
   await t("selecting two properties opens a compare table with a ✦ winner", async () => {
-    const buttons = page.getByRole("button", { name: "Compare", exact: true });
-    await buttons.nth(0).click();
-    await buttons.nth(1).click();
+    const boxes = page.getByRole("checkbox", { name: "Compare", exact: true });
+    await boxes.nth(0).check();
+    await boxes.nth(1).check();
     const link = page.getByRole("link", { name: /Compare 2 properties/ });
     await link.waitFor();
     await link.click();

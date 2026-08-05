@@ -76,7 +76,7 @@ const ROWS: Row[] = [
     num: (p) => p.secondStationDistanceM,
   },
   {
-    label: "Transit to Flinders St",
+    label: "Transit to CBD (7:30am)",
     better: "min",
     value: (p) =>
       p.ptMinutesToFlinders != null ? fmtMinutes(p.ptMinutesToFlinders) : "—",

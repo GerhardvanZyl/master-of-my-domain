@@ -46,8 +46,13 @@ function aspect(width: number | null, height: number | null): number | null {
  * agents pad the gallery with. Verified against the ~7.8k stored images:
  *   - agent headshots are 120–180px squares, agent "cards" are 1080px squares
  *   - agency logos are wide strips (720×50, 120×42)
- *   - real Domain photos are 3:2 (1620×1080) and floorplans are portrait or
- *     A-paper landscape — none of them square, none under 500px
+ *   - real Domain photos are 3:2 (1620×1080)
+ * Square (1.00 aspect) is treated as agent-card junk here, but Domain also
+ * serves plenty of genuine floorplans at exactly 1080×1080 — this heuristic
+ * can't tell those apart from shape alone, so it doesn't try. A curated
+ * notes='floorplan'/'hero' tag overrides this in getPropertyImages() (see
+ * isVisibleImage below); don't loosen the aspect check itself, or real agent
+ * cards leak back into every gallery.
  * Drops 1959 of 7770 images and leaves every property with at least one photo.
  * Dimensions are unknown for nothing in the DB today; if that changes, keep the
  * image rather than hide it.
@@ -446,6 +451,31 @@ export interface ImageWithTag {
   confidence: number | null;
 }
 
+/**
+ * Whether an image belongs in the app's galleries at all — the single
+ * predicate behind getPropertyImages(). Pure (no DB access) so it's testable
+ * without a database.
+ *
+ * Order matters:
+ *   1. `exclude` is absolute — a display-control tag (agency branding, logo
+ *      cards, pure text/marketing panels) that must never be shown anywhere,
+ *      no matter what any other tag says. Checked first and unconditionally.
+ *   2. A curated notes='floorplan'/'hero' tag then overrides the shape
+ *      heuristic — it's how genuine square (1080×1080) floorplans survive
+ *      isPropertyPhoto's "square = agent card" rule (see that doc comment).
+ *   3. Otherwise fall back to the aspect-ratio heuristic.
+ */
+export function isVisibleImage(i: {
+  width: number | null;
+  height: number | null;
+  roomType?: string | null;
+  notes?: string | null;
+}): boolean {
+  if (i.roomType === "exclude") return false;
+  if (i.notes === "floorplan" || i.notes === "hero") return true;
+  return isPropertyPhoto(i.width, i.height);
+}
+
 export function getPropertyImages(propertyId: string): ImageWithTag[] {
   return db
     .select({
@@ -468,12 +498,10 @@ export function getPropertyImages(propertyId: string): ImageWithTag[] {
     .orderBy(images.ordinal)
     .all()
     // Galleries, lightboxes and the room compare all read through here, so one
-    // filter keeps agent headshots and agency logos out of every carousel.
-    // Tagging scripts talk to the DB directly and still see everything.
-    .filter((i) => isPropertyPhoto(i.width, i.height))
-    // `exclude` is a display-control tag (agency branding, logo cards, pure
-    // text/marketing panels) — never shown anywhere in the app.
-    .filter((i) => i.roomType !== "exclude");
+    // filter keeps agent headshots and agency logos out of every carousel
+    // while still rescuing curated picks (see isVisibleImage). Tagging
+    // scripts talk to the DB directly and still see everything.
+    .filter(isVisibleImage);
 }
 
 export function deleteProperty(id: string): void {

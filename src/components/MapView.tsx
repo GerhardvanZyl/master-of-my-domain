@@ -15,7 +15,7 @@ const AMENITIES: { key: string; label: string; ok: (p: PropertyListItem) => bool
   { key: "coles", label: "Coles ≤1 km", ok: (p) => (p.colesDistanceM ?? Infinity) <= 1000 },
   { key: "play", label: "Playground ≤500 m", ok: (p) => (p.playgrounds500m ?? 0) > 0 },
   { key: "vet", label: "Vet ≤10 km", ok: (p) => (p.greenCrossDistanceM ?? Infinity) <= 10_000 },
-  { key: "transit", label: "Flinders ≤60 min", ok: (p) => (p.ptMinutesToFlinders ?? Infinity) <= 60 },
+  { key: "transit", label: "Transit ≤60 min", ok: (p) => (p.ptMinutesToFlinders ?? Infinity) <= 60 },
 ];
 
 export default function MapView({ properties }: { properties: PropertyListItem[] }) {
