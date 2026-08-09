@@ -156,6 +156,9 @@ CREATE INDEX IF NOT EXISTS idx_group_members_group ON similarity_group_members(g
 CREATE INDEX IF NOT EXISTS idx_group_members_image ON similarity_group_members(image_id);
 CREATE INDEX IF NOT EXISTS idx_price_history_property ON price_history(property_id);
 CREATE INDEX IF NOT EXISTS idx_shares_to_read ON shares(to_profile, read_at);
+-- scrape_jobs is keyed by url in practice: every property page render looks up
+-- its sale status by listing_url, and ingest upserts one row per url.
+CREATE INDEX IF NOT EXISTS idx_scrape_jobs_url ON scrape_jobs(url);
 `;
 
 /**

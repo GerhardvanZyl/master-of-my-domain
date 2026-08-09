@@ -11,6 +11,7 @@ import { formatPrice, bedBathCar, fmtNum, fmtSoldDate, fmtSoldDateLong } from ".
 import { priorityScore } from "../src/lib/priority";
 import { pickHero, pickFloorplan, isPropertyPhoto, isVisibleImage } from "../src/db/queries/properties";
 import { soldDate } from "../src/scrape/adapters/domain";
+import { isSupportedMedia, safeName } from "../src/lib/media";
 
 // --- firstInt ---
 assert.equal(firstInt(4), 4);
@@ -312,5 +313,14 @@ assert.equal(fmtSoldDate("2026-07-28"), "28 Jul 26");
 assert.equal(fmtSoldDateLong("2026-07-28"), "28 Jul 2026");
 assert.equal(fmtSoldDate(null), null);
 assert.equal(fmtSoldDateLong(null), null);
+
+// --- isSupportedMedia: the upload route rejects exactly what listMedia hides,
+// so an offline-queued photo can never be "saved" into a 200 that stores nothing.
+assert.equal(isSupportedMedia("IMG_0042.HEIC"), true, "iPhone capture, uppercase ext");
+assert.equal(isSupportedMedia("walkthrough.mov"), true);
+assert.equal(isSupportedMedia("notes.txt"), false);
+assert.equal(isSupportedMedia("noextension"), false);
+// safeName strips separators, so the route can never write outside the property dir.
+assert.equal(safeName("../../etc/passwd.jpg"), "passwd.jpg");
 
 console.log("✓ units.test: all assertions passed");

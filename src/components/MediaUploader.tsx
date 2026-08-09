@@ -41,20 +41,19 @@ export default function MediaUploader({
     setBusy(true);
     setErr(null);
     const list = Array.from(files);
+    const form = new FormData();
+    for (const f of list) form.append("files", f);
+    let res: Response;
     try {
-      const form = new FormData();
-      for (const f of list) form.append("files", f);
-      const res = await fetch(`/api/properties/${propertyId}/media`, {
+      res = await fetch(`/api/properties/${propertyId}/media`, {
         method: "POST",
         body: form,
       });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? res.status);
-      setMedia(json.media);
     } catch (e) {
-      // Offline (or the server is down): park each file in the outbox. A real
-      // server-side rejection reaches here too, but retrying it later is
-      // harmless — replay() drops anything the server 4xxs.
+      // The server was unreachable — park each file in the outbox and let
+      // SyncStatus replay it. Only a thrown fetch means offline: an HTTP error
+      // status is the server answering, and queueing that would just get the
+      // job dropped later with nothing shown to you.
       try {
         for (const f of list) {
           await queue({
@@ -65,10 +64,22 @@ export default function MediaUploader({
             blob: f,
           });
         }
-        setErr(null);
       } catch {
         setErr(e instanceof Error ? e.message : String(e));
       }
+      setBusy(false);
+      return;
+    }
+    try {
+      const json = await res.json();
+      if (!res.ok) {
+        setErr(String(json.error ?? res.status));
+        return;
+      }
+      setMedia(json.media);
+      // Partial success: some files were stored, others aren't types we serve.
+      // Saying so beats them quietly not appearing in the grid.
+      if (json.skipped?.length) setErr(`Skipped (unsupported type): ${json.skipped.join(", ")}`);
     } finally {
       setBusy(false);
     }
