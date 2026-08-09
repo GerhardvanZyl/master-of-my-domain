@@ -573,6 +573,14 @@ async function main() {
   // A short phrase forced to wrap into 3+ lines means a column too narrow for it
   // (e.g. distance text crushed next to buttons). Flags cramped/squashed layout
   // that a horizontal-scroll check can't see.
+  //
+  // CAVEAT, measured 2026-08-09: this runs with fonts.googleapis.com aborted (see
+  // ctx.route below), so headings render in the fallback serif, which is wider
+  // than Instrument Serif. On the home grid that is the whole difference between
+  // pass and fail — with the real font loaded 0 of 337 addresses wrap to 3 lines;
+  // with it blocked, 2 do ("224 Saltwater Promenade…", "105 Williams Landing
+  // Boulevard…"). Before changing any card CSS to chase a failure here, check
+  // whether it reproduces with the font actually loaded.
   async function squashOffenders(url: string) {
     await page.setViewportSize(MOBILE);
     await page.goto(url, { waitUntil: "domcontentloaded" });
