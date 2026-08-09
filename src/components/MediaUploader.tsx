@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { MediaItem } from "@/lib/media";
+import { OUTBOX_EVENT, pendingMedia, queue } from "@/lib/outbox";
 
 /** Your own photos & walk-through videos. Files live on disk under
  *  data/media/<propertyId>/ — ponytail: the directory listing IS the index,
- *  no table needed. */
+ *  no table needed. Captured offline, they wait in the outbox instead and show
+ *  here with a "pending" badge until they sync. */
 export default function MediaUploader({
   propertyId,
   initial,
@@ -16,14 +18,32 @@ export default function MediaUploader({
   const [media, setMedia] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // Object URLs for photos still in the outbox, so they're visible after a
+  // reload with no connection. Revoked when the list is rebuilt.
+  const [pending, setPending] = useState<{ id: number; name: string; url: string }[]>([]);
+
+  const loadPending = useCallback(async () => {
+    const jobs = await pendingMedia(propertyId);
+    setPending((prev) => {
+      prev.forEach((p) => URL.revokeObjectURL(p.url));
+      return jobs.map((j) => ({ id: j.id, name: j.name, url: URL.createObjectURL(j.blob) }));
+    });
+  }, [propertyId]);
+
+  useEffect(() => {
+    loadPending();
+    window.addEventListener(OUTBOX_EVENT, loadPending);
+    return () => window.removeEventListener(OUTBOX_EVENT, loadPending);
+  }, [loadPending]);
 
   async function upload(files: FileList | null) {
     if (!files?.length) return;
     setBusy(true);
     setErr(null);
+    const list = Array.from(files);
     try {
       const form = new FormData();
-      for (const f of Array.from(files)) form.append("files", f);
+      for (const f of list) form.append("files", f);
       const res = await fetch(`/api/properties/${propertyId}/media`, {
         method: "POST",
         body: form,
@@ -32,7 +52,23 @@ export default function MediaUploader({
       if (!res.ok) throw new Error(json.error ?? res.status);
       setMedia(json.media);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
+      // Offline (or the server is down): park each file in the outbox. A real
+      // server-side rejection reaches here too, but retrying it later is
+      // harmless — replay() drops anything the server 4xxs.
+      try {
+        for (const f of list) {
+          await queue({
+            kind: "media",
+            propertyId,
+            name: f.name || `photo-${Date.now()}.jpg`,
+            type: f.type,
+            blob: f,
+          });
+        }
+        setErr(null);
+      } catch {
+        setErr(e instanceof Error ? e.message : String(e));
+      }
     } finally {
       setBusy(false);
     }
@@ -46,6 +82,8 @@ export default function MediaUploader({
     if (res.ok) setMedia((await res.json()).media);
   }
 
+  const empty = media.length === 0 && pending.length === 0;
+
   return (
     <div className="card p-[18px]">
       <div className="mb-3.5 flex items-center justify-between gap-4">
@@ -55,21 +93,42 @@ export default function MediaUploader({
             Your own photos &amp; walk-through videos for this place
           </p>
         </div>
-        <label className="btn-primary cursor-pointer">
-          {busy ? "Uploading…" : "Upload"}
-          <input
-            type="file"
-            accept="image/*,video/*"
-            multiple
-            onChange={(e) => upload(e.target.files)}
-            className="hidden"
-          />
-        </label>
+        <div className="flex shrink-0 items-center gap-2">
+          {/* `capture` makes a phone open the camera directly rather than the
+              picker — the whole point of this at an inspection. Desktop
+              browsers ignore it and show a file dialog. */}
+          <label className="chip cursor-pointer">
+            📷 Photo
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={(e) => upload(e.target.files)}
+              className="hidden"
+            />
+          </label>
+          <label className="btn-primary cursor-pointer">
+            {busy ? "Uploading…" : "Upload"}
+            <input
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              onChange={(e) => upload(e.target.files)}
+              className="hidden"
+            />
+          </label>
+        </div>
       </div>
 
       {err && <p className="mb-3 text-xs text-[#B84A3A]">{err}</p>}
+      {pending.length > 0 && (
+        <p className="mb-3 text-xs text-amber">
+          {pending.length} photo{pending.length > 1 ? "s" : ""} saved on this device — syncing when
+          you&apos;re back online.
+        </p>
+      )}
 
-      {media.length === 0 ? (
+      {empty ? (
         <label
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
@@ -89,6 +148,18 @@ export default function MediaUploader({
         </label>
       ) : (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {pending.map((p) => (
+            <div
+              key={`pending-${p.id}`}
+              className="relative aspect-[4/3] overflow-hidden rounded-[9px] border border-amber bg-fill"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.url} alt={p.name} className="h-full w-full object-cover opacity-70" />
+              <span className="absolute bottom-1 left-1 rounded-full bg-amber px-2 py-0.5 text-[10px] font-semibold text-linen">
+                pending
+              </span>
+            </div>
+          ))}
           {media.map((m) => (
             <div
               key={m.name}

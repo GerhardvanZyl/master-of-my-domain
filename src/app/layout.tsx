@@ -5,6 +5,7 @@ import ProfileBar from "@/components/ProfileBar";
 import ProfileGate from "@/components/ProfileGate";
 import NotificationBadge from "@/components/NotificationBadge";
 import RegisterSW from "@/components/RegisterSW";
+import SyncStatus from "@/components/SyncStatus";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -61,6 +62,7 @@ export default function RootLayout({
               </span>
             </Link>
             <NavLinks />
+            <SyncStatus />
             <NotificationBadge />
             <ProfileBar />
           </nav>
