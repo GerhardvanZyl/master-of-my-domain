@@ -18,6 +18,7 @@ import NotesEditor from "@/components/NotesEditor";
 import PropertyRail from "@/components/PropertyRail";
 import PropertyPager from "@/components/PropertyPager";
 import MediaUploader from "@/components/MediaUploader";
+import MarkViewed from "@/components/MarkViewed";
 import MetadataEditor from "@/components/MetadataEditor";
 import ShareButton from "@/components/ShareButton";
 import { listMedia } from "@/lib/media";
@@ -205,6 +206,7 @@ export default async function PropertyDetail({
 
   return (
     <section className="rise">
+      <MarkViewed propertyId={property.id} />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/"

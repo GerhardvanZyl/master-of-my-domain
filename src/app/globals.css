@@ -82,6 +82,10 @@ body {
 @utility chip-on {
   @apply border-forest bg-forest text-linen;
 }
+/* Tri-state chips: green = include only, amber = exclude. */
+@utility chip-ex {
+  @apply border-amber bg-amber text-linen;
+}
 @utility btn-primary {
   @apply rounded-xl bg-forest px-5 py-2.5 text-sm font-semibold text-linen;
 }
@@ -122,3 +126,5 @@ input[type="range"] {
   touch-action: pan-y;
   height: 28px;
 }
+
+

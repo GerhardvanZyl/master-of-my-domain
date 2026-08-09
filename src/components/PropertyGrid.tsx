@@ -12,6 +12,7 @@ import { commuteDestination } from "@/lib/commute";
 import { DEFAULT_VIBE_CONFIG, loadVibeConfig, saveVibeConfig, vibeScore } from "@/lib/vibes";
 import { SHORTLIST_TAGS, useProfile } from "@/lib/profile";
 import { useDebounced } from "@/lib/useDebounced";
+import { loadViewed } from "@/lib/viewed";
 import MultiSelect from "./MultiSelect";
 import StaticMap from "./StaticMap";
 import ShareButton from "./ShareButton";
@@ -90,6 +91,41 @@ function isThisWeekend(iso: string | null): boolean {
   const satStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + satOffset);
   const monStart = new Date(satStart.getFullYear(), satStart.getMonth(), satStart.getDate() + 2);
   return d >= satStart && d < monStart;
+}
+
+/* --- Tri-state filter chips -------------------------------------------------
+   "off" (no fill) → "in" (green: only properties with this) → "ex" (amber:
+   hide properties with this) → "off".
+   ponytail: plain strings, no enum/union type — they never leave this file and
+   `asTri` is the only thing that has to be careful. Older saved values from
+   before the rework fall back to "off" rather than being migrated. */
+const asTri = (v: unknown) => (v === "in" || v === "ex" ? v : "off");
+
+/** Keeps a property when the chip is off, or when it matches the chip's side. */
+const triKeep = (mode: string, has: boolean) => (mode === "off" ? true : mode === "in" ? has : !has);
+
+function TriChip({
+  value,
+  onChange,
+  label,
+  exLabel,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  exLabel: string;
+}) {
+  const next = value === "off" ? "in" : value === "in" ? "ex" : "off";
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(next)}
+      title={next === "in" ? `Show only ${label.toLowerCase()}` : next === "ex" ? `Hide ${label.toLowerCase()}` : "Show all"}
+      className={`chip whitespace-nowrap ${value === "in" ? "chip-on" : value === "ex" ? "chip-ex" : "hover:border-forest"}`}
+    >
+      {value === "ex" ? exLabel : label}
+    </button>
+  );
 }
 
 /** "Visited 26 Jul" — fixed locale + timezone so server/client markup agree. */
@@ -602,9 +638,13 @@ export default function PropertyGrid({
   const [hideAuction, setHideAuction] = useState(false);
   const [hideUnderOffer, setHideUnderOffer] = useState(false);
   const [hideDelisted, setHideDelisted] = useState(false);
-  const [inspectingFilter, setInspectingFilter] = useState(false);
-  // "off" | "attended" | "not-attended" — one chip cycles all three states.
+  // Tri-state chips (see TriChip): "off" | "in" (only these) | "ex" (hide these).
+  const [inspectingFilter, setInspectingFilter] = useState("off");
   const [attendedFilter, setAttendedFilter] = useState("off");
+  const [viewedFilter, setViewedFilter] = useState("off");
+  const [ratedFilter, setRatedFilter] = useState("off");
+  // "off" | "1w".."4w" — created within the last N weeks (NEW_FOR_MS-based).
+  const [newFilter, setNewFilter] = useState("off");
   // Task 15: pin the filter bar to the top, collapse it to chips on scroll.
   const [pinned, setPinned] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -621,6 +661,12 @@ export default function PropertyGrid({
   // React throws a hydration error, so the config lives in state.
   const [savedCfg, setSavedCfg] = useState(DEFAULT_VIBE_CONFIG);
   useEffect(() => setSavedCfg(loadVibeConfig()), []);
+
+  // Viewed-property ids (localStorage, see src/lib/viewed.ts) — same
+  // hydrate-after-mount rule as everything else on this page. Keyed by
+  // profile, so re-run when `profile` hydrates/switches.
+  const [viewedSet, setViewedSet] = useState<Set<string>>(new Set());
+  useEffect(() => setViewedSet(loadViewed(profile)), [profile]);
 
   // `profile` hydrates in an effect, so fkey flips default→<profile> right after
   // mount. Without this guard the save effect fires on that flip carrying the
@@ -655,8 +701,11 @@ export default function PropertyGrid({
     setHideAuction(!!s.hideAuction);
     setHideUnderOffer(!!s.hideUnderOffer);
     setHideDelisted(!!s.hideDelisted);
-    setInspectingFilter(!!s.inspectingFilter);
-    setAttendedFilter(typeof s.attendedFilter === "string" ? s.attendedFilter : "off");
+    setInspectingFilter(asTri(s.inspectingFilter));
+    setAttendedFilter(asTri(s.attendedFilter));
+    setViewedFilter(asTri(s.viewedFilter));
+    setRatedFilter(asTri(s.ratedFilter));
+    setNewFilter(/^[1-4]w$/.test(String(s.newFilter)) ? (s.newFilter as string) : "off");
     setPinned(!!s.pinned);
     setIdealPrice(typeof s.idealPrice === "number" ? s.idealPrice : loadVibeConfig().idealPrice);
     loaded.current = fkey;
@@ -671,14 +720,14 @@ export default function PropertyGrid({
       try {
         localStorage.setItem(
           fkey,
-          JSON.stringify({ sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, pinned }),
+          JSON.stringify({ sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, viewedFilter, ratedFilter, newFilter, pinned }),
         );
       } catch (e) {
         console.warn("filter save failed", e); // quota/private mode — don't fail silently
       }
     }, 400);
     return () => clearTimeout(t);
-  }, [fkey, sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, pinned]);
+  }, [fkey, sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, viewedFilter, ratedFilter, newFilter, pinned]);
 
   // Compare selection persists per region, independent of the profile filter
   // bucket above — you might switch profiles mid-compare.
@@ -810,6 +859,23 @@ export default function PropertyGrid({
     [shortlistEdits],
   );
 
+  // "Rated" = the user has expressed ANY opinion, from EITHER profile: a
+  // ratings row with a vibe/look/kitchen/score, or free-text pros/cons.
+  // Reuses vibeOf() for MY vibe so a click on the grid's emoji row (which
+  // only updates vibeEdits, not p.ratings) is picked up immediately; the
+  // other profile's vibe and the non-vibe fields aren't overlaid anywhere
+  // else on this page, so those read straight off p.ratings.
+  const isRated = useCallback(
+    (p: PropertyListItem) => {
+      if ((p.pros ?? "").trim() || (p.cons ?? "").trim()) return true;
+      if (vibeOf(p)) return true;
+      return p.ratings.some(
+        (r) => (r.profile !== profile && r.vibe) || r.look || r.kitchen || r.score != null,
+      );
+    },
+    [vibeOf, profile],
+  );
+
   const view = useMemo(() => {
     const maxP = dMaxPrice >= PRICE_MAX ? null : dMaxPrice;
     const needle = dQ.trim().toLowerCase();
@@ -827,11 +893,13 @@ export default function PropertyGrid({
       if (hideAuction && isAuction(p)) return false;
       if (hideUnderOffer && isUnderOffer(p)) return false;
       if (hideDelisted && p.delisted) return false;
-      if (inspectingFilter && !isThisWeekend(p.nextInspection)) return false;
-      if (attendedFilter !== "off") {
-        const attended = attendedOf(p);
-        if (attendedFilter === "attended" && !attended) return false;
-        if (attendedFilter === "not-attended" && attended) return false;
+      if (!triKeep(inspectingFilter, isThisWeekend(p.nextInspection))) return false;
+      if (!triKeep(attendedFilter, !!attendedOf(p))) return false;
+      if (!triKeep(viewedFilter, viewedSet.has(p.id))) return false;
+      if (!triKeep(ratedFilter, isRated(p))) return false;
+      if (newFilter !== "off") {
+        const age = Date.now() - new Date(p.createdAt).getTime();
+        if (age >= NEW_FOR_MS * parseInt(newFilter, 10)) return false;
       }
       return true;
     });
@@ -844,7 +912,7 @@ export default function PropertyGrid({
       if (cfg?.num) list = [...list].sort(byNum(cfg.num, cfg.dir));
     }
     return list;
-  }, [properties, suburb, minBeds, minBaths, minParking, dMaxPrice, dQ, sort, scoreOf, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, attendedOf, shortlistOf, myScore]);
+  }, [properties, suburb, minBeds, minBaths, minParking, dMaxPrice, dQ, sort, scoreOf, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, attendedOf, shortlistOf, myScore, viewedFilter, viewedSet, ratedFilter, isRated, newFilter]);
 
   // Hand the current on-screen order to the detail page's prev/next pager, so
   // stepping through listings follows the filter+sort you're actually looking
@@ -946,9 +1014,13 @@ export default function PropertyGrid({
     hideUnderOffer && "no under-offer",
     hideAuction && "no auction",
     hideDelisted && "no sold",
-    inspectingFilter && "inspecting this weekend",
-    attendedFilter === "attended" && "attended",
-    attendedFilter === "not-attended" && "not attended",
+    inspectingFilter !== "off" &&
+      (inspectingFilter === "in" ? "inspecting this weekend" : "not inspecting this weekend"),
+    attendedFilter !== "off" && (attendedFilter === "in" ? "attended" : "not attended"),
+    viewedFilter !== "off" && (viewedFilter === "in" ? "viewed" : "not viewed"),
+    ratedFilter !== "off" && (ratedFilter === "in" ? "rated" : "unrated"),
+    newFilter !== "off" &&
+      (newFilter === "1w" ? "new this week" : `new these ${parseInt(newFilter, 10)} weeks`),
     q.trim() && `“${q.trim()}”`,
   ].filter(Boolean) as string[];
 
@@ -967,7 +1039,10 @@ export default function PropertyGrid({
     setHideUnderOffer(false);
     setHideDelisted(false);
     setAttendedFilter("off");
-    setInspectingFilter(false);
+    setViewedFilter("off");
+    setRatedFilter("off");
+    setNewFilter("off");
+    setInspectingFilter("off");
   };
 
   const pinBtn = (
@@ -1163,26 +1238,23 @@ export default function PropertyGrid({
         <div className="hidden h-6 w-px bg-line sm:block" />
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <span className="label-cap">Filter</span>
+          <TriChip
+            value={inspectingFilter}
+            onChange={setInspectingFilter}
+            label="Inspecting this weekend"
+            exLabel="Not inspecting this weekend"
+          />
+          <TriChip value={attendedFilter} onChange={setAttendedFilter} label="Attended" exLabel="Not attended" />
+          <TriChip value={viewedFilter} onChange={setViewedFilter} label="Viewed" exLabel="Not viewed" />
+          <TriChip value={ratedFilter} onChange={setRatedFilter} label="Rated" exLabel="Unrated" />
+          {/* New is include-only, so it just cycles 1→4 weeks and back off. */}
           <button
-            onClick={() => setInspectingFilter((v) => !v)}
-            className={`chip ${inspectingFilter ? "chip-on" : "hover:border-forest"}`}
+            type="button"
+            onClick={() => setNewFilter((v) => (v === "off" ? "1w" : v === "4w" ? "off" : `${parseInt(v, 10) + 1}w`))}
+            title={newFilter === "4w" ? "Show all" : `Show only new (last ${newFilter === "off" ? 1 : parseInt(newFilter, 10) + 1} week${newFilter === "off" ? "" : "s"})`}
+            className={`chip whitespace-nowrap ${newFilter !== "off" ? "chip-on" : "hover:border-forest"}`}
           >
-            Inspecting this weekend
-          </button>
-          <button
-            onClick={() =>
-              setAttendedFilter((v) => (v === "off" ? "attended" : v === "attended" ? "not-attended" : "off"))
-            }
-            title={
-              attendedFilter === "off"
-                ? "Show only attended"
-                : attendedFilter === "attended"
-                  ? "Show only not-attended"
-                  : "Show all"
-            }
-            className={`chip ${attendedFilter !== "off" ? "chip-on" : "hover:border-forest"}`}
-          >
-            {attendedFilter === "not-attended" ? "Not attended" : "Attended"}
+            {newFilter === "off" ? "New" : `New (${parseInt(newFilter, 10)}wk)`}
           </button>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto sm:flex-nowrap">
