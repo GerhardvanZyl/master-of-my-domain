@@ -133,6 +133,43 @@ async function main() {
   });
   assert.notEqual(otherId, twinId, "a different street number stays a separate property");
 
+  // The CLI bulk loader must make the SAME call. It keys on listing_url, so a
+  // harvest of the same house under a new URL used to insert a duplicate that
+  // ingest would have merged — leaving your ratings on the row you can't see.
+  const { loadProperties } = await import("../src/db/queries/load");
+  const before = (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c;
+  loadProperties([
+    {
+      listingUrl: "https://www.domain.com.au/12-test-st-testville-nsw-2000-RELISTED",
+      sourceSite: "domain",
+      address: "12 Test St",
+      suburb: "Testville",
+      beds: 5,
+    },
+  ]);
+  const after = (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c;
+  assert.equal(after, before, "a relisted URL for a known address does not add a row");
+  const reloaded = sqlite
+    .prepare("SELECT beds, listing_url FROM properties WHERE id = ?")
+    .get(twinId) as Record<string, unknown>;
+  assert.equal(reloaded.beds, 5, "the load updated the existing row");
+  assert.equal(reloaded.listing_url, raw.url, "the load kept the canonical listing_url");
+
+  // …and a genuinely new address still inserts.
+  loadProperties([
+    {
+      listingUrl: "https://www.domain.com.au/99-elsewhere-rd-testville-nsw-2000-123",
+      sourceSite: "domain",
+      address: "99 Elsewhere Rd",
+      suburb: "Testville",
+    },
+  ]);
+  assert.equal(
+    (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c,
+    before + 1,
+    "an unknown address still inserts a new row",
+  );
+
   sqlite.close();
   try {
     fs.rmSync(tmp, { recursive: true, force: true });
