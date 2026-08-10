@@ -42,7 +42,8 @@ const PRICE_MAX = 1_500_000; // slider top = "no cap"
 const PRICE_STEP = 25_000;
 const fmtK = (n: number) => (n >= PRICE_MAX ? "any" : `$${(n / 1000).toFixed(0)}k`);
 
-// Vibe rating buttons shown on each tile (mirror RatingControls' VIBE row).
+// Vibe rating buttons shown on each tile. Values and point deltas must stay in
+// step with DEFAULT_VIBE_CONFIG (lib/vibes.ts) and the rating route's VOCAB.
 const VIBE_OPTS = [
   { v: "like", emoji: "😍", label: "Like" },
   { v: "meh", emoji: "😐", label: "Meh" },
