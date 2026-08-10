@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
-import { listMedia, mediaDirFor, safeName, MEDIA_MIME } from "@/lib/media";
+import { listMedia, mediaDirFor, safeName, isSupportedMedia } from "@/lib/media";
 
 export const runtime = "nodejs";
 
@@ -19,15 +19,32 @@ export async function POST(
   if (files.length === 0) {
     return NextResponse.json({ error: "no files" }, { status: 400 });
   }
-  fs.mkdirSync(dir, { recursive: true });
+  await fs.promises.mkdir(dir, { recursive: true });
+  const skipped: string[] = [];
+  let saved = 0;
   for (const file of files) {
     const name = safeName(file.name || "upload");
-    if (!MEDIA_MIME[path.extname(name).toLowerCase()]) continue; // skip unknown types
+    if (!isSupportedMedia(name)) {
+      skipped.push(name);
+      continue;
+    }
     // Prefix keeps same-named uploads from clobbering each other.
     const dest = path.join(dir, `${Date.now()}-${name}`);
-    fs.writeFileSync(dest, Buffer.from(await file.arrayBuffer()));
+    // Async write: a walk-through video is tens of MB, and writeFileSync parks
+    // the single Node thread on disk I/O for the whole file (same reason
+    // /api/img went async).
+    await fs.promises.writeFile(dest, Buffer.from(await file.arrayBuffer()));
+    saved++;
   }
-  return NextResponse.json({ ok: true, media: listMedia(id) });
+  // A 200 here would tell the offline outbox the job is done and delete the
+  // queued photo — silently losing it. Nothing stored => say so.
+  if (saved === 0) {
+    return NextResponse.json(
+      { error: `unsupported file type: ${skipped.join(", ")}` },
+      { status: 415 },
+    );
+  }
+  return NextResponse.json({ ok: true, media: listMedia(id), skipped });
 }
 
 // DELETE /api/properties/<id>/media?name=<file>

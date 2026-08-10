@@ -1,0 +1,12 @@
+.git
+node_modules
+.next
+.next-test
+.superpowers
+# 2.8 GB of images + the SQLite file — bind-mounted at runtime, never baked in.
+data
+certs
+docs
+design
+test
+*.log

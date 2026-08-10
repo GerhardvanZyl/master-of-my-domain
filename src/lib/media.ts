@@ -20,6 +20,12 @@ export const MEDIA_MIME: Record<string, string> = {
   ".webm": "video/webm",
 };
 
+/** A filename this app will store and serve. One predicate, so the upload
+ *  route rejects exactly what listMedia would refuse to show. */
+export function isSupportedMedia(name: string): boolean {
+  return MEDIA_MIME[path.extname(name).toLowerCase()] != null;
+}
+
 /** Strip anything that could escape the property folder, keep it recognisable. */
 export function safeName(name: string): string {
   return path.basename(name).replace(/[^\w.\- ]+/g, "_").slice(-120);
@@ -36,7 +42,7 @@ export function listMedia(propertyId: string): MediaItem[] {
   if (!dir || !fs.existsSync(dir)) return [];
   return fs
     .readdirSync(dir)
-    .filter((n) => MEDIA_MIME[path.extname(n).toLowerCase()])
+    .filter(isSupportedMedia)
     .sort()
     .map((name) => ({
       name,

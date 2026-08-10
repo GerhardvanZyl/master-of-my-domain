@@ -8,11 +8,16 @@ import type { NormalizedProperty } from "./types";
  * Street address, comparable across sites: lowercase, unit separators unified
  * ("4/275" stays distinct from "275"), punctuation and suburb/state/postcode
  * tail dropped so "5 Foo St, Point Cook VIC 3030" == "5 Foo Street".
+ *
+ * Postcode is deliberately NOT part of the key: it carries no information the
+ * suburb doesn't already carry (an AU suburb has one postcode), but a listing
+ * captured without one used to get key "…|point cook|" which could never equal
+ * the stored "…|point cook|3030" — so the twin never matched and the same house
+ * got a second row with none of its ratings, notes or deduced metadata.
  */
-function addressKey(p: {
+export function addressKey(p: {
   address?: string | null;
   suburb?: string | null;
-  postcode?: string | null;
 }): string | null {
   if (!p.address) return null;
   const street = p.address.split(",")[0];
@@ -30,10 +35,38 @@ function addressKey(p: {
     .replace(/[^a-z0-9/]+/g, " ")
     .trim();
   if (!key) return null;
-  return `${key}|${(p.suburb ?? "").toLowerCase().trim()}|${p.postcode ?? ""}`;
+  return `${key}|${(p.suburb ?? "").toLowerCase().trim()}`;
 }
 
 export { addressKey as __addressKeyForTest };
+
+/**
+ * The existing property for a house, matched on address rather than URL — the
+ * same twin lookup upsertProperty does, shared so the bulk loader (queries/load.ts)
+ * can't drift away from ingest and start minting the duplicates ingest avoids.
+ * Returns null when the input has no usable address or nothing matches.
+ */
+export function findTwinByAddress(p: {
+  address?: string | null;
+  suburb?: string | null;
+}): string | null {
+  const key = addressKey(p);
+  if (!key) return null;
+  // ponytail: compare the key against every row rather than pre-filtering in
+  // SQL. Ingest and bulk loads happen a few times a day over ~300 rows, and a
+  // narrowing predicate that disagrees with the key is exactly how the postcode
+  // bug hid. Add an index only if this ever shows up in a trace.
+  const twin = db
+    .select({
+      id: properties.id,
+      address: properties.address,
+      suburb: properties.suburb,
+    })
+    .from(properties)
+    .all()
+    .find((r) => addressKey(r) === key);
+  return twin?.id ?? null;
+}
 
 /**
  * Upsert a property keyed by listing_url. Returns the property id.
@@ -92,31 +125,18 @@ export function upsertProperty(
   }
 
   // Same house from the other site? Attach to it rather than making a twin.
-  const key = addressKey(p);
-  if (key) {
-    const twin = db
-      .select({
-        id: properties.id,
-        address: properties.address,
-        suburb: properties.suburb,
-        postcode: properties.postcode,
-      })
-      .from(properties)
-      .where(eq(properties.postcode, p.postcode ?? ""))
-      .all()
-      .find((r) => addressKey(r) === key);
-    if (twin) {
-      // Only overwrite with values the newcomer actually has; never clobber the
-      // canonical listing_url / source_site.
-      const merged = Object.fromEntries(
-        Object.entries(row).filter(
-          ([k, v]) =>
-            v != null && k !== "listingUrl" && k !== "sourceSite" && k !== "externalId",
-        ),
-      );
-      db.update(properties).set(merged).where(eq(properties.id, twin.id)).run();
-      return twin.id;
-    }
+  const twinId = findTwinByAddress(p);
+  if (twinId) {
+    // Only overwrite with values the newcomer actually has; never clobber the
+    // canonical listing_url / source_site.
+    const merged = Object.fromEntries(
+      Object.entries(row).filter(
+        ([k, v]) =>
+          v != null && k !== "listingUrl" && k !== "sourceSite" && k !== "externalId",
+      ),
+    );
+    db.update(properties).set(merged).where(eq(properties.id, twinId)).run();
+    return twinId;
   }
   const id = newId("prop");
   db.insert(properties)

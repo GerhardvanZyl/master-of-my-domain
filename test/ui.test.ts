@@ -17,12 +17,34 @@ import http from "node:http";
 import net from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { spawn, type ChildProcess } from "node:child_process";
+import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import Database from "better-sqlite3";
 import type { BrowserContext, Page } from "playwright-core";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pc-ui-"));
+
+/** The dev server this run booted. Module-scoped so the teardown in .finally()
+ *  reaches it even when main() throws before its own cleanup. */
+let server: ChildProcess | undefined;
+
+/**
+ * Kill the dev server AND its children. On Windows `spawn("npx.cmd", …, {shell:
+ * true})` builds a cmd.exe → npx-cli → next dev → start-server chain, and
+ * `kill()` signals only the top of it: every run used to leak a live Next
+ * server holding its port, the copied DB and a .next-test handle (which then
+ * made the rmSync below fail, and left stale route types behind to break the
+ * next `next build`).
+ */
+function killServer(): void {
+  if (!server?.pid) return;
+  if (process.platform === "win32") {
+    spawnSync("taskkill", ["/pid", String(server.pid), "/T", "/F"], { stdio: "ignore" });
+  } else {
+    server.kill();
+  }
+  server = undefined;
+}
 
 // ---------------------------------------------------------------- tiny runner
 let passed = 0;
@@ -155,7 +177,6 @@ async function chooseProfile(page: Page, name = "Gerhard") {
 
 async function main() {
   const base = process.env.BASE_URL ?? `http://localhost:${await freePort()}`;
-  let server: ChildProcess | undefined;
 
   if (!process.env.BASE_URL) {
     const dbPath = snapshotDb();
@@ -552,6 +573,14 @@ async function main() {
   // A short phrase forced to wrap into 3+ lines means a column too narrow for it
   // (e.g. distance text crushed next to buttons). Flags cramped/squashed layout
   // that a horizontal-scroll check can't see.
+  //
+  // CAVEAT, measured 2026-08-09: this runs with fonts.googleapis.com aborted (see
+  // ctx.route below), so headings render in the fallback serif, which is wider
+  // than Instrument Serif. On the home grid that is the whole difference between
+  // pass and fail — with the real font loaded 0 of 337 addresses wrap to 3 lines;
+  // with it blocked, 2 do ("224 Saltwater Promenade…", "105 Williams Landing
+  // Boulevard…"). Before changing any card CSS to chase a failure here, check
+  // whether it reproduces with the font actually loaded.
   async function squashOffenders(url: string) {
     await page.setViewportSize(MOBILE);
     await page.goto(url, { waitUntil: "domcontentloaded" });
@@ -651,7 +680,7 @@ async function main() {
 
   await ctx.close();
   await closeBrowser();
-  server?.kill();
+  killServer();
 
   console.log(`\n${passed} passed, ${failures.length} failed`);
   if (failures.length) {
@@ -666,6 +695,9 @@ main()
     process.exitCode = 1;
   })
   .finally(() => {
+    // Belt and braces: main() kills the server on its happy path, but a throw
+    // anywhere above that would otherwise strand it.
+    killServer();
     // Windows keeps SQLite/Next handles open a moment after the processes die;
     // a leftover temp dir isn't worth failing the run over.
     for (const dir of [tmp, path.join(ROOT, ".next-test")]) {

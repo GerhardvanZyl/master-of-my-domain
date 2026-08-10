@@ -130,6 +130,27 @@ label, and group membership ignores duplicates.
 - `/rooms`: browse all photos of a room type across properties, or open a
   similarity group to see the curated side-by-side comparison.
 
+## Offline capture
+
+Notes and photos can be taken at an inspection with no connection and sync when
+you're back on the network.
+
+- `public/sw.js` — network-first for page navigations (cached copy when the
+  server is unreachable), cache-first for `/_next/static`, `/api/img`,
+  `/api/media` and `/icons`. API reads are never cached: stale property data is
+  worse than none. Bump `CACHE` to invalidate everything.
+- `src/lib/outbox.ts` — IndexedDB queue (`pc-outbox`/`queue`). `queue()` parks a
+  job, `flush()` replays oldest-first and stops at the first job that needs a
+  retry. Notes are last-write-wins per property; a 4xx drops the job so it can't
+  jam the queue, a 5xx or network error keeps it.
+- `src/components/SyncStatus.tsx` — header pill (count + manual retry) and the
+  thing that actually drives `flush()`, on mount and on the `online` event.
+  Rendered on every page, so anything queued syncs as soon as you open the app.
+- `NotesEditor` and `MediaUploader` fall back to the outbox when their fetch
+  throws; pending photos render with an amber "pending" badge until they upload.
+- **Only pages visited while online are available offline.** There's no route
+  precache — property pages are server-rendered per request.
+
 ## Conventions
 - Keep the DDL in `src/db/ddl.ts` in sync with `src/db/schema.ts`.
 - `price_history` rows with `event = 'Sold'`: `date` is the real sale date when

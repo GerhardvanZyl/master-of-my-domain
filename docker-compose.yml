@@ -1,0 +1,10 @@
+services:
+  app:
+    build: .
+    image: property-compare
+    ports:
+      - "3225:3225"
+    volumes:
+      # Must be real local disk — SQLite WAL does not survive NFS/SMB.
+      - ./data:/app/data
+    restart: unless-stopped

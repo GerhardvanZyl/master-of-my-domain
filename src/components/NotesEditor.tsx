@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { queue } from "@/lib/outbox";
 
-/** Editable "My notes" box for a property. Persists to /api/properties/<id>/notes. */
+/** Editable "My notes" box for a property. Persists to /api/properties/<id>/notes,
+ *  or to the offline outbox when the server can't be reached. */
 export default function NotesEditor({
   propertyId,
   initial,
@@ -13,23 +15,30 @@ export default function NotesEditor({
 }) {
   const router = useRouter();
   const [value, setValue] = useState(initial ?? "");
-  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "queued" | "error">("idle");
   const dirty = value !== (initial ?? "");
 
   async function save() {
     setState("saving");
+    let res: Response;
     try {
-      const res = await fetch(`/api/properties/${encodeURIComponent(propertyId)}/notes`, {
+      res = await fetch(`/api/properties/${encodeURIComponent(propertyId)}/notes`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ domainNotes: value }),
       });
-      if (!res.ok) throw new Error(String(res.status));
-      setState("saved");
-      router.refresh();
     } catch {
-      setState("error");
+      // Unreachable server — park it and let SyncStatus replay it later.
+      await queue({ kind: "notes", propertyId, text: value });
+      setState("queued");
+      return;
     }
+    if (!res.ok) {
+      setState("error");
+      return;
+    }
+    setState("saved");
+    router.refresh();
   }
 
   return (
@@ -54,6 +63,7 @@ export default function NotesEditor({
         </button>
         {state === "saving" && <span className="text-mute">saving…</span>}
         {state === "saved" && !dirty && <span className="text-forest">saved ✓</span>}
+        {state === "queued" && <span className="text-amber">saved offline — syncs later</span>}
         {state === "error" && <span className="text-[#B84A3A]">save failed</span>}
       </div>
     </div>

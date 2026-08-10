@@ -164,11 +164,31 @@ export function vibeScore(
 }
 
 const KEY = "vibeConfig";
+
+/**
+ * Every VibeConfig field is a finite number, so anything else in the stored JSON
+ * is dropped in favour of the default. Spreading the parsed object wholesale let
+ * one bad value (a hand-edited string, a null, a NaN from an old bug) reach the
+ * arithmetic in vibeBreakdown, and NaN propagates: the score, the sort order and
+ * every tile's badge all go to NaN at once, with nothing on screen explaining
+ * why. Unknown keys are dropped for the same reason.
+ */
+export function parseVibeConfig(raw: unknown): VibeConfig {
+  if (!raw || typeof raw !== "object") return DEFAULT_VIBE_CONFIG;
+  const src = raw as Record<string, unknown>;
+  const out = { ...DEFAULT_VIBE_CONFIG };
+  for (const k of Object.keys(DEFAULT_VIBE_CONFIG) as (keyof VibeConfig)[]) {
+    const v = src[k];
+    if (typeof v === "number" && Number.isFinite(v)) out[k] = v;
+  }
+  return out;
+}
+
 export function loadVibeConfig(): VibeConfig {
   if (typeof localStorage === "undefined") return DEFAULT_VIBE_CONFIG;
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? { ...DEFAULT_VIBE_CONFIG, ...JSON.parse(raw) } : DEFAULT_VIBE_CONFIG;
+    return raw ? parseVibeConfig(JSON.parse(raw)) : DEFAULT_VIBE_CONFIG;
   } catch {
     return DEFAULT_VIBE_CONFIG;
   }

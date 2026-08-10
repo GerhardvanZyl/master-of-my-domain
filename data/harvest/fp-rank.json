@@ -1,0 +1,3118 @@
+[
+ {
+  "id": "6d23424a-4432-4530-b692-e6a361b1bfb9",
+  "external_id": "2020870533",
+  "listing_url": "https://www.domain.com.au/21-mirri-drive-torquay-vic-3228-2020870533",
+  "address": "21 Mirri Drive, Torquay, VIC, 3228",
+  "suburb": "Torquay",
+  "state": "VIC",
+  "price_numeric": 845000,
+  "price_display": "$845,000 - $895,000",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T12:30:00+10:00",
+  "st": null,
+  "nimg": 16,
+  "nfp": 0,
+  "total": 16,
+  "candidates": [
+   {
+    "id": "img_8b3e76cdb156",
+    "ord": 15,
+    "w": 1762,
+    "h": 1080,
+    "a": 1.631,
+    "room": "exclude",
+    "path": "images\\6d23424a-4432-4530-b692-e6a361b1bfb9\\img_8b3e76cdb156.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_3fdfb8002fe4",
+    "ord": 13,
+    "a": 1.5,
+    "path": "images\\6d23424a-4432-4530-b692-e6a361b1bfb9\\img_3fdfb8002fe4.webp"
+   },
+   {
+    "id": "img_a66e502f4e3e",
+    "ord": 14,
+    "a": 1.5,
+    "path": "images\\6d23424a-4432-4530-b692-e6a361b1bfb9\\img_a66e502f4e3e.webp"
+   },
+   {
+    "id": "img_8b3e76cdb156",
+    "ord": 15,
+    "a": 1.631,
+    "path": "images\\6d23424a-4432-4530-b692-e6a361b1bfb9\\img_8b3e76cdb156.webp"
+   }
+  ],
+  "tailOffBand": 1,
+  "sc": 3.8
+ },
+ {
+  "id": "795b5901-e592-4e02-8555-41ad62196c12",
+  "external_id": "2021050903",
+  "listing_url": "https://www.domain.com.au/18-carnegie-road-point-cook-vic-3030-2021050903",
+  "address": "18 Carnegie Road, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": 880000,
+  "price_display": "$880,000 to $920,000",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": null,
+  "nimg": 14,
+  "nfp": 0,
+  "total": 14,
+  "candidates": [
+   {
+    "id": "img_b87bf9885504",
+    "ord": 0,
+    "w": 1432,
+    "h": 888,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_b87bf9885504.webp"
+   },
+   {
+    "id": "img_8b79121df5e3",
+    "ord": 1,
+    "w": 1432,
+    "h": 888,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_8b79121df5e3.webp"
+   },
+   {
+    "id": "img_019d1176ad0f",
+    "ord": 2,
+    "w": 1432,
+    "h": 888,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_019d1176ad0f.webp"
+   },
+   {
+    "id": "img_841c98d7c197",
+    "ord": 3,
+    "w": 1432,
+    "h": 888,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_841c98d7c197.webp"
+   },
+   {
+    "id": "img_21a7aaffbb09",
+    "ord": 4,
+    "w": 1432,
+    "h": 888,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_21a7aaffbb09.webp"
+   },
+   {
+    "id": "img_9db1ad53704f",
+    "ord": 5,
+    "w": 1432,
+    "h": 888,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_9db1ad53704f.webp"
+   },
+   {
+    "id": "img_e3db5c8c72d2",
+    "ord": 6,
+    "w": 1432,
+    "h": 888,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_e3db5c8c72d2.webp"
+   },
+   {
+    "id": "img_c8b414461d65",
+    "ord": 7,
+    "w": 1268,
+    "h": 786,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_c8b414461d65.webp"
+   },
+   {
+    "id": "img_8c10c3e408c8",
+    "ord": 8,
+    "w": 1268,
+    "h": 786,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_8c10c3e408c8.webp"
+   },
+   {
+    "id": "img_b04018243b31",
+    "ord": 9,
+    "w": 1268,
+    "h": 786,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_b04018243b31.webp"
+   },
+   {
+    "id": "img_b2d0116e6fbd",
+    "ord": 10,
+    "w": 1440,
+    "h": 896,
+    "a": 1.607,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_b2d0116e6fbd.webp"
+   },
+   {
+    "id": "img_86c2f5b98950",
+    "ord": 11,
+    "w": 1432,
+    "h": 888,
+    "a": 1.613,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_86c2f5b98950.webp"
+   },
+   {
+    "id": "img_d2981de7e0ed",
+    "ord": 12,
+    "w": 1440,
+    "h": 896,
+    "a": 1.607,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_d2981de7e0ed.webp"
+   },
+   {
+    "id": "img_a40455f9e78a",
+    "ord": 13,
+    "w": 1440,
+    "h": 896,
+    "a": 1.607,
+    "room": null,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_a40455f9e78a.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_86c2f5b98950",
+    "ord": 11,
+    "a": 1.613,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_86c2f5b98950.webp"
+   },
+   {
+    "id": "img_d2981de7e0ed",
+    "ord": 12,
+    "a": 1.607,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_d2981de7e0ed.webp"
+   },
+   {
+    "id": "img_a40455f9e78a",
+    "ord": 13,
+    "a": 1.607,
+    "path": "images\\795b5901-e592-4e02-8555-41ad62196c12\\img_a40455f9e78a.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": 3.8
+ },
+ {
+  "id": "3943a576-c6fd-449f-b5fb-b559b4b39210",
+  "external_id": "2020812250",
+  "listing_url": "https://www.domain.com.au/34-lightwood-street-torquay-vic-3228-2020812250",
+  "address": "34 Lightwood Street, Torquay, VIC, 3228",
+  "suburb": "Torquay",
+  "state": "VIC",
+  "price_numeric": 870000,
+  "price_display": "$870,000 - $899,000",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T10:00:00+10:00",
+  "st": null,
+  "nimg": 12,
+  "nfp": 0,
+  "total": 12,
+  "candidates": [
+   {
+    "id": "img_b185c8a99987",
+    "ord": 0,
+    "w": 1438,
+    "h": 1080,
+    "a": 1.331,
+    "room": "living",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_b185c8a99987.webp"
+   },
+   {
+    "id": "img_279abb6d2748",
+    "ord": 1,
+    "w": 1456,
+    "h": 1080,
+    "a": 1.348,
+    "room": "living",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_279abb6d2748.webp"
+   },
+   {
+    "id": "img_728d3bd07c93",
+    "ord": 2,
+    "w": 1443,
+    "h": 1080,
+    "a": 1.336,
+    "room": "kitchen",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_728d3bd07c93.webp"
+   },
+   {
+    "id": "img_65cabe6bf049",
+    "ord": 3,
+    "w": 1457,
+    "h": 1079,
+    "a": 1.35,
+    "room": "bedroom",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_65cabe6bf049.webp"
+   },
+   {
+    "id": "img_64054d416bb4",
+    "ord": 4,
+    "w": 1446,
+    "h": 1080,
+    "a": 1.339,
+    "room": "bathroom",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_64054d416bb4.webp"
+   },
+   {
+    "id": "img_54dec3fc4760",
+    "ord": 5,
+    "w": 1451,
+    "h": 1080,
+    "a": 1.344,
+    "room": "bedroom",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_54dec3fc4760.webp"
+   },
+   {
+    "id": "img_72d480c4e47a",
+    "ord": 6,
+    "w": 1451,
+    "h": 1080,
+    "a": 1.344,
+    "room": "bedroom",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_72d480c4e47a.webp"
+   },
+   {
+    "id": "img_73dbe4fa1d5c",
+    "ord": 7,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_73dbe4fa1d5c.webp"
+   },
+   {
+    "id": "img_81f918d2fe96",
+    "ord": 8,
+    "w": 1456,
+    "h": 1080,
+    "a": 1.348,
+    "room": "bathroom",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_81f918d2fe96.webp"
+   },
+   {
+    "id": "img_f5855f023ea3",
+    "ord": 9,
+    "w": 1024,
+    "h": 769,
+    "a": 1.332,
+    "room": "exterior",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_f5855f023ea3.webp"
+   },
+   {
+    "id": "img_8259be292d3e",
+    "ord": 10,
+    "w": 1617,
+    "h": 972,
+    "a": 1.664,
+    "room": "other",
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_8259be292d3e.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_f5855f023ea3",
+    "ord": 9,
+    "a": 1.332,
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_f5855f023ea3.webp"
+   },
+   {
+    "id": "img_8259be292d3e",
+    "ord": 10,
+    "a": 1.664,
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_8259be292d3e.webp"
+   },
+   {
+    "id": "img_9e20b2005e89",
+    "ord": 11,
+    "a": 1.464,
+    "path": "images\\3943a576-c6fd-449f-b5fb-b559b4b39210\\img_9e20b2005e89.webp"
+   }
+  ],
+  "tailOffBand": 2,
+  "sc": 3.2
+ },
+ {
+  "id": "d66ef81f-1c2b-4e40-b20f-50b24d82a8df",
+  "external_id": "2020864598",
+  "listing_url": "https://www.domain.com.au/11-opperman-place-point-cook-vic-3030-2020864598",
+  "address": "11 Opperman Place, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": 820000,
+  "price_display": "$820,000 to $850,000",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 29,
+  "nfp": 0,
+  "total": 29,
+  "candidates": [
+   {
+    "id": "img_02dd337e4247",
+    "ord": 19,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_02dd337e4247.webp"
+   },
+   {
+    "id": "img_7c8ba60d9634",
+    "ord": 20,
+    "w": 720,
+    "h": 50,
+    "a": 14.4,
+    "room": "exclude",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_7c8ba60d9634.webp"
+   },
+   {
+    "id": "img_06a57a8f36bc",
+    "ord": 21,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_06a57a8f36bc.webp"
+   },
+   {
+    "id": "img_a792724f98d8",
+    "ord": 22,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_a792724f98d8.webp"
+   },
+   {
+    "id": "img_c93ffa241bcb",
+    "ord": 23,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_c93ffa241bcb.webp"
+   },
+   {
+    "id": "img_5a8e53ba59c9",
+    "ord": 24,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "other",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_5a8e53ba59c9.webp"
+   },
+   {
+    "id": "img_56033811ab6d",
+    "ord": 25,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_56033811ab6d.webp"
+   },
+   {
+    "id": "img_13dec6ac797e",
+    "ord": 26,
+    "w": 160,
+    "h": 160,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_13dec6ac797e.png"
+   },
+   {
+    "id": "img_7c38d4a6a53b",
+    "ord": 27,
+    "w": 1050,
+    "h": 192,
+    "a": 5.469,
+    "room": "exclude",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_7c38d4a6a53b.jpg"
+   },
+   {
+    "id": "img_c1fa7e1c6412",
+    "ord": 28,
+    "w": 154,
+    "h": 24,
+    "a": 6.417,
+    "room": "exclude",
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_c1fa7e1c6412.jpg"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_13dec6ac797e",
+    "ord": 26,
+    "a": 1,
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_13dec6ac797e.png"
+   },
+   {
+    "id": "img_7c38d4a6a53b",
+    "ord": 27,
+    "a": 5.469,
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_7c38d4a6a53b.jpg"
+   },
+   {
+    "id": "img_c1fa7e1c6412",
+    "ord": 28,
+    "a": 6.417,
+    "path": "images\\d66ef81f-1c2b-4e40-b20f-50b24d82a8df\\img_c1fa7e1c6412.jpg"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": 2.8
+ },
+ {
+  "id": "7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167",
+  "external_id": "2021040247",
+  "listing_url": "https://www.domain.com.au/91-baycrest-drive-point-cook-vic-3030-2021040247",
+  "address": "91 Baycrest Drive, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": 820000,
+  "price_display": "$820,000 to to $900,000 welcome offer",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T16:00:00+10:00",
+  "st": null,
+  "nimg": 17,
+  "nfp": 0,
+  "total": 17,
+  "candidates": [
+   {
+    "id": "img_d1fab6ddbc3f",
+    "ord": 0,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_d1fab6ddbc3f.webp"
+   },
+   {
+    "id": "img_5ffb99c2f7dc",
+    "ord": 1,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "kitchen",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_5ffb99c2f7dc.webp"
+   },
+   {
+    "id": "img_49a0e8ed5655",
+    "ord": 2,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_49a0e8ed5655.webp"
+   },
+   {
+    "id": "img_812bc303e117",
+    "ord": 3,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "kitchen",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_812bc303e117.webp"
+   },
+   {
+    "id": "img_514ded9ec918",
+    "ord": 4,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_514ded9ec918.webp"
+   },
+   {
+    "id": "img_45325d342df3",
+    "ord": 5,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_45325d342df3.webp"
+   },
+   {
+    "id": "img_617e848a22f8",
+    "ord": 6,
+    "w": 900,
+    "h": 674,
+    "a": 1.335,
+    "room": "bedroom",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_617e848a22f8.webp"
+   },
+   {
+    "id": "img_f08f7be58045",
+    "ord": 7,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_f08f7be58045.webp"
+   },
+   {
+    "id": "img_c82c8ca11c53",
+    "ord": 8,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_c82c8ca11c53.webp"
+   },
+   {
+    "id": "img_852fa95cdf44",
+    "ord": 9,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_852fa95cdf44.webp"
+   },
+   {
+    "id": "img_3d422a203e45",
+    "ord": 10,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_3d422a203e45.webp"
+   },
+   {
+    "id": "img_2f2288e6962f",
+    "ord": 11,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_2f2288e6962f.webp"
+   },
+   {
+    "id": "img_3fadc5cbc9f6",
+    "ord": 12,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_3fadc5cbc9f6.webp"
+   },
+   {
+    "id": "img_7ac60c0dd6de",
+    "ord": 13,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "other",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_7ac60c0dd6de.webp"
+   },
+   {
+    "id": "img_d00ce9e6b651",
+    "ord": 14,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_d00ce9e6b651.webp"
+   },
+   {
+    "id": "img_646c26dbf527",
+    "ord": 15,
+    "w": 900,
+    "h": 675,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_646c26dbf527.webp"
+   },
+   {
+    "id": "img_6bbacdb1d5d5",
+    "ord": 16,
+    "w": 900,
+    "h": 674,
+    "a": 1.335,
+    "room": "exterior",
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_6bbacdb1d5d5.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_d00ce9e6b651",
+    "ord": 14,
+    "a": 1.333,
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_d00ce9e6b651.webp"
+   },
+   {
+    "id": "img_646c26dbf527",
+    "ord": 15,
+    "a": 1.333,
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_646c26dbf527.webp"
+   },
+   {
+    "id": "img_6bbacdb1d5d5",
+    "ord": 16,
+    "a": 1.335,
+    "path": "images\\7a80bbc4-868e-4d0e-9e5d-71b2bd6a7167\\img_6bbacdb1d5d5.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": 2.8
+ },
+ {
+  "id": "48df99a6-c79f-4758-9cd6-5264e0680d08",
+  "external_id": "2020861708",
+  "listing_url": "https://www.domain.com.au/12-wurrak-crescent-torquay-vic-3228-2020861708",
+  "address": "12 Wurrak Crescent, Torquay, VIC, 3228",
+  "suburb": "Torquay",
+  "state": "VIC",
+  "price_numeric": 830000,
+  "price_display": "Price Adjustment: $830,000 - $860,000",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T13:00:00+10:00",
+  "st": null,
+  "nimg": 16,
+  "nfp": 0,
+  "total": 16,
+  "candidates": [
+   {
+    "id": "img_8a8c6c26888c",
+    "ord": 0,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_8a8c6c26888c.webp"
+   },
+   {
+    "id": "img_e3479b4ef026",
+    "ord": 1,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_e3479b4ef026.webp"
+   },
+   {
+    "id": "img_aa29199b5c0b",
+    "ord": 2,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "kitchen",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_aa29199b5c0b.webp"
+   },
+   {
+    "id": "img_2a0e11a0e995",
+    "ord": 3,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_2a0e11a0e995.webp"
+   },
+   {
+    "id": "img_ac6ff20211c9",
+    "ord": 4,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_ac6ff20211c9.webp"
+   },
+   {
+    "id": "img_db24f38221d5",
+    "ord": 5,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_db24f38221d5.webp"
+   },
+   {
+    "id": "img_f11a4ffe65d1",
+    "ord": 6,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_f11a4ffe65d1.webp"
+   },
+   {
+    "id": "img_bde10d4947f0",
+    "ord": 7,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_bde10d4947f0.webp"
+   },
+   {
+    "id": "img_2f21ad9d2c96",
+    "ord": 8,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_2f21ad9d2c96.webp"
+   },
+   {
+    "id": "img_68772d36daf7",
+    "ord": 9,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_68772d36daf7.webp"
+   },
+   {
+    "id": "img_f8c93f966e52",
+    "ord": 10,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_f8c93f966e52.webp"
+   },
+   {
+    "id": "img_9a30e8b146c4",
+    "ord": 11,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_9a30e8b146c4.webp"
+   },
+   {
+    "id": "img_e5427caba777",
+    "ord": 12,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_e5427caba777.webp"
+   },
+   {
+    "id": "img_ce74406bea6f",
+    "ord": 13,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_ce74406bea6f.webp"
+   },
+   {
+    "id": "img_876805b03bac",
+    "ord": 14,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_876805b03bac.webp"
+   },
+   {
+    "id": "img_f75c43b5acf4",
+    "ord": 15,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_f75c43b5acf4.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_ce74406bea6f",
+    "ord": 13,
+    "a": 1.333,
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_ce74406bea6f.webp"
+   },
+   {
+    "id": "img_876805b03bac",
+    "ord": 14,
+    "a": 1.333,
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_876805b03bac.webp"
+   },
+   {
+    "id": "img_f75c43b5acf4",
+    "ord": 15,
+    "a": 1.333,
+    "path": "images\\48df99a6-c79f-4758-9cd6-5264e0680d08\\img_f75c43b5acf4.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": 2.2
+ },
+ {
+  "id": "06363519-6615-4080-bf6a-d3f2b65ba587",
+  "external_id": "2021007758",
+  "listing_url": "https://www.domain.com.au/33-mirri-drive-torquay-vic-3228-2021007758",
+  "address": "33 Mirri Drive, Torquay, VIC, 3228",
+  "suburb": "Torquay",
+  "state": "VIC",
+  "price_numeric": 895000,
+  "price_display": "$895,000 - $975,000",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": null,
+  "nimg": 15,
+  "nfp": 0,
+  "total": 15,
+  "candidates": [
+   {
+    "id": "img_46fc59f64df6",
+    "ord": 0,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_46fc59f64df6.webp"
+   },
+   {
+    "id": "img_06e58e55a063",
+    "ord": 1,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_06e58e55a063.webp"
+   },
+   {
+    "id": "img_f81b501dfa93",
+    "ord": 2,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "aerial",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_f81b501dfa93.webp"
+   },
+   {
+    "id": "img_1ae505a272f1",
+    "ord": 3,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_1ae505a272f1.webp"
+   },
+   {
+    "id": "img_bb7cb4cfed63",
+    "ord": 4,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "kitchen",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_bb7cb4cfed63.webp"
+   },
+   {
+    "id": "img_97fc28acfd74",
+    "ord": 5,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_97fc28acfd74.webp"
+   },
+   {
+    "id": "img_907ee982c79f",
+    "ord": 6,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_907ee982c79f.webp"
+   },
+   {
+    "id": "img_bb46266e3c9a",
+    "ord": 7,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_bb46266e3c9a.webp"
+   },
+   {
+    "id": "img_11f50a5e9d6e",
+    "ord": 8,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_11f50a5e9d6e.webp"
+   },
+   {
+    "id": "img_7f43bcf7caf2",
+    "ord": 9,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_7f43bcf7caf2.webp"
+   },
+   {
+    "id": "img_794278ead3ee",
+    "ord": 10,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_794278ead3ee.webp"
+   },
+   {
+    "id": "img_088a74c7aa1b",
+    "ord": 11,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_088a74c7aa1b.webp"
+   },
+   {
+    "id": "img_3d0ded3f30b2",
+    "ord": 12,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_3d0ded3f30b2.webp"
+   },
+   {
+    "id": "img_d64ea7798e81",
+    "ord": 13,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "aerial",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_d64ea7798e81.webp"
+   },
+   {
+    "id": "img_c1f6700bcb8a",
+    "ord": 14,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_c1f6700bcb8a.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_3d0ded3f30b2",
+    "ord": 12,
+    "a": 1.333,
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_3d0ded3f30b2.webp"
+   },
+   {
+    "id": "img_d64ea7798e81",
+    "ord": 13,
+    "a": 1.333,
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_d64ea7798e81.webp"
+   },
+   {
+    "id": "img_c1f6700bcb8a",
+    "ord": 14,
+    "a": 1.333,
+    "path": "images\\06363519-6615-4080-bf6a-d3f2b65ba587\\img_c1f6700bcb8a.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": 2.2
+ },
+ {
+  "id": "5b1200b8-91cc-41a7-b1d8-7d3307793306",
+  "external_id": "2020736595",
+  "listing_url": "https://www.domain.com.au/point-cook-vic-3030-2020736595",
+  "address": "Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": 904000,
+  "price_display": "$904,000",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 3,
+  "nfp": 0,
+  "total": 3,
+  "candidates": [
+   {
+    "id": "img_fdef84c55db3",
+    "ord": 1,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\5b1200b8-91cc-41a7-b1d8-7d3307793306\\img_fdef84c55db3.webp"
+   },
+   {
+    "id": "img_20ec14dcd4d3",
+    "ord": 2,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\5b1200b8-91cc-41a7-b1d8-7d3307793306\\img_20ec14dcd4d3.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_3f111cf37275",
+    "ord": 0,
+    "a": 1.5,
+    "path": "images\\5b1200b8-91cc-41a7-b1d8-7d3307793306\\img_3f111cf37275.webp"
+   },
+   {
+    "id": "img_fdef84c55db3",
+    "ord": 1,
+    "a": 1,
+    "path": "images\\5b1200b8-91cc-41a7-b1d8-7d3307793306\\img_fdef84c55db3.webp"
+   },
+   {
+    "id": "img_20ec14dcd4d3",
+    "ord": 2,
+    "a": 1,
+    "path": "images\\5b1200b8-91cc-41a7-b1d8-7d3307793306\\img_20ec14dcd4d3.webp"
+   }
+  ],
+  "tailOffBand": 2,
+  "sc": 1.8399999999999999
+ },
+ {
+  "id": "1b0f3e18-d95d-4f60-a596-25a8bc048285",
+  "external_id": "2021002962",
+  "listing_url": "https://www.domain.com.au/22-macfarlane-street-torquay-vic-3228-2021002962",
+  "address": "22 Macfarlane Street, Torquay, VIC, 3228",
+  "suburb": "Torquay",
+  "state": "VIC",
+  "price_numeric": 820000,
+  "price_display": "$820,000 - $860,000",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T10:00:00+10:00",
+  "st": null,
+  "nimg": 12,
+  "nfp": 0,
+  "total": 12,
+  "candidates": [
+   {
+    "id": "img_1ef22de4bca7",
+    "ord": 0,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\1b0f3e18-d95d-4f60-a596-25a8bc048285\\img_1ef22de4bca7.webp"
+   },
+   {
+    "id": "img_3a568e387ad8",
+    "ord": 6,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\1b0f3e18-d95d-4f60-a596-25a8bc048285\\img_3a568e387ad8.webp"
+   },
+   {
+    "id": "img_ce51f6305a8e",
+    "ord": 8,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\1b0f3e18-d95d-4f60-a596-25a8bc048285\\img_ce51f6305a8e.webp"
+   },
+   {
+    "id": "img_fa6dc13c86f6",
+    "ord": 9,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\1b0f3e18-d95d-4f60-a596-25a8bc048285\\img_fa6dc13c86f6.webp"
+   },
+   {
+    "id": "img_fdbab52e3524",
+    "ord": 10,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\1b0f3e18-d95d-4f60-a596-25a8bc048285\\img_fdbab52e3524.webp"
+   },
+   {
+    "id": "img_04e5ed859941",
+    "ord": 11,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\1b0f3e18-d95d-4f60-a596-25a8bc048285\\img_04e5ed859941.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_fa6dc13c86f6",
+    "ord": 9,
+    "a": 1.333,
+    "path": "images\\1b0f3e18-d95d-4f60-a596-25a8bc048285\\img_fa6dc13c86f6.webp"
+   },
+   {
+    "id": "img_fdbab52e3524",
+    "ord": 10,
+    "a": 1.333,
+    "path": "images\\1b0f3e18-d95d-4f60-a596-25a8bc048285\\img_fdbab52e3524.webp"
+   },
+   {
+    "id": "img_04e5ed859941",
+    "ord": 11,
+    "a": 1.333,
+    "path": "images\\1b0f3e18-d95d-4f60-a596-25a8bc048285\\img_04e5ed859941.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": 1.8
+ },
+ {
+  "id": "fff7cd52-e7e2-430a-b59f-bdd3a3bfc015",
+  "external_id": "2020685354",
+  "listing_url": "https://www.domain.com.au/49-coast-drive-torquay-vic-3228-2020685354",
+  "address": "49 Coast Drive, Torquay, VIC, 3228",
+  "suburb": "Torquay",
+  "state": "VIC",
+  "price_numeric": 895000,
+  "price_display": "$895,000",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": null,
+  "nimg": 14,
+  "nfp": 0,
+  "total": 14,
+  "candidates": [
+   {
+    "id": "img_06a329e5a5ae",
+    "ord": 0,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "kitchen",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_06a329e5a5ae.webp"
+   },
+   {
+    "id": "img_fcc579ab39cd",
+    "ord": 1,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_fcc579ab39cd.webp"
+   },
+   {
+    "id": "img_df28e44979b1",
+    "ord": 2,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_df28e44979b1.webp"
+   },
+   {
+    "id": "img_51703c56a6f1",
+    "ord": 3,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "dining",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_51703c56a6f1.webp"
+   },
+   {
+    "id": "img_e2738917331d",
+    "ord": 4,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_e2738917331d.webp"
+   },
+   {
+    "id": "img_a4b9b78ed3a0",
+    "ord": 5,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_a4b9b78ed3a0.webp"
+   },
+   {
+    "id": "img_1aea0b959067",
+    "ord": 6,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_1aea0b959067.webp"
+   },
+   {
+    "id": "img_443268d1498e",
+    "ord": 7,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_443268d1498e.webp"
+   },
+   {
+    "id": "img_a043b23e1f76",
+    "ord": 8,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_a043b23e1f76.webp"
+   },
+   {
+    "id": "img_3505c2b7f111",
+    "ord": 9,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_3505c2b7f111.webp"
+   },
+   {
+    "id": "img_9eac6d7d5fc0",
+    "ord": 10,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_9eac6d7d5fc0.webp"
+   },
+   {
+    "id": "img_8a3d02bbb158",
+    "ord": 11,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_8a3d02bbb158.webp"
+   },
+   {
+    "id": "img_2832c3fda046",
+    "ord": 12,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "aerial",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_2832c3fda046.webp"
+   },
+   {
+    "id": "img_a0fafc7e0849",
+    "ord": 13,
+    "w": 1200,
+    "h": 900,
+    "a": 1.333,
+    "room": "aerial",
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_a0fafc7e0849.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_8a3d02bbb158",
+    "ord": 11,
+    "a": 1.333,
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_8a3d02bbb158.webp"
+   },
+   {
+    "id": "img_2832c3fda046",
+    "ord": 12,
+    "a": 1.333,
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_2832c3fda046.webp"
+   },
+   {
+    "id": "img_a0fafc7e0849",
+    "ord": 13,
+    "a": 1.333,
+    "path": "images\\fff7cd52-e7e2-430a-b59f-bdd3a3bfc015\\img_a0fafc7e0849.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": 1.2
+ },
+ {
+  "id": "cae1db3b-fcb3-4b08-807b-e8f18f29e21d",
+  "external_id": "2020781592",
+  "listing_url": "https://www.domain.com.au/95-waterways-blvd-williams-landing-vic-3027-2020781592",
+  "address": "95 Waterways Blvd, Williams Landing, VIC, 3027",
+  "suburb": "Williams Landing",
+  "state": "VIC",
+  "price_numeric": 975000,
+  "price_display": "$975,000 to $1,050,000",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 21,
+  "nfp": 0,
+  "total": 21,
+  "candidates": [
+   {
+    "id": "img_5ab708fdd611",
+    "ord": 0,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "other",
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_5ab708fdd611.webp"
+   },
+   {
+    "id": "img_5a305dad5966",
+    "ord": 1,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "other",
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_5a305dad5966.webp"
+   },
+   {
+    "id": "img_2b0399c28a46",
+    "ord": 14,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "other",
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_2b0399c28a46.webp"
+   },
+   {
+    "id": "img_15244254bbfc",
+    "ord": 16,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_15244254bbfc.webp"
+   },
+   {
+    "id": "img_7f472635a6d1",
+    "ord": 17,
+    "w": 720,
+    "h": 50,
+    "a": 14.4,
+    "room": "exclude",
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_7f472635a6d1.webp"
+   },
+   {
+    "id": "img_a56d344017b5",
+    "ord": 18,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_a56d344017b5.webp"
+   },
+   {
+    "id": "img_cf3e9c13f442",
+    "ord": 19,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_cf3e9c13f442.webp"
+   },
+   {
+    "id": "img_5ddc4df49a89",
+    "ord": 20,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_5ddc4df49a89.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_a56d344017b5",
+    "ord": 18,
+    "a": 1,
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_a56d344017b5.webp"
+   },
+   {
+    "id": "img_cf3e9c13f442",
+    "ord": 19,
+    "a": 1,
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_cf3e9c13f442.webp"
+   },
+   {
+    "id": "img_5ddc4df49a89",
+    "ord": 20,
+    "a": 2.857,
+    "path": "images\\cae1db3b-fcb3-4b08-807b-e8f18f29e21d\\img_5ddc4df49a89.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": -1
+ },
+ {
+  "id": "b51f2da9-10f6-4412-a765-77ae904892cc",
+  "external_id": "2020926867",
+  "listing_url": "https://www.domain.com.au/34-constantine-drive-point-cook-vic-3030-2020926867",
+  "address": "34 Constantine Drive, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": 749000,
+  "price_display": "$749,000 - $799,000",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T12:20:00+10:00",
+  "st": "done",
+  "nimg": 25,
+  "nfp": 0,
+  "total": 25,
+  "candidates": [
+   {
+    "id": "img_b09fc75c2060",
+    "ord": 12,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_b09fc75c2060.webp"
+   },
+   {
+    "id": "img_7756bbd75d7e",
+    "ord": 13,
+    "w": 720,
+    "h": 50,
+    "a": 14.4,
+    "room": "exclude",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_7756bbd75d7e.webp"
+   },
+   {
+    "id": "img_8652579a4b7e",
+    "ord": 14,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_8652579a4b7e.webp"
+   },
+   {
+    "id": "img_d218996d350b",
+    "ord": 15,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "other",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_d218996d350b.webp"
+   },
+   {
+    "id": "img_831afe3db051",
+    "ord": 16,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "other",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_831afe3db051.webp"
+   },
+   {
+    "id": "img_5267051491a7",
+    "ord": 17,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_5267051491a7.webp"
+   },
+   {
+    "id": "img_61e6e341b165",
+    "ord": 18,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_61e6e341b165.webp"
+   },
+   {
+    "id": "img_deab248bd155",
+    "ord": 19,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "other",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_deab248bd155.webp"
+   },
+   {
+    "id": "img_f8d0b76f90f0",
+    "ord": 20,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_f8d0b76f90f0.webp"
+   },
+   {
+    "id": "img_d1481178f2f2",
+    "ord": 21,
+    "w": 1680,
+    "h": 720,
+    "a": 2.333,
+    "room": "exterior",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_d1481178f2f2.webp"
+   },
+   {
+    "id": "img_cafa699f3a9d",
+    "ord": 22,
+    "w": 160,
+    "h": 160,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_cafa699f3a9d.png"
+   },
+   {
+    "id": "img_9038c1541372",
+    "ord": 23,
+    "w": 1050,
+    "h": 192,
+    "a": 5.469,
+    "room": "exclude",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_9038c1541372.jpg"
+   },
+   {
+    "id": "img_3819d6cb9142",
+    "ord": 24,
+    "w": 154,
+    "h": 24,
+    "a": 6.417,
+    "room": "exclude",
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_3819d6cb9142.jpg"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_cafa699f3a9d",
+    "ord": 22,
+    "a": 1,
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_cafa699f3a9d.png"
+   },
+   {
+    "id": "img_9038c1541372",
+    "ord": 23,
+    "a": 5.469,
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_9038c1541372.jpg"
+   },
+   {
+    "id": "img_3819d6cb9142",
+    "ord": 24,
+    "a": 6.417,
+    "path": "images\\b51f2da9-10f6-4412-a765-77ae904892cc\\img_3819d6cb9142.jpg"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": -1.04
+ },
+ {
+  "id": "4fa0b448-aaf1-4fb9-bcb5-486edd077642",
+  "external_id": "2020878377",
+  "listing_url": "https://www.domain.com.au/67-mulloway-drive-point-cook-vic-3030-2020878377",
+  "address": "67 Mulloway Drive, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": 720000,
+  "price_display": "$720,000 to $770,000",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 29,
+  "nfp": 0,
+  "total": 29,
+  "candidates": [
+   {
+    "id": "img_cfd0c1d8d4f8",
+    "ord": 20,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_cfd0c1d8d4f8.webp"
+   },
+   {
+    "id": "img_fe2832f9bdb0",
+    "ord": 21,
+    "w": 720,
+    "h": 50,
+    "a": 14.4,
+    "room": "exclude",
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_fe2832f9bdb0.webp"
+   },
+   {
+    "id": "img_d8a60aeb0d40",
+    "ord": 22,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_d8a60aeb0d40.webp"
+   },
+   {
+    "id": "img_224754c6fc3b",
+    "ord": 23,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_224754c6fc3b.webp"
+   },
+   {
+    "id": "img_ffdb34c2b7f9",
+    "ord": 24,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_ffdb34c2b7f9.webp"
+   },
+   {
+    "id": "img_60f9097c89eb",
+    "ord": 25,
+    "w": 1680,
+    "h": 720,
+    "a": 2.333,
+    "room": "exterior",
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_60f9097c89eb.webp"
+   },
+   {
+    "id": "img_7e04682d5784",
+    "ord": 26,
+    "w": 160,
+    "h": 160,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_7e04682d5784.png"
+   },
+   {
+    "id": "img_16607fcda7fd",
+    "ord": 27,
+    "w": 1050,
+    "h": 192,
+    "a": 5.469,
+    "room": "exclude",
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_16607fcda7fd.jpg"
+   },
+   {
+    "id": "img_60e4306467ec",
+    "ord": 28,
+    "w": 154,
+    "h": 24,
+    "a": 6.417,
+    "room": "exclude",
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_60e4306467ec.jpg"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_7e04682d5784",
+    "ord": 26,
+    "a": 1,
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_7e04682d5784.png"
+   },
+   {
+    "id": "img_16607fcda7fd",
+    "ord": 27,
+    "a": 5.469,
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_16607fcda7fd.jpg"
+   },
+   {
+    "id": "img_60e4306467ec",
+    "ord": 28,
+    "a": 6.417,
+    "path": "images\\4fa0b448-aaf1-4fb9-bcb5-486edd077642\\img_60e4306467ec.jpg"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": -1.2000000000000002
+ },
+ {
+  "id": "3f4a8b44-f925-4df2-a943-d5f2d00a3e8d",
+  "external_id": "2020830570",
+  "listing_url": "https://www.domain.com.au/53-stretton-drive-torquay-vic-3228-2020830570",
+  "address": "53 Stretton Drive, Torquay, VIC, 3228",
+  "suburb": "Torquay",
+  "state": "VIC",
+  "price_numeric": 990000,
+  "price_display": "$990,000 - $1,030,000",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T11:30:00+10:00",
+  "st": null,
+  "nimg": 18,
+  "nfp": 0,
+  "total": 18,
+  "candidates": [
+   {
+    "id": "img_a0cd58401195",
+    "ord": 0,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_a0cd58401195.webp"
+   },
+   {
+    "id": "img_95f7e6e61ac4",
+    "ord": 1,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_95f7e6e61ac4.webp"
+   },
+   {
+    "id": "img_b0b923dd9e52",
+    "ord": 2,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "kitchen",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_b0b923dd9e52.webp"
+   },
+   {
+    "id": "img_9d1d31b00db5",
+    "ord": 3,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "dining",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_9d1d31b00db5.webp"
+   },
+   {
+    "id": "img_5870466222ae",
+    "ord": 4,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_5870466222ae.webp"
+   },
+   {
+    "id": "img_def6b3685ccc",
+    "ord": 5,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "living",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_def6b3685ccc.webp"
+   },
+   {
+    "id": "img_89e4cce34bb1",
+    "ord": 6,
+    "w": 1024,
+    "h": 768,
+    "a": 1.333,
+    "room": "other",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_89e4cce34bb1.webp"
+   },
+   {
+    "id": "img_b6cbf2f9a28d",
+    "ord": 7,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_b6cbf2f9a28d.webp"
+   },
+   {
+    "id": "img_d6a782841871",
+    "ord": 8,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_d6a782841871.webp"
+   },
+   {
+    "id": "img_26696398aa72",
+    "ord": 9,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bedroom",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_26696398aa72.webp"
+   },
+   {
+    "id": "img_c75ffb423d42",
+    "ord": 10,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "bathroom",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_c75ffb423d42.webp"
+   },
+   {
+    "id": "img_3888b32d2208",
+    "ord": 11,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_3888b32d2208.webp"
+   },
+   {
+    "id": "img_20f6167dd7ee",
+    "ord": 12,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_20f6167dd7ee.webp"
+   },
+   {
+    "id": "img_6e35f00960a0",
+    "ord": 13,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "aerial",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_6e35f00960a0.webp"
+   },
+   {
+    "id": "img_34ffc7363029",
+    "ord": 14,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "aerial",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_34ffc7363029.webp"
+   },
+   {
+    "id": "img_ed990f39b905",
+    "ord": 15,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "aerial",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_ed990f39b905.webp"
+   },
+   {
+    "id": "img_d90d7f9f36df",
+    "ord": 16,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "aerial",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_d90d7f9f36df.webp"
+   },
+   {
+    "id": "img_7bb74745d479",
+    "ord": 17,
+    "w": 1440,
+    "h": 1080,
+    "a": 1.333,
+    "room": "aerial",
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_7bb74745d479.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_ed990f39b905",
+    "ord": 15,
+    "a": 1.333,
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_ed990f39b905.webp"
+   },
+   {
+    "id": "img_d90d7f9f36df",
+    "ord": 16,
+    "a": 1.333,
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_d90d7f9f36df.webp"
+   },
+   {
+    "id": "img_7bb74745d479",
+    "ord": 17,
+    "a": 1.333,
+    "path": "images\\3f4a8b44-f925-4df2-a943-d5f2d00a3e8d\\img_7bb74745d479.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": -1.5999999999999996
+ },
+ {
+  "id": "583ed513-16e3-404b-bf10-a6938f0e2694",
+  "external_id": "2020956604",
+  "listing_url": "https://www.domain.com.au/89-sayers-road-williams-landing-vic-3027-2020956604",
+  "address": "89 Sayers Road, Williams Landing, VIC, 3027",
+  "suburb": "Williams Landing",
+  "state": "VIC",
+  "price_numeric": 700000,
+  "price_display": "$700,000 - $750,000",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T10:30:00+10:00",
+  "st": "done",
+  "nimg": 18,
+  "nfp": 0,
+  "total": 18,
+  "candidates": [
+   {
+    "id": "img_10eb2f4b6be1",
+    "ord": 11,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_10eb2f4b6be1.webp"
+   },
+   {
+    "id": "img_30e31881fbe5",
+    "ord": 12,
+    "w": 720,
+    "h": 50,
+    "a": 14.4,
+    "room": "exclude",
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_30e31881fbe5.webp"
+   },
+   {
+    "id": "img_361a8a8e108a",
+    "ord": 13,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_361a8a8e108a.webp"
+   },
+   {
+    "id": "img_8969b81bf5ed",
+    "ord": 14,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_8969b81bf5ed.webp"
+   },
+   {
+    "id": "img_e3a156937a02",
+    "ord": 15,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_e3a156937a02.webp"
+   },
+   {
+    "id": "img_8f7c1a13d64b",
+    "ord": 16,
+    "w": 1050,
+    "h": 192,
+    "a": 5.469,
+    "room": "exclude",
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_8f7c1a13d64b.jpg"
+   },
+   {
+    "id": "img_3d7e5d97b0d2",
+    "ord": 17,
+    "w": 154,
+    "h": 24,
+    "a": 6.417,
+    "room": "exclude",
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_3d7e5d97b0d2.jpg"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_e3a156937a02",
+    "ord": 15,
+    "a": 2.857,
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_e3a156937a02.webp"
+   },
+   {
+    "id": "img_8f7c1a13d64b",
+    "ord": 16,
+    "a": 5.469,
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_8f7c1a13d64b.jpg"
+   },
+   {
+    "id": "img_3d7e5d97b0d2",
+    "ord": 17,
+    "a": 6.417,
+    "path": "images\\583ed513-16e3-404b-bf10-a6938f0e2694\\img_3d7e5d97b0d2.jpg"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": -2
+ },
+ {
+  "id": "19f26315-3f43-4dec-841f-485d1d9cbe6c",
+  "external_id": "2019184038",
+  "listing_url": "https://www.domain.com.au/point-cook-vic-3030-2019184038",
+  "address": "Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": 720437,
+  "price_display": "$720,437",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 5,
+  "nfp": 0,
+  "total": 5,
+  "candidates": [
+   {
+    "id": "img_340dcc6bce1e",
+    "ord": 0,
+    "w": 800,
+    "h": 600,
+    "a": 1.333,
+    "room": "exterior",
+    "path": "images\\19f26315-3f43-4dec-841f-485d1d9cbe6c\\img_340dcc6bce1e.webp"
+   },
+   {
+    "id": "img_185ecfdbb1ce",
+    "ord": 1,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\19f26315-3f43-4dec-841f-485d1d9cbe6c\\img_185ecfdbb1ce.webp"
+   },
+   {
+    "id": "img_6e9111f28e89",
+    "ord": 2,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\19f26315-3f43-4dec-841f-485d1d9cbe6c\\img_6e9111f28e89.webp"
+   },
+   {
+    "id": "img_96620b5aca4f",
+    "ord": 3,
+    "w": 160,
+    "h": 160,
+    "a": 1,
+    "room": "other",
+    "path": "images\\19f26315-3f43-4dec-841f-485d1d9cbe6c\\img_96620b5aca4f.png"
+   },
+   {
+    "id": "img_c19941356d78",
+    "ord": 4,
+    "w": 154,
+    "h": 24,
+    "a": 6.417,
+    "room": "exclude",
+    "path": "images\\19f26315-3f43-4dec-841f-485d1d9cbe6c\\img_c19941356d78.jpg"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_6e9111f28e89",
+    "ord": 2,
+    "a": 1,
+    "path": "images\\19f26315-3f43-4dec-841f-485d1d9cbe6c\\img_6e9111f28e89.webp"
+   },
+   {
+    "id": "img_96620b5aca4f",
+    "ord": 3,
+    "a": 1,
+    "path": "images\\19f26315-3f43-4dec-841f-485d1d9cbe6c\\img_96620b5aca4f.png"
+   },
+   {
+    "id": "img_c19941356d78",
+    "ord": 4,
+    "a": 6.417,
+    "path": "images\\19f26315-3f43-4dec-841f-485d1d9cbe6c\\img_c19941356d78.jpg"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": -2.1825200000000002
+ },
+ {
+  "id": "372d7510-e2d5-42f9-b7b9-0ca653c297f5",
+  "external_id": "2020934197",
+  "listing_url": "https://www.domain.com.au/79-murnong-street-point-cook-vic-3030-2020934197",
+  "address": "79 Murnong Street, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": 600000,
+  "price_display": "$600,000 - $640,000",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 21,
+  "nfp": 0,
+  "total": 21,
+  "candidates": [
+   {
+    "id": "img_62ebdb6e9b1e",
+    "ord": 14,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_62ebdb6e9b1e.webp"
+   },
+   {
+    "id": "img_fd55bb0f1f39",
+    "ord": 15,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_fd55bb0f1f39.webp"
+   },
+   {
+    "id": "img_f3770bff8cc5",
+    "ord": 16,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_f3770bff8cc5.webp"
+   },
+   {
+    "id": "img_2b6599b14583",
+    "ord": 17,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_2b6599b14583.webp"
+   },
+   {
+    "id": "img_b7c9a596f8b4",
+    "ord": 18,
+    "w": 160,
+    "h": 160,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_b7c9a596f8b4.png"
+   },
+   {
+    "id": "img_e28dcd0366c6",
+    "ord": 19,
+    "w": 1050,
+    "h": 192,
+    "a": 5.469,
+    "room": "exclude",
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_e28dcd0366c6.jpg"
+   },
+   {
+    "id": "img_26a870493f8e",
+    "ord": 20,
+    "w": 154,
+    "h": 24,
+    "a": 6.417,
+    "room": "exclude",
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_26a870493f8e.jpg"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_b7c9a596f8b4",
+    "ord": 18,
+    "a": 1,
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_b7c9a596f8b4.png"
+   },
+   {
+    "id": "img_e28dcd0366c6",
+    "ord": 19,
+    "a": 5.469,
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_e28dcd0366c6.jpg"
+   },
+   {
+    "id": "img_26a870493f8e",
+    "ord": 20,
+    "a": 6.417,
+    "path": "images\\372d7510-e2d5-42f9-b7b9-0ca653c297f5\\img_26a870493f8e.jpg"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": -7
+ },
+ {
+  "id": "522c6ce9-5e07-4850-8128-5e0e40581452",
+  "external_id": "2020795101",
+  "listing_url": "https://www.domain.com.au/82-ashcroft-avenue-williams-landing-vic-3027-2020795101",
+  "address": "82 Ashcroft Avenue, Williams Landing, VIC, 3027",
+  "suburb": "Williams Landing",
+  "state": "VIC",
+  "price_numeric": 600000,
+  "price_display": "$600,000 to $660,000",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T12:30:00+10:00",
+  "st": "done",
+  "nimg": 26,
+  "nfp": 0,
+  "total": 26,
+  "candidates": [
+   {
+    "id": "img_b3b2859cd820",
+    "ord": 16,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_b3b2859cd820.webp"
+   },
+   {
+    "id": "img_f355ee6a0e83",
+    "ord": 17,
+    "w": 720,
+    "h": 50,
+    "a": 14.4,
+    "room": "exclude",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_f355ee6a0e83.webp"
+   },
+   {
+    "id": "img_b28a16b57bd6",
+    "ord": 18,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_b28a16b57bd6.webp"
+   },
+   {
+    "id": "img_50eee0a30d17",
+    "ord": 19,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_50eee0a30d17.webp"
+   },
+   {
+    "id": "img_169cad23e685",
+    "ord": 20,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_169cad23e685.webp"
+   },
+   {
+    "id": "img_f4710a9cf1d5",
+    "ord": 21,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "other",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_f4710a9cf1d5.webp"
+   },
+   {
+    "id": "img_687ff7b08c36",
+    "ord": 22,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_687ff7b08c36.webp"
+   },
+   {
+    "id": "img_bc2228dd78c7",
+    "ord": 23,
+    "w": 160,
+    "h": 160,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_bc2228dd78c7.png"
+   },
+   {
+    "id": "img_1c0b58ad167b",
+    "ord": 24,
+    "w": 1050,
+    "h": 192,
+    "a": 5.469,
+    "room": "exclude",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_1c0b58ad167b.jpg"
+   },
+   {
+    "id": "img_85ff4d821f3c",
+    "ord": 25,
+    "w": 154,
+    "h": 24,
+    "a": 6.417,
+    "room": "exclude",
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_85ff4d821f3c.jpg"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_bc2228dd78c7",
+    "ord": 23,
+    "a": 1,
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_bc2228dd78c7.png"
+   },
+   {
+    "id": "img_1c0b58ad167b",
+    "ord": 24,
+    "a": 5.469,
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_1c0b58ad167b.jpg"
+   },
+   {
+    "id": "img_85ff4d821f3c",
+    "ord": 25,
+    "a": 6.417,
+    "path": "images\\522c6ce9-5e07-4850-8128-5e0e40581452\\img_85ff4d821f3c.jpg"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": -7
+ },
+ {
+  "id": "9470ca60-0244-4502-b447-c26803e951b5",
+  "external_id": "2020910588",
+  "listing_url": "https://www.domain.com.au/61-murphy-street-point-cook-vic-3030-2020910588",
+  "address": "61 Murphy Street, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": 595000,
+  "price_display": "$595,000 to $615,000",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 24,
+  "nfp": 0,
+  "total": 24,
+  "candidates": [
+   {
+    "id": "img_a6ef2d01577a",
+    "ord": 0,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "exterior",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_a6ef2d01577a.webp"
+   },
+   {
+    "id": "img_d8a4817750f0",
+    "ord": 1,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "exterior",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_d8a4817750f0.webp"
+   },
+   {
+    "id": "img_eced26a6a258",
+    "ord": 2,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "exterior",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_eced26a6a258.webp"
+   },
+   {
+    "id": "img_905451097b28",
+    "ord": 3,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "exterior",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_905451097b28.webp"
+   },
+   {
+    "id": "img_2b623eebf5e9",
+    "ord": 4,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "kitchen",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_2b623eebf5e9.webp"
+   },
+   {
+    "id": "img_ec783957b02c",
+    "ord": 5,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "living",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_ec783957b02c.webp"
+   },
+   {
+    "id": "img_456e5597fa69",
+    "ord": 6,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "bathroom",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_456e5597fa69.webp"
+   },
+   {
+    "id": "img_388cdb80e0de",
+    "ord": 7,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "bathroom",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_388cdb80e0de.webp"
+   },
+   {
+    "id": "img_86a8e3ecfc34",
+    "ord": 8,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "bedroom",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_86a8e3ecfc34.webp"
+   },
+   {
+    "id": "img_2287ad970ef8",
+    "ord": 9,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "other",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_2287ad970ef8.webp"
+   },
+   {
+    "id": "img_47f3cc6778a2",
+    "ord": 10,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "bathroom",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_47f3cc6778a2.webp"
+   },
+   {
+    "id": "img_3be0c805bfea",
+    "ord": 11,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "living",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_3be0c805bfea.webp"
+   },
+   {
+    "id": "img_b04c02b2ad1b",
+    "ord": 12,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "kitchen",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_b04c02b2ad1b.webp"
+   },
+   {
+    "id": "img_e2ebc520c254",
+    "ord": 13,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "kitchen",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_e2ebc520c254.webp"
+   },
+   {
+    "id": "img_28f259a7431e",
+    "ord": 14,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "exterior",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_28f259a7431e.webp"
+   },
+   {
+    "id": "img_5630824fc72d",
+    "ord": 15,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "kitchen",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_5630824fc72d.webp"
+   },
+   {
+    "id": "img_7d80758030d6",
+    "ord": 16,
+    "w": 1560,
+    "h": 896,
+    "a": 1.741,
+    "room": "exterior",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_7d80758030d6.webp"
+   },
+   {
+    "id": "img_573e5ccff641",
+    "ord": 17,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_573e5ccff641.webp"
+   },
+   {
+    "id": "img_89a8d7253b99",
+    "ord": 18,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "other",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_89a8d7253b99.webp"
+   },
+   {
+    "id": "img_e99434df2882",
+    "ord": 19,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "other",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_e99434df2882.webp"
+   },
+   {
+    "id": "img_f3be9ef370cc",
+    "ord": 20,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_f3be9ef370cc.webp"
+   },
+   {
+    "id": "img_854eb9ce82ef",
+    "ord": 21,
+    "w": 160,
+    "h": 160,
+    "a": 1,
+    "room": "other",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_854eb9ce82ef.png"
+   },
+   {
+    "id": "img_e568f03ed56d",
+    "ord": 22,
+    "w": 1050,
+    "h": 192,
+    "a": 5.469,
+    "room": "exclude",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_e568f03ed56d.jpg"
+   },
+   {
+    "id": "img_9323e7b2e910",
+    "ord": 23,
+    "w": 154,
+    "h": 24,
+    "a": 6.417,
+    "room": "exclude",
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_9323e7b2e910.jpg"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_854eb9ce82ef",
+    "ord": 21,
+    "a": 1,
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_854eb9ce82ef.png"
+   },
+   {
+    "id": "img_e568f03ed56d",
+    "ord": 22,
+    "a": 5.469,
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_e568f03ed56d.jpg"
+   },
+   {
+    "id": "img_9323e7b2e910",
+    "ord": 23,
+    "a": 6.417,
+    "path": "images\\9470ca60-0244-4502-b447-c26803e951b5\\img_9323e7b2e910.jpg"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": -7.199999999999999
+ },
+ {
+  "id": "1c1102a7-3421-43bc-bf2d-722fa63ff0ac",
+  "external_id": "2020761862",
+  "listing_url": "https://www.domain.com.au/47-waterways-boulevard-williams-landing-vic-3027-2020761862",
+  "address": "47 Waterways Boulevard, Williams Landing, VIC, 3027",
+  "suburb": "Williams Landing",
+  "state": "VIC",
+  "price_numeric": null,
+  "price_display": "CONTACT AGENT",
+  "shortlist_tag": null,
+  "next_inspection": "2026-08-08T11:00:00+10:00",
+  "st": "done",
+  "nimg": 21,
+  "nfp": 0,
+  "total": 21,
+  "candidates": [
+   {
+    "id": "img_27ac12660e85",
+    "ord": 7,
+    "w": 800,
+    "h": 600,
+    "a": 1.333,
+    "room": "other",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_27ac12660e85.webp"
+   },
+   {
+    "id": "img_3fa268c6ebbd",
+    "ord": 8,
+    "w": 800,
+    "h": 600,
+    "a": 1.333,
+    "room": "other",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_3fa268c6ebbd.webp"
+   },
+   {
+    "id": "img_917b1cc18004",
+    "ord": 9,
+    "w": 800,
+    "h": 600,
+    "a": 1.333,
+    "room": "other",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_917b1cc18004.webp"
+   },
+   {
+    "id": "img_c60148c72820",
+    "ord": 14,
+    "w": 1748,
+    "h": 1080,
+    "a": 1.619,
+    "room": "exterior",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_c60148c72820.webp"
+   },
+   {
+    "id": "img_e42f87d6586a",
+    "ord": 15,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_e42f87d6586a.webp"
+   },
+   {
+    "id": "img_8a5d5f036462",
+    "ord": 16,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_8a5d5f036462.webp"
+   },
+   {
+    "id": "img_a71735ab1d4b",
+    "ord": 17,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "other",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_a71735ab1d4b.webp"
+   },
+   {
+    "id": "img_4be06703cf33",
+    "ord": 18,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_4be06703cf33.webp"
+   },
+   {
+    "id": "img_aa69a5ce6368",
+    "ord": 19,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "other",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_aa69a5ce6368.webp"
+   },
+   {
+    "id": "img_175f39f31f56",
+    "ord": 20,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_175f39f31f56.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_4be06703cf33",
+    "ord": 18,
+    "a": 1,
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_4be06703cf33.webp"
+   },
+   {
+    "id": "img_aa69a5ce6368",
+    "ord": 19,
+    "a": 1,
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_aa69a5ce6368.webp"
+   },
+   {
+    "id": "img_175f39f31f56",
+    "ord": 20,
+    "a": 2.857,
+    "path": "images\\1c1102a7-3421-43bc-bf2d-722fa63ff0ac\\img_175f39f31f56.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": null
+ },
+ {
+  "id": "96275df2-33b5-4297-909c-aaa5c9f7aee1",
+  "external_id": "2020864609",
+  "listing_url": "https://www.domain.com.au/6-gillian-place-point-cook-vic-3030-2020864609",
+  "address": "6 Gillian Place, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": null,
+  "price_display": "UNDER CONTRACT/OFFER",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 30,
+  "nfp": 0,
+  "total": 30,
+  "candidates": [
+   {
+    "id": "img_ba4ea1762af9",
+    "ord": 20,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_ba4ea1762af9.webp"
+   },
+   {
+    "id": "img_f6493b83b1a6",
+    "ord": 21,
+    "w": 720,
+    "h": 50,
+    "a": 14.4,
+    "room": "exclude",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_f6493b83b1a6.webp"
+   },
+   {
+    "id": "img_67ebacad337d",
+    "ord": 22,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_67ebacad337d.webp"
+   },
+   {
+    "id": "img_fefa2cc91e4e",
+    "ord": 23,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_fefa2cc91e4e.webp"
+   },
+   {
+    "id": "img_f2a414a46937",
+    "ord": 24,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_f2a414a46937.webp"
+   },
+   {
+    "id": "img_71d70641bb40",
+    "ord": 25,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "other",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_71d70641bb40.webp"
+   },
+   {
+    "id": "img_3f2ff322caf4",
+    "ord": 26,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_3f2ff322caf4.webp"
+   },
+   {
+    "id": "img_94c6dd4136d5",
+    "ord": 27,
+    "w": 160,
+    "h": 160,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_94c6dd4136d5.png"
+   },
+   {
+    "id": "img_aa00266b073b",
+    "ord": 28,
+    "w": 1050,
+    "h": 192,
+    "a": 5.469,
+    "room": "exclude",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_aa00266b073b.jpg"
+   },
+   {
+    "id": "img_930625dc206e",
+    "ord": 29,
+    "w": 154,
+    "h": 24,
+    "a": 6.417,
+    "room": "exclude",
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_930625dc206e.jpg"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_94c6dd4136d5",
+    "ord": 27,
+    "a": 1,
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_94c6dd4136d5.png"
+   },
+   {
+    "id": "img_aa00266b073b",
+    "ord": 28,
+    "a": 5.469,
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_aa00266b073b.jpg"
+   },
+   {
+    "id": "img_930625dc206e",
+    "ord": 29,
+    "a": 6.417,
+    "path": "images\\96275df2-33b5-4297-909c-aaa5c9f7aee1\\img_930625dc206e.jpg"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": null
+ },
+ {
+  "id": "a03b2dcc-9bdc-4def-8186-27539569a5a3",
+  "external_id": "2021004843",
+  "listing_url": "https://www.domain.com.au/87-evesham-drive-point-cook-vic-3030-2021004843",
+  "address": "87 Evesham Drive, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": null,
+  "price_display": "Contact Agent",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 21,
+  "nfp": 0,
+  "total": 21,
+  "candidates": [
+   {
+    "id": "img_9880b3c18ba7",
+    "ord": 14,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_9880b3c18ba7.webp"
+   },
+   {
+    "id": "img_66b9c1e352a1",
+    "ord": 15,
+    "w": 720,
+    "h": 50,
+    "a": 14.4,
+    "room": "exclude",
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_66b9c1e352a1.webp"
+   },
+   {
+    "id": "img_e26453514e65",
+    "ord": 16,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "other",
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_e26453514e65.webp"
+   },
+   {
+    "id": "img_2932bf5122aa",
+    "ord": 17,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "other",
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_2932bf5122aa.webp"
+   },
+   {
+    "id": "img_c9444a38e15b",
+    "ord": 18,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_c9444a38e15b.webp"
+   },
+   {
+    "id": "img_3757d8bd6cf6",
+    "ord": 19,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_3757d8bd6cf6.webp"
+   },
+   {
+    "id": "img_76163af84cad",
+    "ord": 20,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_76163af84cad.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_c9444a38e15b",
+    "ord": 18,
+    "a": 1,
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_c9444a38e15b.webp"
+   },
+   {
+    "id": "img_3757d8bd6cf6",
+    "ord": 19,
+    "a": 1,
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_3757d8bd6cf6.webp"
+   },
+   {
+    "id": "img_76163af84cad",
+    "ord": 20,
+    "a": 2.857,
+    "path": "images\\a03b2dcc-9bdc-4def-8186-27539569a5a3\\img_76163af84cad.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": null
+ },
+ {
+  "id": "1cf8a852-33fb-4474-96ff-637f02368618",
+  "external_id": "2016341775",
+  "listing_url": "https://www.domain.com.au/9-benuad-way-point-cook-vic-3030-2016341775",
+  "address": "9 Benuad Way, Point Cook, VIC, 3030",
+  "suburb": "Point Cook",
+  "state": "VIC",
+  "price_numeric": null,
+  "price_display": "contact agent",
+  "shortlist_tag": null,
+  "next_inspection": null,
+  "st": "done",
+  "nimg": 15,
+  "nfp": 0,
+  "total": 15,
+  "candidates": [
+   {
+    "id": "img_3d6de7dca520",
+    "ord": 0,
+    "w": 1728,
+    "h": 1080,
+    "a": 1.6,
+    "room": "bathroom",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_3d6de7dca520.webp"
+   },
+   {
+    "id": "img_85eea3f91315",
+    "ord": 1,
+    "w": 1728,
+    "h": 1080,
+    "a": 1.6,
+    "room": "other",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_85eea3f91315.webp"
+   },
+   {
+    "id": "img_fc3b19dc2434",
+    "ord": 2,
+    "w": 1728,
+    "h": 1080,
+    "a": 1.6,
+    "room": "exterior",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_fc3b19dc2434.webp"
+   },
+   {
+    "id": "img_51257643340e",
+    "ord": 3,
+    "w": 1728,
+    "h": 1080,
+    "a": 1.6,
+    "room": "bedroom",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_51257643340e.webp"
+   },
+   {
+    "id": "img_3e46893cf6d6",
+    "ord": 9,
+    "w": 1728,
+    "h": 1080,
+    "a": 1.6,
+    "room": "exterior",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_3e46893cf6d6.webp"
+   },
+   {
+    "id": "img_23d3864fca77",
+    "ord": 10,
+    "w": 120,
+    "h": 42,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_23d3864fca77.webp"
+   },
+   {
+    "id": "img_49ff64b5983d",
+    "ord": 11,
+    "w": 720,
+    "h": 50,
+    "a": 14.4,
+    "room": "exclude",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_49ff64b5983d.webp"
+   },
+   {
+    "id": "img_23eddceb65ff",
+    "ord": 12,
+    "w": 180,
+    "h": 180,
+    "a": 1,
+    "room": "other",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_23eddceb65ff.webp"
+   },
+   {
+    "id": "img_708b142f9d31",
+    "ord": 13,
+    "w": 120,
+    "h": 120,
+    "a": 1,
+    "room": "exclude",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_708b142f9d31.webp"
+   },
+   {
+    "id": "img_8dec4978daa3",
+    "ord": 14,
+    "w": 200,
+    "h": 70,
+    "a": 2.857,
+    "room": "exclude",
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_8dec4978daa3.webp"
+   }
+  ],
+  "tail": [
+   {
+    "id": "img_23eddceb65ff",
+    "ord": 12,
+    "a": 1,
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_23eddceb65ff.webp"
+   },
+   {
+    "id": "img_708b142f9d31",
+    "ord": 13,
+    "a": 1,
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_708b142f9d31.webp"
+   },
+   {
+    "id": "img_8dec4978daa3",
+    "ord": 14,
+    "a": 2.857,
+    "path": "images\\1cf8a852-33fb-4474-96ff-637f02368618\\img_8dec4978daa3.webp"
+   }
+  ],
+  "tailOffBand": 3,
+  "sc": null
+ }
+]

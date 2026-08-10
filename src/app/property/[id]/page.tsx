@@ -18,6 +18,7 @@ import NotesEditor from "@/components/NotesEditor";
 import PropertyRail from "@/components/PropertyRail";
 import PropertyPager from "@/components/PropertyPager";
 import MediaUploader from "@/components/MediaUploader";
+import MarkViewed from "@/components/MarkViewed";
 import MetadataEditor from "@/components/MetadataEditor";
 import ShareButton from "@/components/ShareButton";
 import { listMedia } from "@/lib/media";
@@ -205,6 +206,7 @@ export default async function PropertyDetail({
 
   return (
     <section className="rise">
+      <MarkViewed propertyId={property.id} />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/"
@@ -253,23 +255,33 @@ export default async function PropertyDetail({
         </div>
       )}
 
-      <div className="grid grid-cols-1 items-start gap-7 lg:grid-cols-[1.5fr_1fr]">
+      {/* Single column. The two rails below are `display: contents`, so every
+          section inside them is a direct flex child of this column and the
+          inline `order` on each one interleaves them freely. */}
+      <div className="flex flex-col gap-7">
         {/* LEFT */}
-        <div className="space-y-4">
-          <HeroGallery
-            images={images}
-            heroIndex={heroIndex}
-            showcaseIndices={showcaseIndices}
-            alt={property.address ?? "property"}
-          />
+        <div className="contents">
+          {/* HeroGallery takes no style/className prop, so the `order` for
+              experimental mode lives on this wrapper instead. */}
+          <div style={{ order: 1 }}>
+            <HeroGallery
+              images={images}
+              heroIndex={heroIndex}
+              showcaseIndices={showcaseIndices}
+              alt={property.address ?? "property"}
+            />
+          </div>
 
           {property.scrapeStatus === "error" && (
-            <div className="rounded-xl border border-[#e0b4ac] bg-[#fbeeeb] p-3 text-sm text-[#B84A3A]">
+            <div
+              style={{ order: 1 }}
+              className="rounded-xl border border-[#e0b4ac] bg-[#fbeeeb] p-3 text-sm text-[#B84A3A]"
+            >
               Scrape error: {property.scrapeError ?? "unknown"}
             </div>
           )}
 
-          <div className="card p-[18px]">
+          <div style={{ order: 4 }} className="card p-[18px]">
             <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-serif text-[22px]">Location &amp; commute</h2>
               <MapModal
@@ -306,7 +318,7 @@ export default async function PropertyDetail({
             )}
           </div>
 
-          <div className="card p-4">
+          <div style={{ order: 6 }} className="card p-4">
             <div className="mb-2.5 flex items-center justify-between">
               <h2 className="font-serif text-lg">Listing photos</h2>
               <span className="text-[11.5px] text-mute">
@@ -316,10 +328,13 @@ export default async function PropertyDetail({
             <PhotoGrid images={images} />
           </div>
 
-          <MediaUploader propertyId={property.id} initial={media} />
+          {/* MediaUploader takes no style prop, so wrap it for the order hook. */}
+          <div style={{ order: 8 }}>
+            <MediaUploader propertyId={property.id} initial={media} />
+          </div>
 
           {property.description && (
-            <div className="card p-[18px]">
+            <div style={{ order: 10 }} className="card p-[18px]">
               <h2 className="mb-2 font-serif text-[22px]">Listing description</h2>
               <p className="whitespace-pre-line text-sm leading-relaxed text-[#5B5A52]">
                 {property.description}
@@ -328,7 +343,7 @@ export default async function PropertyDetail({
           )}
 
           {priceRowsWithChange.length > 0 && (
-            <div className="card p-[18px]">
+            <div style={{ order: 12 }} className="card p-[18px]">
               <h2 className="mb-2.5 font-serif text-[22px]">Price history</h2>
               <table className="w-full text-sm">
                 <tbody>
@@ -357,8 +372,8 @@ export default async function PropertyDetail({
         </div>
 
         {/* RIGHT RAIL */}
-        <div className="flex flex-col gap-4 lg:sticky lg:top-[84px]">
-          <div>
+        <div className="contents">
+          <div style={{ order: 2 }}>
             <span className="text-[11px] uppercase tracking-widest text-mute">
               {property.sourceSite}
               {property.suburb ? ` · ${property.suburb}` : ""}
@@ -403,7 +418,7 @@ export default async function PropertyDetail({
             </a>
           </div>
 
-          <div className="flex gap-2.5">
+          <div style={{ order: 3 }} className="flex gap-2.5">
             {stats.map(([k, v]) => (
               <div key={k} className="flex-1 rounded-xl border border-line bg-white p-3 text-center">
                 <div className="font-serif text-2xl leading-tight">{v}</div>
@@ -413,7 +428,7 @@ export default async function PropertyDetail({
           </div>
 
           {floorplan && (
-            <div className="card p-4">
+            <div style={{ order: 5 }} className="card p-4">
               <div className="label-cap mb-2.5">Floorplan</div>
               <a
                 href={imageUrl(floorplan)}
@@ -431,7 +446,7 @@ export default async function PropertyDetail({
             </div>
           )}
 
-          <div className="card p-4">
+          <div style={{ order: 7 }} className="card p-4">
             <div className="label-cap mb-2.5">Home &amp; grounds</div>
             <dl className="flex flex-col gap-2.5 text-[13px]">
               {homeFacts.map(([k, v], i) => (
@@ -467,19 +482,22 @@ export default async function PropertyDetail({
             </div>
           </div>
 
-          <PropertyRail
-            property={property}
-            ratings={ratings}
-            notes={
-              <div className="card p-4">
-                <div className="label-cap mb-2.5">My notes</div>
-                <NotesEditor propertyId={property.id} initial={property.domainNotes} />
-              </div>
-            }
-          />
+          {/* PropertyRail takes no style prop, so wrap it for the order hook. */}
+          <div style={{ order: 9 }}>
+            <PropertyRail
+              property={property}
+              ratings={ratings}
+              notes={
+                <div className="card p-4">
+                  <div className="label-cap mb-2.5">My notes</div>
+                  <NotesEditor propertyId={property.id} initial={property.domainNotes} />
+                </div>
+              }
+            />
+          </div>
 
           {property.aiComment && (
-            <div className="rounded-[14px] border border-sand-line bg-sand p-4">
+            <div style={{ order: 11 }} className="rounded-[14px] border border-sand-line bg-sand p-4">
               <div className="mb-2 text-[12.5px] font-semibold uppercase text-amber">
                 Claude&apos;s take
               </div>
@@ -489,7 +507,7 @@ export default async function PropertyDetail({
             </div>
           )}
 
-          <div className="card p-4">
+          <div style={{ order: 13 }} className="card p-4">
             <div className="label-cap mb-2.5">Listing details</div>
             <dl className="flex flex-col gap-2 text-[13px]">
               {listingFacts.map(([k, v]) => (

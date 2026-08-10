@@ -25,7 +25,10 @@ export function setPropertyMetadata(
     .prepare("SELECT 1 FROM properties WHERE id = ?")
     .get(propertyId);
   if (!exists) throw new Error(`No property with id ${propertyId}`);
-  const cols = Object.keys(values);
+  // Whitelist the keys, like updatePropertyMetadata below — these names are
+  // interpolated straight into the UPDATE, so the filter is what makes that safe
+  // regardless of who calls this.
+  const cols = Object.keys(values).filter((k) => k in META_COLUMNS);
   if (cols.length === 0) return;
   const assigns = cols.map((c) => `${META_COLUMNS[c]} = ?`).join(", ");
   const args = cols.map((c) => values[c]);

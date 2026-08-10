@@ -116,23 +116,32 @@ if (process.argv[1]?.endsWith("inspection.ts")) {
   assert(formatInspection("2000-01-01T11:00:00+10:00")!.upcoming === false, "past");
   assert(formatInspection("2999-01-01T11:00:00+10:00")!.upcoming === true, "future");
 
+  // Days ahead of TODAY, anchored to the Melbourne calendar date so the
+  // fixture is independent of the machine's timezone. These were hardcoded
+  // ("2026-08-01") until 2026-08-10, when they quietly became past dates and
+  // every item fell into the trailing group — which nothing noticed, because
+  // this block wasn't wired into `npm test`. It is now; keep it relative.
+  const melDayAhead = (days: number) =>
+    melDay(new Date(Date.now() + days * 86_400_000));
+  const d1 = melDayAhead(7);
+  const d2 = melDayAhead(8);
   const items = [
-    { label: "sat-late", nextInspection: "2026-08-01T14:00:00+10:00" },
-    { label: "sat-early", nextInspection: "2026-08-01T09:00:00+10:00" },
-    { label: "sun", nextInspection: "2026-08-02T10:00:00+10:00" },
+    { label: "d1-late", nextInspection: `${d1}T14:00:00+10:00` },
+    { label: "d1-early", nextInspection: `${d1}T09:00:00+10:00` },
+    { label: "d2", nextInspection: `${d2}T10:00:00+10:00` },
     { label: "no-time", nextInspection: null },
     { label: "past", nextInspection: "2000-01-01T10:00:00+10:00" },
     { label: "garbage", nextInspection: "nope" },
   ];
   const groups = groupByInspectionDay(items);
   assert(groups.length === 3, `expected 3 groups, got ${groups.length}`);
-  assert(groups[0].day === "Sat 1 Aug", `day0 was ${groups[0].day}`);
+  assert(groups[0].day !== "" && groups[1].day !== "", "future days are labelled");
+  assert(groups[0].day !== groups[1].day, "the two future days are distinct groups");
   assert(
-    groups[0].items.map((i) => i.label).join(",") === "sat-early,sat-late",
+    groups[0].items.map((i) => i.label).join(",") === "d1-early,d1-late",
     `within-day order was ${groups[0].items.map((i) => i.label).join(",")}`,
   );
-  assert(groups[1].day === "Sun 2 Aug", `day1 was ${groups[1].day}`);
-  assert(groups[1].items.map((i) => i.label).join(",") === "sun", "day1 items");
+  assert(groups[1].items.map((i) => i.label).join(",") === "d2", "day1 items");
   assert(groups[2].day === "", `trailing group day was ${JSON.stringify(groups[2].day)}`);
   assert(
     groups[2].items.map((i) => i.label).sort().join(",") === "garbage,no-time,past",
