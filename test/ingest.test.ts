@@ -98,6 +98,78 @@ async function main() {
   );
   assert.equal(bad.status, 400, "unsupported host -> 400");
 
+  // Cross-site twin merge: the same house captured from realestate.com.au has a
+  // different listing_url, so it must attach to the existing row (keeping its
+  // ratings/notes/metadata) rather than becoming a second one. The REA capture
+  // deliberately carries NO postcode — that used to break the match silently.
+  const { upsertProperty } = await import("../src/scrape/persist");
+  const twinId = upsertProperty({
+    sourceSite: "rea",
+    listingUrl: "https://www.realestate.com.au/property-house-nsw-testville-1234",
+    address: "12 Test Street",
+    suburb: "Testville",
+    state: "NSW",
+  });
+  assert.equal(twinId, data.propertyId, "REA capture with no postcode merges into the Domain row");
+  assert.equal(
+    (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c,
+    1,
+    "twin merge did not create a second row",
+  );
+  // The canonical listing_url/source_site must survive the merge.
+  const merged = sqlite
+    .prepare("SELECT listing_url, source_site FROM properties WHERE id = ?")
+    .get(twinId) as Record<string, unknown>;
+  assert.equal(merged.listing_url, raw.url, "merge keeps the original listing_url");
+  assert.equal(merged.source_site, "domain", "merge keeps the original source_site");
+
+  // A genuinely different house on the same street must NOT merge.
+  const otherId = upsertProperty({
+    sourceSite: "rea",
+    listingUrl: "https://www.realestate.com.au/property-house-nsw-testville-9999",
+    address: "14 Test Street",
+    suburb: "Testville",
+    state: "NSW",
+  });
+  assert.notEqual(otherId, twinId, "a different street number stays a separate property");
+
+  // The CLI bulk loader must make the SAME call. It keys on listing_url, so a
+  // harvest of the same house under a new URL used to insert a duplicate that
+  // ingest would have merged — leaving your ratings on the row you can't see.
+  const { loadProperties } = await import("../src/db/queries/load");
+  const before = (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c;
+  loadProperties([
+    {
+      listingUrl: "https://www.domain.com.au/12-test-st-testville-nsw-2000-RELISTED",
+      sourceSite: "domain",
+      address: "12 Test St",
+      suburb: "Testville",
+      beds: 5,
+    },
+  ]);
+  const after = (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c;
+  assert.equal(after, before, "a relisted URL for a known address does not add a row");
+  const reloaded = sqlite
+    .prepare("SELECT beds, listing_url FROM properties WHERE id = ?")
+    .get(twinId) as Record<string, unknown>;
+  assert.equal(reloaded.beds, 5, "the load updated the existing row");
+  assert.equal(reloaded.listing_url, raw.url, "the load kept the canonical listing_url");
+
+  // …and a genuinely new address still inserts.
+  loadProperties([
+    {
+      listingUrl: "https://www.domain.com.au/99-elsewhere-rd-testville-nsw-2000-123",
+      sourceSite: "domain",
+      address: "99 Elsewhere Rd",
+      suburb: "Testville",
+    },
+  ]);
+  assert.equal(
+    (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c,
+    before + 1,
+    "an unknown address still inserts a new row",
+  );
+
   sqlite.close();
   try {
     fs.rmSync(tmp, { recursive: true, force: true });

@@ -31,12 +31,13 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    ".next-test/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    ".next-dhtest/types/**/*.ts"
+    ".next-test/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    ".next-test",
+    ".next-dhtest"
   ]
 }

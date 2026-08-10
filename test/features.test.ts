@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { TILE, project } from "../src/lib/mercator";
 import {
   DEFAULT_VIBE_CONFIG,
+  parseVibeConfig,
   vibeBreakdown,
   vibeScore,
   type Rating,
@@ -75,5 +76,34 @@ assert.equal(vet(8000), -8);
 assert.equal(vet(80_000), -20);
 // Zero-magnitude terms are dropped rather than listed as "0".
 assert.ok(rows.every((r) => r.pts !== 0));
+
+// --- parseVibeConfig: one bad stored value must not NaN the whole grid -------
+// Spreading the parsed JSON used to let a string/null/NaN reach the arithmetic,
+// and NaN propagates to the score, the sort and every tile badge at once.
+assert.deepEqual(parseVibeConfig(null), DEFAULT_VIBE_CONFIG, "null -> defaults");
+assert.deepEqual(parseVibeConfig("nope"), DEFAULT_VIBE_CONFIG, "non-object -> defaults");
+assert.equal(parseVibeConfig({ like: 40 }).like, 40, "a valid override is kept");
+assert.equal(
+  parseVibeConfig({ like: 40 }).hate,
+  DEFAULT_VIBE_CONFIG.hate,
+  "untouched keys keep their default",
+);
+for (const bad of [{ like: "40" }, { like: null }, { like: NaN }, { like: Infinity }, { like: {} }]) {
+  assert.equal(
+    parseVibeConfig(bad).like,
+    DEFAULT_VIBE_CONFIG.like,
+    `rejected ${JSON.stringify(bad)}`,
+  );
+}
+assert.ok(
+  !("bogus" in parseVibeConfig({ bogus: 1 })),
+  "unknown keys are dropped, not carried into the config",
+);
+// The whole point: a corrupt store still yields a real number for every score.
+const corrupt = parseVibeConfig({ like: "40", idealPrice: null, perStation250m: NaN });
+assert.ok(
+  Number.isFinite(vibeScore(p, [{ profile: "g", vibe: "like" }], corrupt)),
+  "score stays finite with a corrupt stored config",
+);
 
 console.log("features.test.ts ok");
