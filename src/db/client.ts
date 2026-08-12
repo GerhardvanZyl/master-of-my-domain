@@ -20,10 +20,15 @@ const globalForDb = globalThis as unknown as {
 function createConnection(): Database.Database {
   ensureDirs();
   const db = new Database(DB_PATH);
+  // First, before anything that takes a lock: switching journal_mode needs an
+  // exclusive lock, and with the default timeout of 0 a concurrent opener fails
+  // instantly with SQLITE_BUSY instead of waiting. Only bites on a fresh DB
+  // (an existing WAL file makes that pragma a no-op read), which is why it
+  // shows up in a container build and never locally.
+  db.pragma("busy_timeout = 5000");
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   db.pragma("synchronous = NORMAL");
-  db.pragma("busy_timeout = 5000");
   db.exec(DDL); // ensure schema exists on every fresh connection
   migrateColumns(db); // retrofit added columns onto older DBs
   return db;

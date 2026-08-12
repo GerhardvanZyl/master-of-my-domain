@@ -20,7 +20,10 @@ COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
 
 COPY --chown=node:node . .
-RUN npm run build
+# Create the schema before the build, so `next build`'s parallel workers open a
+# DB that already exists instead of racing to create one. Shadowed by the
+# data/ bind mount at runtime; only matters if you run without a mount.
+RUN npm run db:migrate && npm run build
 
 ENV NODE_ENV=production
 EXPOSE 3225
