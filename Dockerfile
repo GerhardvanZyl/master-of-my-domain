@@ -9,11 +9,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 make g++ \
  && rm -rf /var/lib/apt/lists/*
 
+# Run as the image's `node` user (uid 1000) — same uid as the default Pi user, so
+# files the app writes into the bind-mounted data/ stay editable on the host
+# instead of landing root-owned.
+RUN mkdir -p /app && chown node:node /app
 WORKDIR /app
-COPY package.json package-lock.json ./
+USER node
+
+COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci
 
-COPY . .
+COPY --chown=node:node . .
 RUN npm run build
 
 ENV NODE_ENV=production
