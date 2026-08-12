@@ -25,13 +25,31 @@ export default function HeroGallery({
   const [open, setOpen] = useState<number | null>(null);
   const hero = images[heroIndex];
 
+  // Size the box to the photo rather than the photo to the box. It used to be a
+  // flat h-[400px] with object-cover, which cropped the top and bottom off every
+  // 3:2 listing shot — the sky and the front garden, usually. Domain's are 3:2,
+  // so that's the fallback when a row has no stored dimensions; a 16:9 aerial or
+  // a portrait shot gets its own ratio and stays whole either way.
+  const ratio = hero?.width && hero?.height ? hero.width / hero.height : 3 / 2;
+  // Cap the HEIGHT by capping the width the ratio is applied to, not with a
+  // max-height. A max-height overrides the aspect-ratio, so the box goes wider
+  // than the photo and object-contain mattes it with grey down both sides —
+  // measured at 1440px: a 1376×648 box painting a 972×648 photo. Deriving the
+  // width means the box always IS the photo's shape: no crop, no matting, and
+  // on a phone it just fills the column.
+  const MAX_HEIGHT = 620;
+
   return (
-    <div className="space-y-2">
+    // The cap lives on the whole block so the showcase strip stays exactly as
+    // wide as the hero above it — on a wide screen the hero is narrower than the
+    // column, and a full-width strip under a centred hero reads as misaligned.
+    <div className="mx-auto space-y-2" style={{ maxWidth: `${Math.round(MAX_HEIGHT * ratio)}px` }}>
       <button
         type="button"
         onClick={() => hero && setOpen(heroIndex)}
         aria-label="Open photo gallery"
-        className="group relative block h-[400px] w-full overflow-hidden rounded-[18px] bg-fill"
+        style={{ aspectRatio: ratio }}
+        className="group relative block w-full overflow-hidden rounded-[18px] bg-fill"
       >
         {hero ? (
           <>
@@ -42,7 +60,7 @@ export default function HeroGallery({
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 60vw"
-              className="object-cover"
+              className="object-contain"
             />
             {images.length > 1 && (
               <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white transition group-hover:bg-black/80">

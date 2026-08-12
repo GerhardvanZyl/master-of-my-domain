@@ -35,6 +35,11 @@ export interface PhotoLite {
   notes?: string | null;
   taggedBy?: string | null;
   confidence?: number | null;
+  /** Stored pixel dimensions. Optional: callers pass ImageWithTag rows, which
+   *  always carry them, but they're nullable in the DB. HeroGallery uses them
+   *  to size its box to the photo instead of cropping the photo to a box. */
+  width?: number | null;
+  height?: number | null;
 }
 
 /** `tagged_by` values that mean "a machine picked this, nobody has reviewed it". */
