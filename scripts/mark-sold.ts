@@ -1,7 +1,6 @@
 import "../src/lib/load-env";
-import { randomUUID } from "node:crypto";
 import { parseFlags } from "../src/lib/args";
-import { sqlite } from "../src/db/client";
+import { markSold } from "../src/db/queries/status";
 
 /**
  * Sanctioned write path for marking a Domain listing sold — replaces
@@ -48,44 +47,19 @@ if (price != null && (!Number.isFinite(price) || price <= 0)) {
   usageError(`--price must be a positive number or "none", got "${priceArg}".`);
 }
 
-const today = new Date().toISOString().slice(0, 10);
-const now = new Date().toISOString();
-const date = dateArg || today;
+const date = dateArg || new Date().toISOString().slice(0, 10);
 
-const prop = url
-  ? (sqlite
-      .prepare("SELECT id, listing_url u FROM properties WHERE listing_url = ?")
-      .get(url) as { id: string; u: string } | undefined)
-  : (sqlite
-      .prepare("SELECT id, listing_url u FROM properties WHERE external_id = ?")
-      .get(external) as { id: string; u: string } | undefined);
-
-if (!prop) {
-  console.error(
-    `No property found for ${url ? `url "${url}"` : `external id "${external}"`}.`,
-  );
+// The write itself lives in src/db/queries/status.ts so that
+// POST /api/batch { sold: [...] } against the live app records the same rows.
+try {
+  const res = markSold({
+    listingUrl: url || undefined,
+    externalId: external || undefined,
+    price,
+    date,
+  });
+  console.log(JSON.stringify({ ...res, price, date }));
+} catch (e) {
+  console.error(e instanceof Error ? e.message : String(e));
   process.exit(1);
 }
-
-sqlite
-  .prepare(
-    "DELETE FROM scrape_jobs WHERE url = ? AND status IN ('delisted','sold','withdrawn')",
-  )
-  .run(prop.u);
-sqlite
-  .prepare(
-    "INSERT INTO scrape_jobs (id, url, status, property_id, created_at, updated_at) VALUES (?, ?, 'sold', ?, ?, ?)",
-  )
-  .run(randomUUID(), prop.u, prop.id, now, now);
-
-sqlite
-  .prepare("DELETE FROM price_history WHERE property_id = ? AND event = 'Sold'")
-  .run(prop.id);
-const priceDisplay = price != null ? "Sold - $" + price.toLocaleString("en-AU") : null;
-sqlite
-  .prepare(
-    "INSERT INTO price_history (id, property_id, date, event, price_display, price_numeric, created_at) VALUES (?, ?, ?, 'Sold', ?, ?, ?)",
-  )
-  .run(randomUUID(), prop.id, date, priceDisplay, price, now);
-
-console.log(JSON.stringify({ ok: true, propertyId: prop.id, url: prop.u, price, date }));

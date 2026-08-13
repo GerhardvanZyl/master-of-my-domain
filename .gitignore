@@ -32,6 +32,15 @@ data/app.db-wal
 # local-model benchmark output (regenerable, grows on every run)
 data/_tagbench.jsonl
 
+# per-run scratch from the update-properties round (snapshot, diff, per-chunk
+# listing-pass payloads, generated browser snippets). Regenerated every run and
+# only useful for resuming one — the durable harvest files next to them
+# (feed.json, stations.json, metadata.json) stay tracked.
+data/harvest/_*
+data/harvest/pass-*.json
+data/harvest/diag.json
+data/harvest/drop.json
+
 # pre-migration DB snapshots
 data/app.db.backup-*
 

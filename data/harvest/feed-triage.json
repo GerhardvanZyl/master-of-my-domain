@@ -1,30 +1,6 @@
 {
  "hnl": [
   {
-   "listingUrl": "https://www.domain.com.au/turnkey-150-briody-grove-briody-street-torquay-vic-3228-2020989570",
-   "street": "TURNKEY 150 Briody Grove -Briody Street",
-   "price": "$921,341",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/119-briody-grove-eucalypt-way-torquay-vic-3228-2020989582",
-   "street": "119 Briody Grove - Eucalypt Way",
-   "price": "$1,047,689",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989587",
-   "street": "149 Briody Grove - Briody Drive",
-   "price": "$962,049",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/122-eucalypt-way-torquay-vic-3228-2021013481",
-   "street": "122 Eucalypt Way",
-   "price": "$1,086,600",
-   "ptype": "New House & Land"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/122-ecalypt-way-torquay-vic-3228-2020950057",
    "street": "122 Ecalypt Way",
    "price": "$849,550",
@@ -49,9 +25,21 @@
    "ptype": "New House & Land"
   },
   {
-   "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865312",
-   "street": "145 Briody Grove - Briody Drive",
-   "price": "$860,548",
+   "listingUrl": "https://www.domain.com.au/turnkey-150-briody-grove-briody-street-torquay-vic-3228-2020989570",
+   "street": "TURNKEY 150 Briody Grove -Briody Street",
+   "price": "$921,341",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/119-briody-grove-eucalypt-way-torquay-vic-3228-2020989582",
+   "street": "119 Briody Grove - Eucalypt Way",
+   "price": "$1,047,689",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989587",
+   "street": "149 Briody Grove - Briody Drive",
+   "price": "$962,049",
    "ptype": "New House & Land"
   },
   {
@@ -121,6 +109,12 @@
    "ptype": "New House & Land"
   },
   {
+   "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865312",
+   "street": "145 Briody Grove - Briody Drive",
+   "price": "$860,548",
+   "ptype": "New House & Land"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020584815",
    "street": "568 Rosella Road",
    "price": "$897,550",
@@ -157,12 +151,6 @@
    "ptype": "New House & Land"
   },
   {
-   "listingUrl": "https://www.domain.com.au/lot-122-eucalypt-way-torquay-vic-3228-2020704646",
-   "street": "Lot 122 Eucalypt Way",
-   "price": "$891,035",
-   "ptype": "New Home Designs"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2021044216",
    "street": "",
    "price": "$645,000",
@@ -177,21 +165,15 @@
    "tag": "Under offer"
   },
   {
-   "listingUrl": "https://www.domain.com.au/4-living-crescent-point-cook-vic-3030-2020928827",
-   "street": "4 Living Crescent",
-   "price": "Sold by Amit Chahal !!",
+   "listingUrl": "https://www.domain.com.au/62-harlem-circuit-point-cook-vic-3030-2018338643",
+   "street": "62 Harlem Circuit",
+   "price": "SOLD by BOBBY LAKRA & YASH SHAH !!",
    "tag": "Under offer"
   },
   {
    "listingUrl": "https://www.domain.com.au/47-yacht-road-point-cook-vic-3030-2019501372",
    "street": "47 Yacht Road",
    "price": "Sold",
-   "tag": "Under offer"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/62-harlem-circuit-point-cook-vic-3030-2018338643",
-   "street": "62 Harlem Circuit",
-   "price": "SOLD by BOBBY LAKRA & YASH SHAH !!",
    "tag": "Under offer"
   }
  ]

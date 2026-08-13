@@ -189,6 +189,11 @@ wrong*. Measured over 118 photos, every threshold from 0.70 to 0.95 auto-tags
 100% of images with an identical error count. `--threshold` is retained only as
 a guard against a typo'd invocation.
 
+**Recorded value: `--threshold=0.8`** (2026-08-13). Any value in 0.70–0.95 is
+byte-for-byte equivalent, so this is a convention, not a tuned parameter — it
+exists so runs stop re-deriving a number that provably does not matter. Do not
+spend a 20–60 minute benchmark picking a different one.
+
 | | First run | + prompt/vocab fixes | + branding sweep |
 | --- | --- | --- | --- |
 | Agreement with hand tags | 84.5% | 93.2% | **95.8%** |

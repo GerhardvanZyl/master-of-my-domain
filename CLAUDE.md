@@ -151,6 +151,38 @@ you're back on the network.
 - **Only pages visited while online are available offline.** There's no route
   precache — property pages are server-rendered per request.
 
+## The live app runs on another host
+
+`http://192.168.68.125:3225` is the instance that matters — **not** this
+workstation. It runs `docker-compose.yml` with `./data` bind-mounted, and
+`data/app.db` + `data/images` are tracked in git, so one way to deploy is
+commit here → `git pull` + rebuild there.
+
+The other way, and the one to prefer, is **`POST /api/batch`** — the whole
+update write path over HTTP, so a run on this machine can update the live app
+without shipping a 10MB SQLite file. Sections (all optional, all idempotent,
+applied in this order):
+
+| section | mirrors | notes |
+| --- | --- | --- |
+| `properties` | `npm run load` | `LoadItem[]`, upsert by `listing_url`, partial |
+| `images` | `npm run load:images` | server downloads; SLOW — chunk it |
+| `tags` | `npm run tag:set` | `notes` carries `hero`/`floorplan`/`master`; `ifAbsent` never clobbers a hand correction |
+| `groups` | `group:ensure` + `group:add` | reused by label, membership deduped |
+| `sold` / `withdrawn` | `npm run mark-sold` | replaces prior status + `Sold` row in place |
+| `priceObserve` | `npm run price:observe` | |
+
+Bad rows are collected into `errors` and reported with `ok: false` rather than
+failing the request, so one dud can't discard the other 300 — **check `errors`,
+a 200 is not proof of a clean apply.** `GET /api/batch` returns a coverage
+summary for verification. Client: `node scripts/batch-push.mjs --base=<url>
+--file=<payload.json>` (chunks the image section), or `--status`.
+
+The shared logic lives in `src/db/queries/status.ts` so the CLIs and the
+endpoint cannot drift. There is deliberately **no auth**: `/api/ingest` already
+takes unauthenticated writes on this LAN, so a token here would lock one of two
+doors. Add one when the app leaves the LAN.
+
 ## Conventions
 - Keep the DDL in `src/db/ddl.ts` in sync with `src/db/schema.ts`.
 - `price_history` rows with `event = 'Sold'`: `date` is the real sale date when
