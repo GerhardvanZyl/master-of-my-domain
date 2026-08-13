@@ -62,8 +62,25 @@ for (const [key, v] of Object.entries(raw)) {
   }
 
   if (v.imgs?.length) {
+    // A listing re-uploaded over time carries the SAME photo slot under several
+    // dates (26 Kittyhawk had _2_1_251209_, _2_1_260119_, _2_1_260505_...).
+    // Basenames differ, so a basename dedupe keeps all of them and the gallery
+    // fills with near-duplicates. Keep one per <listingId>_<photoIndex>_<crop>,
+    // the most recently uploaded.
+    const bySlot = new Map();
+    for (const u of v.imgs) {
+      const b = base(u);
+      const m = /^(\d+)_(\d+)_(\d+)_(\d+)_(\d+)/.exec(b);
+      const key = m ? `${m[1]}_${m[2]}_${m[3]}` : b;
+      const stamp = m ? `${m[4]}${m[5]}` : "";
+      const prev = bySlot.get(key);
+      if (!prev || stamp > prev.stamp) bySlot.set(key, { u, stamp });
+    }
+    const deduped = [...bySlot.values()].map((x) => x.u);
     const have = new Set(haveOf.all(prop.id).map((r) => base(r.source_url)));
-    const fresh = v.imgs.filter((u) => !have.has(base(u)));
+    const fresh = deduped.filter((u) => !have.has(base(u)));
+    if (v.imgs.length !== deduped.length)
+      console.log(`  (${listingUrl.split("/").pop()}: ${v.imgs.length} -> ${deduped.length} after slot dedupe)`);
     if (fresh.length) gallery.push({ listingUrl, imageUrls: fresh });
   }
 }
