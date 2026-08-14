@@ -19,7 +19,7 @@
  * Writes: data/harvest/metadata.json (write-only — does not load into the DB)
  */
 import "../src/lib/load-env";
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { sqlite } from "../src/db/client";
 import { getPois, haversineM, type Point } from "./lib/overpass-poi";
@@ -50,12 +50,20 @@ function summarize(label: string, values: (number | null)[], suburbs: (string | 
 }
 
 async function main() {
-  const props = sqlite
-    .prepare(
-      "SELECT listing_url AS listingUrl, latitude, longitude, suburb FROM properties WHERE latitude IS NOT NULL",
-    )
-    .all() as Row[];
-  console.log(`Loaded ${props.length} properties with coordinates.`);
+  // PROPS_JSON lets this run against a harvest file instead of the DB, for the
+  // case where the new listings live only on the live app (all writes go over
+  // HTTP) and were never loaded locally. Same row shape either way.
+  const src = process.env.PROPS_JSON;
+  const props = (
+    src
+      ? (JSON.parse(readFileSync(src, "utf8")) as Row[]).filter((p) => p.latitude != null)
+      : (sqlite
+          .prepare(
+            "SELECT listing_url AS listingUrl, latitude, longitude, suburb FROM properties WHERE latitude IS NOT NULL",
+          )
+          .all() as Row[])
+  ) as Row[];
+  console.log(`Loaded ${props.length} properties with coordinates${src ? ` from ${src}` : ""}.`);
 
   const points: Point[] = props.map((p) => ({ lat: p.latitude!, lng: p.longitude! }));
 
@@ -137,7 +145,9 @@ async function main() {
     };
   });
 
-  const outPath = resolve(process.cwd(), "data/harvest/metadata.json");
+  // OUT_JSON keeps a partial run (PROPS_JSON over a handful of new listings)
+  // from clobbering the full-coverage metadata.json.
+  const outPath = resolve(process.cwd(), process.env.OUT_JSON ?? "data/harvest/metadata.json");
   writeFileSync(outPath, JSON.stringify(out, null, 2));
   console.log(`Wrote ${out.length} rows -> ${outPath}`);
   console.log(`With coords: ${out.filter((r) => r.greenCrossDistanceM != null).length}`);

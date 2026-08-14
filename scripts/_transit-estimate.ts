@@ -6,10 +6,13 @@
  * chain. Values are prefixed "Estimated" so the UI flags them with `*`.
  * Frozen NSW rows are excluded. Idempotent.
  */
+import fs from "node:fs";
 import Database from "better-sqlite3";
 import { loadProperties } from "../src/db/queries/load";
 
-const db = new Database("data/app.db");
+// Read-only: the measured neighbours come from here, but nothing is written
+// back — writes go to the live app over HTTP (see OUT_JSON below).
+const db = new Database("data/app.db", { readonly: true });
 type Row = {
   url: string;
   address: string;
@@ -32,7 +35,33 @@ const all = db
 // Torquay's commute model is different (drive + V/Line), so never cross the line.
 const zone = (r: Row) => (r.suburb === "Torquay" ? "surfcoast" : "metro");
 const known = all.filter((r) => r.mins != null);
-const need = all.filter((r) => r.mins == null);
+// NEED_JSON supplies the properties to estimate from a harvest file, for
+// listings that exist only on the live app and were never loaded locally.
+// The measured pool still comes from the DB.
+const needSrc = process.env.NEED_JSON;
+const need: Row[] = needSrc
+  ? (
+      JSON.parse(fs.readFileSync(needSrc, "utf8")) as {
+        listingUrl: string;
+        address?: string;
+        suburb?: string;
+        latitude?: number;
+        longitude?: number;
+        state?: string;
+      }[]
+    )
+      .filter((p) => p.latitude != null && p.state !== "NSW")
+      .map((p) => ({
+        url: p.listingUrl,
+        address: p.address ?? p.listingUrl,
+        suburb: p.suburb ?? "",
+        lat: p.latitude!,
+        lng: p.longitude!,
+        mins: null,
+        route: null,
+        steps: null,
+      }))
+  : all.filter((r) => r.mins == null);
 
 const dist = (a: Row, b: Row) => {
   const R = 6371000,
@@ -67,5 +96,11 @@ for (const r of need) {
   console.log(`${r.address}  <-  ${best.address} (${bd} m, ${best.mins} min)`);
 }
 
-if (process.argv.includes("--apply")) console.log(JSON.stringify(loadProperties(out)));
-else console.log(`\n${out.length} would be set. Re-run with --apply to write.`);
+if (process.env.OUT_JSON) {
+  fs.writeFileSync(process.env.OUT_JSON, JSON.stringify(out, null, 1));
+  console.log(`\nWrote ${out.length} rows -> ${process.env.OUT_JSON}`);
+} else if (process.argv.includes("--apply")) {
+  console.log(JSON.stringify(loadProperties(out)));
+} else {
+  console.log(`\n${out.length} would be set. Re-run with --apply to write.`);
+}

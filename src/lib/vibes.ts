@@ -1,12 +1,13 @@
 import type { Property } from "@/db/schema";
 
 /**
- * "Vibes" score — starts at 100 and applies the deductions/bonuses the user
+ * "Vibes" score — starts at cfg.baseScore and applies the deductions/bonuses the user
  * specified. Config values are stored as positive magnitudes; the sign is
  * applied here. Everything is configurable (persisted in localStorage by the
  * settings panel); DEFAULT_VIBE_CONFIG holds the user's original numbers.
  */
 export interface VibeConfig {
+  baseScore: number; // what every property starts on, before deductions/bonuses
   idealPrice: number;
   perStation250m: number; // −1 per 250 m from nearest station
   stationExponent: number; // 1 = linear; >1 punishes distance super-linearly
@@ -36,6 +37,7 @@ export interface VibeConfig {
 }
 
 export const DEFAULT_VIBE_CONFIG: VibeConfig = {
+  baseScore: 1000,
   idealPrice: 850_000,
   perStation250m: 1,
   stationExponent: 1,
@@ -110,7 +112,7 @@ export function vibeBreakdown(
   ratings: Rating[],
   cfg: VibeConfig = DEFAULT_VIBE_CONFIG,
 ): BreakdownRow[] {
-  const rows: BreakdownRow[] = [{ label: "Base score", pts: 100 }];
+  const rows: BreakdownRow[] = [{ label: "Base score", pts: cfg.baseScore }];
   const push = (label: string, pts: number) => {
     if (Math.abs(pts) >= 0.05) rows.push({ label, pts: Math.round(pts * 10) / 10 });
   };

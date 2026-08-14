@@ -53,7 +53,12 @@ assert.equal(
   vibeScore(p, ratings, DEFAULT_VIBE_CONFIG),
 );
 assert.equal(rows[0].label, "Base score");
-assert.equal(rows[0].pts, 100);
+assert.equal(rows[0].pts, DEFAULT_VIBE_CONFIG.baseScore);
+// The starting points are configurable, and the base row must follow the config.
+assert.equal(
+  vibeBreakdown(p, ratings, { ...DEFAULT_VIBE_CONFIG, baseScore: 250 })[0].pts,
+  250,
+);
 // Both profiles' reactions count separately, and each is attributed.
 assert.ok(rows.some((r) => r.label === "gerhard: liked it" && r.pts === 25));
 assert.ok(rows.some((r) => r.label === "johanita: meh" && r.pts === -10));

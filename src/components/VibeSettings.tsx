@@ -16,6 +16,7 @@ const FIELDS: {
   sign: "−" | "+" | "";
   step?: number;
 }[] = [
+  { key: "baseScore", label: "base score (starting points)", sign: "+" },
   { key: "perStation250m", label: "per 250m from station", sign: "−" },
   { key: "stationExponent", label: "…^this (1 = linear)", sign: "", step: 0.1 },
   { key: "perAbove5000", label: "per $5k above ideal", sign: "−" },

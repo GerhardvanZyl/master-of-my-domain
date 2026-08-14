@@ -49174,5 +49174,3257 @@
         }
       }
     ]
+  },
+  "playground:-38.001,144.614,-37.775,144.889": {
+    "fetchedAt": "2026-08-14T13:52:58.151Z",
+    "elements": [
+      {
+        "key": "node/358834781",
+        "lat": -37.8797594,
+        "lng": 144.7916084,
+        "tags": {
+          "created_by": "Potlatch 0.10f",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/370487893",
+        "lat": -37.7949737,
+        "lng": 144.834602,
+        "tags": {
+          "created_by": "Potlatch 0.10f",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/577464339",
+        "lat": -37.866906,
+        "lng": 144.6829376,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "node/588393097",
+        "lat": -37.7775159,
+        "lng": 144.8736467,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/697191923",
+        "lat": -37.8607672,
+        "lng": 144.8770945,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/707091740",
+        "lat": -37.8004626,
+        "lng": 144.8635847,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/1421473022",
+        "lat": -37.9008652,
+        "lng": 144.6641865,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "Kelly Park Playground"
+        }
+      },
+      {
+        "key": "node/1509506399",
+        "lat": -37.8889874,
+        "lng": 144.7290742,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/1509506419",
+        "lat": -37.8907472,
+        "lng": 144.7246556,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2003920107",
+        "lat": -37.8899615,
+        "lng": 144.6756734,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2288833535",
+        "lat": -37.8628829,
+        "lng": 144.7221323,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2387042217",
+        "lat": -37.8987089,
+        "lng": 144.6231619,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2483459528",
+        "lat": -37.8584833,
+        "lng": 144.7760876,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2483459545",
+        "lat": -37.8602276,
+        "lng": 144.7689792,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2483459560",
+        "lat": -37.8614783,
+        "lng": 144.7740809,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2483459563",
+        "lat": -37.8615682,
+        "lng": 144.7688412,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2483459650",
+        "lat": -37.8628646,
+        "lng": 144.7720003,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2524262100",
+        "lat": -37.7974993,
+        "lng": 144.8866825,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2722408224",
+        "lat": -37.7821225,
+        "lng": 144.8142619,
+        "tags": {
+          "leisure": "playground",
+          "name": "Selwyn Park Playground",
+          "wheelchair": "yes"
+        }
+      },
+      {
+        "key": "node/2722408225",
+        "lat": -37.7937401,
+        "lng": 144.840053,
+        "tags": {
+          "leisure": "playground",
+          "name": "Tom O'Brien Park Playground"
+        }
+      },
+      {
+        "key": "node/2960619333",
+        "lat": -37.9305404,
+        "lng": 144.6702754,
+        "tags": {
+          "addr:postcode": "3030",
+          "addr:street": "K Road",
+          "addr:suburb": "Werribee South",
+          "fixme": "Is it really indoor, intoo the mansion?",
+          "leisure": "playground",
+          "name": "Werribee Park",
+          "phone:AU": "13 19 63",
+          "website": "https://parkweb.vic.gov.au/explore/parks/werribee-park"
+        }
+      },
+      {
+        "key": "node/2980566005",
+        "lat": -37.7872182,
+        "lng": 144.8740949,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/2981972966",
+        "lat": -37.8218376,
+        "lng": 144.8397865,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/3868636552",
+        "lat": -37.8325107,
+        "lng": 144.8379347,
+        "tags": {
+          "leisure": "playground",
+          "source": "Mapbox"
+        }
+      },
+      {
+        "key": "node/4060950180",
+        "lat": -37.859653,
+        "lng": 144.6575804,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/4776012055",
+        "lat": -37.8536605,
+        "lng": 144.7726805,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/4893103183",
+        "lat": -37.8344128,
+        "lng": 144.8463559,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/4961150257",
+        "lat": -37.8871644,
+        "lng": 144.6491331,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/5457967707",
+        "lat": -37.8834767,
+        "lng": 144.6989097,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/5624308591",
+        "lat": -37.849789,
+        "lng": 144.8750798,
+        "tags": {
+          "access": "customers",
+          "fee": "yes",
+          "indoor": "yes",
+          "leisure": "playground",
+          "name": "Tumbles Playhouse"
+        }
+      },
+      {
+        "key": "node/7295692915",
+        "lat": -37.8863151,
+        "lng": 144.6798737,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/7599677566",
+        "lat": -37.9091998,
+        "lng": 144.6609448,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/8043691417",
+        "lat": -37.9033588,
+        "lng": 144.6726026,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/8043691418",
+        "lat": -37.90439,
+        "lng": 144.6667491,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/8043691419",
+        "lat": -37.912143,
+        "lng": 144.6731327,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/8937440488",
+        "lat": -37.846844,
+        "lng": 144.6517149,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "The Grove Playground",
+          "surface": "rubber"
+        }
+      },
+      {
+        "key": "node/8937440491",
+        "lat": -37.8460014,
+        "lng": 144.6530219,
+        "tags": {
+          "leisure": "playground",
+          "name": "Butterfly Boulevard Playground"
+        }
+      },
+      {
+        "key": "node/8940812483",
+        "lat": -37.9040315,
+        "lng": 144.6541987,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "surface": "wood"
+        }
+      },
+      {
+        "key": "node/8949947756",
+        "lat": -37.866174,
+        "lng": 144.6594566,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/8954137628",
+        "lat": -37.887604,
+        "lng": 144.6580323,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/8991598816",
+        "lat": -37.8672605,
+        "lng": 144.7146456,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/9042214259",
+        "lat": -37.8769051,
+        "lng": 144.6583091,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/9047000982",
+        "lat": -37.8899746,
+        "lng": 144.6546084,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/9184330600",
+        "lat": -37.8554846,
+        "lng": 144.6713704,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/9265523058",
+        "lat": -37.8946635,
+        "lng": 144.6481047,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/9504058722",
+        "lat": -37.884802,
+        "lng": 144.7886297,
+        "tags": {
+          "leisure": "playground",
+          "name": "Tatman Drive Playground"
+        }
+      },
+      {
+        "key": "node/9588841951",
+        "lat": -37.8721027,
+        "lng": 144.6680142,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/9645096342",
+        "lat": -37.8772616,
+        "lng": 144.6622419,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/9843498770",
+        "lat": -37.8783636,
+        "lng": 144.6978679,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/10605458492",
+        "lat": -37.7946968,
+        "lng": 144.844866,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/11076644427",
+        "lat": -37.872437,
+        "lng": 144.7072782,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/12210501060",
+        "lat": -37.829743,
+        "lng": 144.8329919,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/13426642344",
+        "lat": -37.8426076,
+        "lng": 144.8784739,
+        "tags": {
+          "access": "private",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/13927743807",
+        "lat": -37.8179549,
+        "lng": 144.6984238,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "node/13928159645",
+        "lat": -37.9063142,
+        "lng": 144.7315196,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/28487466",
+        "lat": -37.817076,
+        "lng": 144.8855673,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/45415497",
+        "lat": -37.8667532,
+        "lng": 144.668686,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/45415680",
+        "lat": -37.8634527,
+        "lng": 144.668186,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/46597243",
+        "lat": -37.8710848,
+        "lng": 144.6881836,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/46597246",
+        "lat": -37.8692917,
+        "lng": 144.689802,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/46597309",
+        "lat": -37.8727955,
+        "lng": 144.6857306,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/46597310",
+        "lat": -37.872623,
+        "lng": 144.6856677,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/46598259",
+        "lat": -37.8769364,
+        "lng": 144.6864231,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/46598392",
+        "lat": -37.8667272,
+        "lng": 144.69367,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/46703694",
+        "lat": -37.841917,
+        "lng": 144.6575828,
+        "tags": {
+          "layer": "-2",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/46751843",
+        "lat": -37.846006,
+        "lng": 144.6531076,
+        "tags": {
+          "layer": "-2",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/47893475",
+        "lat": -37.8850693,
+        "lng": 144.7511718,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/47893928",
+        "lat": -37.873565,
+        "lng": 144.7565302,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/51251941",
+        "lat": -37.8800512,
+        "lng": 144.6917942,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "Regent Street Park Playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/51529816",
+        "lat": -37.9284302,
+        "lng": 144.7719096,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/51529825",
+        "lat": -37.9284466,
+        "lng": 144.7729302,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/51537588",
+        "lat": -37.8617536,
+        "lng": 144.8207579,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/51654357",
+        "lat": -37.8551628,
+        "lng": 144.7345717,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/51655123",
+        "lat": -37.8474724,
+        "lng": 144.724568,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/52435778",
+        "lat": -37.7919998,
+        "lng": 144.7668094,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/53159388",
+        "lat": -37.8591433,
+        "lng": 144.7428668,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/59034221",
+        "lat": -37.792094,
+        "lng": 144.7565677,
+        "tags": {
+          "layer": "1",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/66980339",
+        "lat": -37.9733607,
+        "lng": 144.6885914,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/68667671",
+        "lat": -37.860124,
+        "lng": 144.8462888,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/71394692",
+        "lat": -37.8240223,
+        "lng": 144.8786831,
+        "tags": {
+          "alt_name": "The Boullevard Playground",
+          "leisure": "playground",
+          "name": "Love Street Reserve Playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/71668912",
+        "lat": -37.8680227,
+        "lng": 144.7721254,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/71704774",
+        "lat": -37.8891998,
+        "lng": 144.7525322,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/71705375",
+        "lat": -37.8891043,
+        "lng": 144.741127,
+        "tags": {
+          "leisure": "playground",
+          "source": "nearmap"
+        }
+      },
+      {
+        "key": "way/85737667",
+        "lat": -37.8994273,
+        "lng": 144.7345495,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/156146597",
+        "lat": -37.8803853,
+        "lng": 144.7561913,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/167308971",
+        "lat": -37.8569138,
+        "lng": 144.7512311,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/169517652",
+        "lat": -37.8773724,
+        "lng": 144.704755,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/169522316",
+        "lat": -37.7767052,
+        "lng": 144.7598072,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/169522317",
+        "lat": -37.780267,
+        "lng": 144.7618264,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/169522321",
+        "lat": -37.7801312,
+        "lng": 144.7696984,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/169522323",
+        "lat": -37.778968,
+        "lng": 144.7667556,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/169527774",
+        "lat": -37.7992935,
+        "lng": 144.8811881,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/169561473",
+        "lat": -37.8505211,
+        "lng": 144.8874593,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "E. W. Jackson Playground"
+        }
+      },
+      {
+        "key": "way/169793789",
+        "lat": -37.7937514,
+        "lng": 144.7916995,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/171861394",
+        "lat": -37.8861016,
+        "lng": 144.7348757,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/183688633",
+        "lat": -37.8477606,
+        "lng": 144.6661695,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/185596516",
+        "lat": -37.8823641,
+        "lng": 144.7492954,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/185748155",
+        "lat": -37.8851321,
+        "lng": 144.7586381,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/185748156",
+        "lat": -37.8845932,
+        "lng": 144.7609504,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/188864413",
+        "lat": -37.8785321,
+        "lng": 144.7442665,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/194026943",
+        "lat": -37.794507,
+        "lng": 144.7685513,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/201386682",
+        "lat": -37.8504018,
+        "lng": 144.709861,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/205872485",
+        "lat": -37.8951814,
+        "lng": 144.7411302,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/208937386",
+        "lat": -37.8976196,
+        "lng": 144.7457862,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/208937389",
+        "lat": -37.8960877,
+        "lng": 144.7451294,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/215046879",
+        "lat": -37.8864773,
+        "lng": 144.7449336,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/244159721",
+        "lat": -37.8073407,
+        "lng": 144.8799609,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/265733440",
+        "lat": -37.8394253,
+        "lng": 144.8880961,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/265759398",
+        "lat": -37.8548953,
+        "lng": 144.8823402,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/265763239",
+        "lat": -37.855531,
+        "lng": 144.8751932,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/363828151",
+        "lat": -37.7961938,
+        "lng": 144.8146699,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/368116001",
+        "lat": -37.7938864,
+        "lng": 144.8564368,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "source": "Bing",
+          "surface": "woodchips",
+          "wheelchair": "limited"
+        }
+      },
+      {
+        "key": "way/389067826",
+        "lat": -37.8234306,
+        "lng": 144.8436068,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/463802822",
+        "lat": -37.9021532,
+        "lng": 144.614539,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/463820890",
+        "lat": -37.9018427,
+        "lng": 144.6208557,
+        "tags": {
+          "leisure": "playground",
+          "source": "extrapolation"
+        }
+      },
+      {
+        "key": "way/471318435",
+        "lat": -37.9132642,
+        "lng": 144.779512,
+        "tags": {
+          "area": "yes",
+          "leisure": "playground",
+          "name": "Saltwater Crocodile Park"
+        }
+      },
+      {
+        "key": "way/471650950",
+        "lat": -37.9086832,
+        "lng": 144.7583333,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/473255234",
+        "lat": -37.9163689,
+        "lng": 144.7805745,
+        "tags": {
+          "area": "yes",
+          "leisure": "playground",
+          "name": "Fire truck playground"
+        }
+      },
+      {
+        "key": "way/473967104",
+        "lat": -37.8400523,
+        "lng": 144.7164412,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/474153343",
+        "lat": -37.8275232,
+        "lng": 144.8442048,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/474559705",
+        "lat": -37.8267994,
+        "lng": 144.882165,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/480772697",
+        "lat": -37.9732674,
+        "lng": 144.693124,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/480965850",
+        "lat": -37.7987189,
+        "lng": 144.8859951,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "Lions Club of Footscray Memorial Playground"
+        }
+      },
+      {
+        "key": "way/481153816",
+        "lat": -37.820375,
+        "lng": 144.874565,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/481153817",
+        "lat": -37.8208489,
+        "lng": 144.8742259,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/481305687",
+        "lat": -37.9085739,
+        "lng": 144.7662213,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/484434471",
+        "lat": -37.8912503,
+        "lng": 144.7832797,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/497795359",
+        "lat": -37.8343536,
+        "lng": 144.8461537,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/498695392",
+        "lat": -37.9087976,
+        "lng": 144.7614229,
+        "tags": {
+          "area": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/499460898",
+        "lat": -37.8207125,
+        "lng": 144.8714188,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/504478603",
+        "lat": -37.8656676,
+        "lng": 144.7836843,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/504478612",
+        "lat": -37.8804278,
+        "lng": 144.7364759,
+        "tags": {
+          "area": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/509777427",
+        "lat": -37.815958,
+        "lng": 144.8814455,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/510636734",
+        "lat": -37.8392818,
+        "lng": 144.8429971,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/511630300",
+        "lat": -37.8884927,
+        "lng": 144.6502078,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/511630407",
+        "lat": -37.8860583,
+        "lng": 144.632407,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/512454100",
+        "lat": -37.8845628,
+        "lng": 144.6691677,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/512454112",
+        "lat": -37.8840975,
+        "lng": 144.673903,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/512486714",
+        "lat": -37.8972307,
+        "lng": 144.6536973,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/513189916",
+        "lat": -37.9131884,
+        "lng": 144.6337186,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/513737653",
+        "lat": -37.8831244,
+        "lng": 144.6712915,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/513737654",
+        "lat": -37.8847464,
+        "lng": 144.6714286,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/513919989",
+        "lat": -37.8444366,
+        "lng": 144.8802955,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/515194418",
+        "lat": -37.8702667,
+        "lng": 144.8296856,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/516153004",
+        "lat": -37.8402504,
+        "lng": 144.8775812,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/520928660",
+        "lat": -37.8680552,
+        "lng": 144.8442887,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/523536385",
+        "lat": -37.8364178,
+        "lng": 144.6639386,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/531380846",
+        "lat": -37.8098009,
+        "lng": 144.8669557,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/541303403",
+        "lat": -37.9093479,
+        "lng": 144.7498693,
+        "tags": {
+          "leisure": "playground",
+          "surface": "sett"
+        }
+      },
+      {
+        "key": "way/559649331",
+        "lat": -37.8424228,
+        "lng": 144.8507204,
+        "tags": {
+          "leisure": "playground",
+          "source": "Bing"
+        }
+      },
+      {
+        "key": "way/562612889",
+        "lat": -37.8590634,
+        "lng": 144.6830476,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/604878596",
+        "lat": -37.9142951,
+        "lng": 144.7607363,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/643364587",
+        "lat": -37.7885808,
+        "lng": 144.8391616,
+        "tags": {
+          "leisure": "playground",
+          "source:geometry": "Esri World Imagery"
+        }
+      },
+      {
+        "key": "way/643367879",
+        "lat": -37.7861057,
+        "lng": 144.8886511,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/675578373",
+        "lat": -37.8928433,
+        "lng": 144.7543271,
+        "tags": {
+          "access": "private",
+          "leisure": "playground",
+          "surface": "woodchips"
+        }
+      },
+      {
+        "key": "way/675578374",
+        "lat": -37.8927315,
+        "lng": 144.7543756,
+        "tags": {
+          "access": "private",
+          "leisure": "playground",
+          "surface": "woodchips"
+        }
+      },
+      {
+        "key": "way/675578375",
+        "lat": -37.8925392,
+        "lng": 144.7543382,
+        "tags": {
+          "access": "private",
+          "leisure": "playground",
+          "surface": "woodchips"
+        }
+      },
+      {
+        "key": "way/694629041",
+        "lat": -37.7987044,
+        "lng": 144.8409136,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/719367213",
+        "lat": -37.8866567,
+        "lng": 144.624235,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/731535129",
+        "lat": -37.8876248,
+        "lng": 144.7153616,
+        "tags": {
+          "leisure": "playground",
+          "name": "Upper Point Cook Playground"
+        }
+      },
+      {
+        "key": "way/733546840",
+        "lat": -37.8387154,
+        "lng": 144.8685015,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/738693685",
+        "lat": -37.8320365,
+        "lng": 144.8879307,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/759532104",
+        "lat": -37.8364703,
+        "lng": 144.6571401,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/759532105",
+        "lat": -37.8338381,
+        "lng": 144.6604941,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/759565471",
+        "lat": -37.8303512,
+        "lng": 144.6778148,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/774540389",
+        "lat": -37.8599856,
+        "lng": 144.7504472,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/787849212",
+        "lat": -37.8963162,
+        "lng": 144.6427499,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/787913935",
+        "lat": -37.8275015,
+        "lng": 144.8342544,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/788174341",
+        "lat": -37.8818469,
+        "lng": 144.6252415,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/788174354",
+        "lat": -37.8881584,
+        "lng": 144.6282708,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/788369348",
+        "lat": -37.8320852,
+        "lng": 144.6495387,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/791024346",
+        "lat": -37.9188518,
+        "lng": 144.6330965,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/796365880",
+        "lat": -37.9027081,
+        "lng": 144.7487979,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/807632522",
+        "lat": -37.7962397,
+        "lng": 144.7935496,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/807637140",
+        "lat": -37.7941444,
+        "lng": 144.7967666,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/807910244",
+        "lat": -37.7941255,
+        "lng": 144.8053402,
+        "tags": {
+          "fixme": "check if still present",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/813574521",
+        "lat": -37.9013468,
+        "lng": 144.6581639,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/813574529",
+        "lat": -37.9023405,
+        "lng": 144.6555267,
+        "tags": {
+          "leisure": "playground",
+          "wheelchair": "yes"
+        }
+      },
+      {
+        "key": "way/822774414",
+        "lat": -37.7997134,
+        "lng": 144.874252,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "operator": "Maribyrnong City Council",
+          "source": "local knowledge;aerial imagery",
+          "surface": "woodchips",
+          "website": "https://www.maribyrnong.vic.gov.au/Parks/Lions-Park"
+        }
+      },
+      {
+        "key": "way/824774149",
+        "lat": -37.8280995,
+        "lng": 144.8707709,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/831185230",
+        "lat": -37.9138297,
+        "lng": 144.7853986,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "Race track playground"
+        }
+      },
+      {
+        "key": "way/831187497",
+        "lat": -37.9032531,
+        "lng": 144.7382101,
+        "tags": {
+          "leisure": "playground",
+          "name": "Flower pot playground"
+        }
+      },
+      {
+        "key": "way/831187498",
+        "lat": -37.9040506,
+        "lng": 144.7435215,
+        "tags": {
+          "leisure": "playground",
+          "name": "Pirate ship playground"
+        }
+      },
+      {
+        "key": "way/842041179",
+        "lat": -37.8726777,
+        "lng": 144.7665263,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/842041180",
+        "lat": -37.8727703,
+        "lng": 144.7621049,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/900597658",
+        "lat": -37.8525144,
+        "lng": 144.7416045,
+        "tags": {
+          "leisure": "playground",
+          "name": "Jupiter Drive Playground",
+          "surface": "wood"
+        }
+      },
+      {
+        "key": "way/926537391",
+        "lat": -37.885128,
+        "lng": 144.6661922,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "max_age": "none",
+          "min_age": "none",
+          "name": "Argyle Crescent Park Playground",
+          "operator": "Wyndham city council"
+        }
+      },
+      {
+        "key": "way/926537392",
+        "lat": -37.8888342,
+        "lng": 144.6654891,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/927749409",
+        "lat": -37.904455,
+        "lng": 144.6668527,
+        "tags": {
+          "leisure": "playground",
+          "name": "Soldiers Reserve Playground"
+        }
+      },
+      {
+        "key": "way/964240075",
+        "lat": -37.8842016,
+        "lng": 144.6698665,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/965149234",
+        "lat": -37.872109,
+        "lng": 144.6680485,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/966974044",
+        "lat": -37.9102707,
+        "lng": 144.6305503,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/971939242",
+        "lat": -37.8368313,
+        "lng": 144.852145,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/972182002",
+        "lat": -37.7873025,
+        "lng": 144.8446303,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/972182007",
+        "lat": -37.7837865,
+        "lng": 144.8507014,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/972182021",
+        "lat": -37.7777999,
+        "lng": 144.858742,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/972182088",
+        "lat": -37.8128757,
+        "lng": 144.8714946,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/972182148",
+        "lat": -37.7825891,
+        "lng": 144.806133,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/974215829",
+        "lat": -37.7788075,
+        "lng": 144.7579725,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/974215834",
+        "lat": -37.7856645,
+        "lng": 144.7585008,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/977780262",
+        "lat": -37.9016067,
+        "lng": 144.7796553,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/977780300",
+        "lat": -37.8644517,
+        "lng": 144.7356051,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/982208864",
+        "lat": -37.8755546,
+        "lng": 144.8128998,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/982208869",
+        "lat": -37.873002,
+        "lng": 144.817562,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/982373798",
+        "lat": -37.8457123,
+        "lng": 144.8521701,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/983233918",
+        "lat": -37.8625102,
+        "lng": 144.8379712,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/993850516",
+        "lat": -37.8357662,
+        "lng": 144.8593388,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1007201968",
+        "lat": -37.8465651,
+        "lng": 144.64676,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1007616069",
+        "lat": -37.8220542,
+        "lng": 144.8463,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1025387035",
+        "lat": -37.8432622,
+        "lng": 144.8822025,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1031076553",
+        "lat": -37.8848195,
+        "lng": 144.7885872,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1037048730",
+        "lat": -37.8386005,
+        "lng": 144.87835,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1037048731",
+        "lat": -37.8384853,
+        "lng": 144.8787204,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1042117824",
+        "lat": -37.8661325,
+        "lng": 144.6594808,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1044085786",
+        "lat": -37.846222,
+        "lng": 144.8678845,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1044668259",
+        "lat": -37.7826192,
+        "lng": 144.8366029,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1046411501",
+        "lat": -37.7858035,
+        "lng": 144.8370547,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1048362381",
+        "lat": -37.8437813,
+        "lng": 144.8670824,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1053285804",
+        "lat": -37.8827955,
+        "lng": 144.6890146,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1053634077",
+        "lat": -37.7809589,
+        "lng": 144.8532412,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1053634139",
+        "lat": -37.776205,
+        "lng": 144.8503106,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1053960916",
+        "lat": -37.7883445,
+        "lng": 144.8659426,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1053985947",
+        "lat": -37.7927849,
+        "lng": 144.8745846,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1053985948",
+        "lat": -37.7927591,
+        "lng": 144.875023,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1056130490",
+        "lat": -37.8703784,
+        "lng": 144.6942712,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1056535309",
+        "lat": -37.8396803,
+        "lng": 144.8702394,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1058339242",
+        "lat": -37.7850041,
+        "lng": 144.8780053,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1064754262",
+        "lat": -37.8958733,
+        "lng": 144.6225433,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1082430779",
+        "lat": -37.7762219,
+        "lng": 144.7961342,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1082430780",
+        "lat": -37.7759769,
+        "lng": 144.7962674,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1090409063",
+        "lat": -37.8609299,
+        "lng": 144.674979,
+        "tags": {
+          "leisure": "playground",
+          "name": "The Grange Reserve Playground"
+        }
+      },
+      {
+        "key": "way/1090409064",
+        "lat": -37.8609443,
+        "lng": 144.6757904,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "surface": "wood"
+        }
+      },
+      {
+        "key": "way/1101408027",
+        "lat": -37.8251176,
+        "lng": 144.6772065,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1101408065",
+        "lat": -37.8206568,
+        "lng": 144.7178996,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1110176231",
+        "lat": -37.7886005,
+        "lng": 144.8180968,
+        "tags": {
+          "leisure": "playground",
+          "name": "Krambruk Street Playground",
+          "operator": "Brimbank Council"
+        }
+      },
+      {
+        "key": "way/1128458169",
+        "lat": -37.7754717,
+        "lng": 144.8366683,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1159141780",
+        "lat": -37.8348323,
+        "lng": 144.7064747,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1212034858",
+        "lat": -37.7904852,
+        "lng": 144.8301151,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1215330516",
+        "lat": -37.883461,
+        "lng": 144.6989552,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1228862488",
+        "lat": -37.8048412,
+        "lng": 144.8725976,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1254252257",
+        "lat": -37.8160221,
+        "lng": 144.8690234,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "Angliss Reserve Playground"
+        }
+      },
+      {
+        "key": "way/1254261056",
+        "lat": -37.8556814,
+        "lng": 144.8185581,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "F. Rush Reserve Playground",
+          "operator": "Hobsons Bay City Council",
+          "surface": "woodchips"
+        }
+      },
+      {
+        "key": "way/1260549214",
+        "lat": -37.8616165,
+        "lng": 144.8136158,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1266353191",
+        "lat": -37.8315413,
+        "lng": 144.8649893,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1268525981",
+        "lat": -37.8265954,
+        "lng": 144.882222,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1270289274",
+        "lat": -37.826893,
+        "lng": 144.8819621,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1270289299",
+        "lat": -37.8274579,
+        "lng": 144.885058,
+        "tags": {
+          "leisure": "playground",
+          "wheelchair": "no"
+        }
+      },
+      {
+        "key": "way/1271076393",
+        "lat": -37.9104078,
+        "lng": 144.6393068,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "Westleigh Drive Park Playground",
+          "operator": "Wyndham City Council",
+          "surface": "woodchips"
+        }
+      },
+      {
+        "key": "way/1273560250",
+        "lat": -37.8723777,
+        "lng": 144.6185784,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1276789282",
+        "lat": -37.7926672,
+        "lng": 144.8748683,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1277607213",
+        "lat": -37.7857369,
+        "lng": 144.885572,
+        "tags": {
+          "leisure": "playground",
+          "name": "Allara Avenue Playground"
+        }
+      },
+      {
+        "key": "way/1281308134",
+        "lat": -37.7934717,
+        "lng": 144.8486744,
+        "tags": {
+          "leisure": "playground",
+          "surface": "woodchips"
+        }
+      },
+      {
+        "key": "way/1285227756",
+        "lat": -37.7987825,
+        "lng": 144.8288423,
+        "tags": {
+          "leisure": "playground",
+          "name": "Buckingham Reserve Playground",
+          "wheelchair": "yes"
+        }
+      },
+      {
+        "key": "way/1285227769",
+        "lat": -37.8020968,
+        "lng": 144.8275689,
+        "tags": {
+          "leisure": "playground",
+          "name": "Bickley/McCoubrie Reserve playground"
+        }
+      },
+      {
+        "key": "way/1285227779",
+        "lat": -37.797009,
+        "lng": 144.8250945,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1285402677",
+        "lat": -37.7891646,
+        "lng": 144.8305957,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1285834004",
+        "lat": -37.7860058,
+        "lng": 144.8096962,
+        "tags": {
+          "addr:housenumber": "65",
+          "addr:street": "Collenso Street",
+          "leisure": "playground",
+          "name": "Collenso Street Reserve Playground"
+        }
+      },
+      {
+        "key": "way/1285834019",
+        "lat": -37.8001577,
+        "lng": 144.8129029,
+        "tags": {
+          "leisure": "playground",
+          "name": "Norm Talintyre Reserve playground"
+        }
+      },
+      {
+        "key": "way/1285834020",
+        "lat": -37.7988706,
+        "lng": 144.8056813,
+        "tags": {
+          "leisure": "playground",
+          "name": "Gresham Way Reserve Playground"
+        }
+      },
+      {
+        "key": "way/1286234223",
+        "lat": -37.8182075,
+        "lng": 144.8781005,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "name": "McNish ‘Dinosaur Park’ Reserve playground",
+          "playground:theme": "dinosaur"
+        }
+      },
+      {
+        "key": "way/1288185577",
+        "lat": -37.847331,
+        "lng": 144.8883748,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1296798039",
+        "lat": -37.8310077,
+        "lng": 144.8575303,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1306982671",
+        "lat": -37.9233087,
+        "lng": 144.6374561,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1313890374",
+        "lat": -37.9170681,
+        "lng": 144.6280842,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1323551965",
+        "lat": -37.8695945,
+        "lng": 144.626669,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1331177300",
+        "lat": -37.78071,
+        "lng": 144.8135325,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1331177437",
+        "lat": -37.7814276,
+        "lng": 144.8154353,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1334654348",
+        "lat": -37.7953301,
+        "lng": 144.8851332,
+        "tags": {
+          "access": "private",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1334654353",
+        "lat": -37.7958506,
+        "lng": 144.8854006,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1336836680",
+        "lat": -37.8202924,
+        "lng": 144.7171512,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1338597776",
+        "lat": -37.8639213,
+        "lng": 144.8803808,
+        "tags": {
+          "area": "yes",
+          "leisure": "playground",
+          "name": "Jawbone Reserve Playground"
+        }
+      },
+      {
+        "key": "way/1339980400",
+        "lat": -37.8673695,
+        "lng": 144.7664796,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1340706075",
+        "lat": -37.8634424,
+        "lng": 144.7531845,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1343707569",
+        "lat": -37.8362122,
+        "lng": 144.8457652,
+        "tags": {
+          "leisure": "playground",
+          "surface": "rubber"
+        }
+      },
+      {
+        "key": "way/1360141436",
+        "lat": -37.888459,
+        "lng": 144.7405552,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1361490009",
+        "lat": -37.9100095,
+        "lng": 144.7269703,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1361520332",
+        "lat": -37.9016554,
+        "lng": 144.7180326,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1362160836",
+        "lat": -37.9001559,
+        "lng": 144.7235698,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1362553772",
+        "lat": -37.899992,
+        "lng": 144.7558881,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1367365378",
+        "lat": -37.9217199,
+        "lng": 144.630132,
+        "tags": {
+          "leisure": "playground",
+          "name": "Tindale Boulevard Park",
+          "playground": "slide"
+        }
+      },
+      {
+        "key": "way/1369994637",
+        "lat": -37.8931607,
+        "lng": 144.6143939,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1374642343",
+        "lat": -37.8667152,
+        "lng": 144.8222511,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1374642345",
+        "lat": -37.8675155,
+        "lng": 144.8232656,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1374642346",
+        "lat": -37.8671754,
+        "lng": 144.823214,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1376979623",
+        "lat": -37.8706113,
+        "lng": 144.8110213,
+        "tags": {
+          "leisure": "playground",
+          "name": "Somers Road Playground"
+        }
+      },
+      {
+        "key": "way/1377156815",
+        "lat": -37.8573146,
+        "lng": 144.8804464,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1378475909",
+        "lat": -37.7927887,
+        "lng": 144.8179305,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1378475910",
+        "lat": -37.7923689,
+        "lng": 144.818917,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1378475911",
+        "lat": -37.79212,
+        "lng": 144.8185425,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1378858403",
+        "lat": -37.8656932,
+        "lng": 144.8282102,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1382487579",
+        "lat": -37.8777415,
+        "lng": 144.6937889,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1382568152",
+        "lat": -37.8682031,
+        "lng": 144.687291,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1382568168",
+        "lat": -37.8651751,
+        "lng": 144.6873599,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1382568178",
+        "lat": -37.8657323,
+        "lng": 144.7000665,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1384008147",
+        "lat": -37.7815919,
+        "lng": 144.8233009,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1387267501",
+        "lat": -37.8672568,
+        "lng": 144.7214697,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1416659671",
+        "lat": -37.8649243,
+        "lng": 144.8408711,
+        "tags": {
+          "access": "customers",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1418421788",
+        "lat": -37.8858251,
+        "lng": 144.7212502,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1419587874",
+        "lat": -37.8394136,
+        "lng": 144.6458927,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1420101828",
+        "lat": -37.8464556,
+        "lng": 144.659959,
+        "tags": {
+          "leisure": "playground",
+          "name": "Kelebek Road Playground"
+        }
+      },
+      {
+        "key": "way/1424941485",
+        "lat": -37.8843119,
+        "lng": 144.6588296,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1426387480",
+        "lat": -37.877268,
+        "lng": 144.6685003,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1427253495",
+        "lat": -37.8435753,
+        "lng": 144.6934443,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1428603782",
+        "lat": -37.8413172,
+        "lng": 144.6849079,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1429444439",
+        "lat": -37.7777966,
+        "lng": 144.8866815,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1455710954",
+        "lat": -37.7960992,
+        "lng": 144.814481,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1455949937",
+        "lat": -37.8228482,
+        "lng": 144.6681122,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1455949938",
+        "lat": -37.8230146,
+        "lng": 144.6680133,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1455949939",
+        "lat": -37.8233575,
+        "lng": 144.6680736,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1456410303",
+        "lat": -37.8656382,
+        "lng": 144.844431,
+        "tags": {
+          "access": "customers",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1456436105",
+        "lat": -37.864407,
+        "lng": 144.8411158,
+        "tags": {
+          "access": "customers",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1456436106",
+        "lat": -37.8642687,
+        "lng": 144.8407926,
+        "tags": {
+          "access": "customers",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1458224509",
+        "lat": -37.7862761,
+        "lng": 144.8003621,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1462047862",
+        "lat": -37.9130029,
+        "lng": 144.7687899,
+        "tags": {
+          "leisure": "playground",
+          "name": "Coaching Parade Park Playground"
+        }
+      },
+      {
+        "key": "way/1465829432",
+        "lat": -37.7846926,
+        "lng": 144.8642448,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1493598166",
+        "lat": -37.831091,
+        "lng": 144.7061133,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1495123266",
+        "lat": -37.9027799,
+        "lng": 144.7089155,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1495123267",
+        "lat": -37.9029437,
+        "lng": 144.7095832,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1495123268",
+        "lat": -37.9036194,
+        "lng": 144.7095231,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1495123271",
+        "lat": -37.9035493,
+        "lng": 144.708809,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1501270436",
+        "lat": -37.9097646,
+        "lng": 144.7667809,
+        "tags": {
+          "leisure": "playground",
+          "name": "Brookdale Road Reserve Playground",
+          "source:geometry": "Esri World Imagery"
+        }
+      },
+      {
+        "key": "way/1502385784",
+        "lat": -37.8273396,
+        "lng": 144.7122607,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1502401316",
+        "lat": -37.8237718,
+        "lng": 144.7061377,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1502401326",
+        "lat": -37.8226091,
+        "lng": 144.701295,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1502747309",
+        "lat": -37.9092516,
+        "lng": 144.6478174,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1502828810",
+        "lat": -37.8460941,
+        "lng": 144.6360584,
+        "tags": {
+          "leisure": "playground",
+          "name": "Feronia Avenue Playground"
+        }
+      },
+      {
+        "key": "way/1503646077",
+        "lat": -37.8922556,
+        "lng": 144.7198644,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1506281050",
+        "lat": -37.8465432,
+        "lng": 144.7145329,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1506281051",
+        "lat": -37.8466943,
+        "lng": 144.7144612,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1506281052",
+        "lat": -37.8468203,
+        "lng": 144.7147255,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1506379546",
+        "lat": -37.8718084,
+        "lng": 144.6762999,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground",
+          "surface": "wood"
+        }
+      },
+      {
+        "key": "way/1512100169",
+        "lat": -37.7869987,
+        "lng": 144.8532222,
+        "tags": {
+          "leisure": "playground",
+          "name": "Lance Reichstein Playground"
+        }
+      },
+      {
+        "key": "way/1537928577",
+        "lat": -37.7888501,
+        "lng": 144.7983241,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1537928578",
+        "lat": -37.7887704,
+        "lng": 144.7996698,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1537928579",
+        "lat": -37.7888933,
+        "lng": 144.7993216,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1545985723",
+        "lat": -37.7961638,
+        "lng": 144.8693625,
+        "tags": {
+          "access": "yes",
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "way/1549053289",
+        "lat": -37.8767637,
+        "lng": 144.7865112,
+        "tags": {
+          "leisure": "playground"
+        }
+      },
+      {
+        "key": "relation/18673799",
+        "lat": -37.9028842,
+        "lng": 144.7581608,
+        "tags": {
+          "leisure": "playground",
+          "type": "multipolygon"
+        }
+      },
+      {
+        "key": "relation/21173174",
+        "lat": -37.7940651,
+        "lng": 144.7612259,
+        "tags": {
+          "leisure": "playground",
+          "type": "multipolygon"
+        }
+      }
+    ]
+  },
+  "coles:-38.001,144.614,-37.775,144.889": {
+    "fetchedAt": "2026-08-14T13:53:06.471Z",
+    "elements": [
+      {
+        "key": "node/290313333",
+        "lat": -37.8747789,
+        "lng": 144.6794291,
+        "tags": {
+          "addr:housenumber": "250",
+          "addr:street": "Heaths Road",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q1339055",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/461534089",
+        "lat": -37.8952497,
+        "lng": 144.7530363,
+        "tags": {
+          "addr:housenumber": "300",
+          "addr:street": "Point Cook Road",
+          "branch": "Sanctuary Lakes",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "opening_hours": "Mo-Su 06:00-24:00",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/508030779",
+        "lat": -37.7936568,
+        "lng": 144.8603614,
+        "tags": {
+          "addr:housenumber": "67",
+          "addr:street": "Ashley Street",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q1339055",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/832563928",
+        "lat": -37.8815939,
+        "lng": 144.7032684,
+        "tags": {
+          "addr:housenumber": "50",
+          "addr:street": "Old Geelong Road",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "shop": "supermarket"
+        }
+      },
+      {
+        "key": "node/1271728963",
+        "lat": -37.8757512,
+        "lng": 144.6145175,
+        "tags": {
+          "addr:housenumber": "8",
+          "addr:street": "Manor Lakes Boulevard",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/1918505758",
+        "lat": -37.8732777,
+        "lng": 144.7759322,
+        "tags": {
+          "addr:housenumber": "1-23",
+          "addr:street": "Central Avenue",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "full_name": "Coles Altona Meadows",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/2163569101",
+        "lat": -37.8825051,
+        "lng": 144.7346373,
+        "tags": {
+          "addr:housenumber": "1",
+          "addr:street": "Main Street",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/2254087485",
+        "lat": -37.7837126,
+        "lng": 144.7711213,
+        "tags": {
+          "addr:street": "Mount Derrimut Road",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket"
+        }
+      },
+      {
+        "key": "node/2943276352",
+        "lat": -37.7976134,
+        "lng": 144.8061424,
+        "tags": {
+          "addr:housenumber": "136",
+          "addr:street": "The Avenue",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket"
+        }
+      },
+      {
+        "key": "node/3338903502",
+        "lat": -37.849012,
+        "lng": 144.7037194,
+        "tags": {
+          "addr:housenumber": "380",
+          "addr:street": "Sayers Road",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "full_name": "Coles Wyndham Village",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q1339055",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/5009375193",
+        "lat": -37.8596976,
+        "lng": 144.6665023,
+        "tags": {
+          "addr:postcode": "3029",
+          "addr:street": "Tarneit Road & Hogans Road",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "opening_hours": "Mo-Su 06:00-00:00",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/5512743307",
+        "lat": -37.837283,
+        "lng": 144.6912622,
+        "tags": {
+          "addr:housenumber": "540",
+          "addr:street": "Derrimut Road",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/5905408641",
+        "lat": -37.7781318,
+        "lng": 144.8514648,
+        "tags": {
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      },
+      {
+        "key": "node/7357800722",
+        "lat": -37.8339607,
+        "lng": 144.6510554,
+        "tags": {
+          "addr:housenumber": "200",
+          "addr:street": "Hummingbird Boulevard",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket"
+        }
+      },
+      {
+        "key": "node/8940011710",
+        "lat": -37.9028636,
+        "lng": 144.6590679,
+        "tags": {
+          "addr:housenumber": "143-163",
+          "addr:street": "Watton Street",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au"
+        }
+      },
+      {
+        "key": "node/11834432297",
+        "lat": -37.7752157,
+        "lng": 144.8866386,
+        "tags": {
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q1339055",
+          "shop": "supermarket"
+        }
+      },
+      {
+        "key": "node/11949677935",
+        "lat": -37.816873,
+        "lng": 144.8810662,
+        "tags": {
+          "addr:housenumber": "1-3",
+          "addr:street": "High Street",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "name": "Coles",
+          "opening_hours": "Mo-Su 06:00-22:00",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q1339055",
+          "shop": "supermarket"
+        }
+      },
+      {
+        "key": "node/11993023120",
+        "lat": -37.9112361,
+        "lng": 144.6145199,
+        "tags": {
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket"
+        }
+      },
+      {
+        "key": "node/12857269811",
+        "lat": -37.820201,
+        "lng": 144.7210078,
+        "tags": {
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "name": "Coles",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "shop": "supermarket"
+        }
+      },
+      {
+        "key": "way/53843626",
+        "lat": -37.8689178,
+        "lng": 144.8299879,
+        "tags": {
+          "addr:street": "Pier Street",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "building": "retail",
+          "name": "Coles",
+          "opening_hours": "Mo-Su 07:00-24:00",
+          "operator": "Coles Group",
+          "operator:wikidata": "Q131937428",
+          "phone": "+61 3 9398 3754",
+          "shop": "supermarket"
+        }
+      },
+      {
+        "key": "way/490242047",
+        "lat": -37.8282395,
+        "lng": 144.8480047,
+        "tags": {
+          "area": "yes",
+          "brand": "Coles",
+          "brand:wikidata": "Q1108172",
+          "brand:wikipedia": "en:Coles Supermarkets",
+          "level": "0",
+          "name": "Coles",
+          "room": "shop",
+          "shop": "supermarket",
+          "website": "https://www.coles.com.au/"
+        }
+      }
+    ]
   }
 }

@@ -15,6 +15,17 @@ type Field = { key: keyof VibeConfig; label: string; hint?: string; step?: numbe
 
 const GROUPS: { title: string; fields: Field[] }[] = [
   {
+    title: "Baseline",
+    fields: [
+      {
+        key: "baseScore",
+        label: "Starting points",
+        step: 100,
+        hint: "What every property starts on, before deductions and bonuses",
+      },
+    ],
+  },
+  {
     title: "Price",
     fields: [
       { key: "idealPrice", label: "Ideal price", step: 5000, hint: "The target the score is measured against" },

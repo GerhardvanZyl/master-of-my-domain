@@ -1,12 +1,6 @@
 {
  "hnl": [
   {
-   "listingUrl": "https://www.domain.com.au/122-ecalypt-way-torquay-vic-3228-2020950057",
-   "street": "122 Ecalypt Way",
-   "price": "$849,550",
-   "ptype": "New House & Land"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989559",
    "street": "149 Briody Grove - Briody Drive",
    "price": "$868,760",
@@ -43,6 +37,42 @@
    "ptype": "New House & Land"
   },
   {
+   "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867246",
+   "street": "911 Stretton Pipit Way",
+   "price": "$993,690",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-way-torquay-vic-3228-2020867264",
+   "street": "CORNER 912 Stretton - Pipit Way",
+   "price": "$1,026,491",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-torquay-vic-3228-2020867283",
+   "street": "CORNER 912 Stretton - Pipit",
+   "price": "$1,025,800",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/titled-turnkey-421-boardwalk-terrene-terrace-point-cook-vic-3030-2020885918",
+   "street": "TITLED TURNKEY 421 Boardwalk - Terrene Terrace",
+   "price": "$807,297",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/122-ecalypt-way-torquay-vic-3228-2020950057",
+   "street": "122 Ecalypt Way",
+   "price": "$849,550",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865312",
+   "street": "145 Briody Grove - Briody Drive",
+   "price": "$860,548",
+   "ptype": "New House & Land"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865328",
    "street": "145 Briody Grove - Briody Drive",
    "price": "$851,080",
@@ -73,57 +103,9 @@
    "ptype": "New House & Land"
   },
   {
-   "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867246",
-   "street": "911 Stretton Pipit Way",
-   "price": "$993,690",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-way-torquay-vic-3228-2020867264",
-   "street": "CORNER 912 Stretton - Pipit Way",
-   "price": "$1,026,491",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-torquay-vic-3228-2020867283",
-   "street": "CORNER 912 Stretton - Pipit",
-   "price": "$1,025,800",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/titled-turnkey-421-boardwalk-terrene-terrace-point-cook-vic-3030-2020885918",
-   "street": "TITLED TURNKEY 421 Boardwalk - Terrene Terrace",
-   "price": "$807,297",
-   "ptype": "New House & Land"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/574-wirilda-street-torquay-vic-3228-2020584849",
    "street": "574 Wirilda Street",
    "price": "$900,888",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020590238",
-   "street": "568 Rosella Road",
-   "price": "$1,085,700",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865312",
-   "street": "145 Briody Grove - Briody Drive",
-   "price": "$860,548",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020584815",
-   "street": "568 Rosella Road",
-   "price": "$897,550",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/575-wirilda-street-torquay-vic-3228-2020584881",
-   "street": "575 Wirilda Street",
-   "price": "$891,554",
    "ptype": "New House & Land"
   },
   {
@@ -145,9 +127,27 @@
    "ptype": "New House & Land"
   },
   {
+   "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020590238",
+   "street": "568 Rosella Road",
+   "price": "$1,085,700",
+   "ptype": "New House & Land"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020590274",
    "street": "568 Rosella Road",
    "price": "$1,085,700",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020584815",
+   "street": "568 Rosella Road",
+   "price": "$897,550",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/575-wirilda-street-torquay-vic-3228-2020584881",
+   "street": "575 Wirilda Street",
+   "price": "$891,554",
    "ptype": "New House & Land"
   },
   {
@@ -165,15 +165,15 @@
    "tag": "Under offer"
   },
   {
-   "listingUrl": "https://www.domain.com.au/62-harlem-circuit-point-cook-vic-3030-2018338643",
-   "street": "62 Harlem Circuit",
-   "price": "SOLD by BOBBY LAKRA & YASH SHAH !!",
-   "tag": "Under offer"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/47-yacht-road-point-cook-vic-3030-2019501372",
    "street": "47 Yacht Road",
    "price": "Sold",
+   "tag": "Under offer"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/62-harlem-circuit-point-cook-vic-3030-2018338643",
+   "street": "62 Harlem Circuit",
+   "price": "SOLD by BOBBY LAKRA & YASH SHAH !!",
    "tag": "Under offer"
   }
  ]
