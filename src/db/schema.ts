@@ -241,6 +241,17 @@ export const shares = sqliteTable(
   ],
 );
 
+/**
+ * Small shared key/value store for app-wide config that both profiles should
+ * see the same value for (e.g. the vibes-score weights) — see
+ * src/db/queries/settings.ts. One row per key, JSON-encoded value.
+ */
+export const settings = sqliteTable("settings", {
+  key: text("key").primaryKey(),
+  json: text("json").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 export const scrapeJobs = sqliteTable("scrape_jobs", {
   id: text("id").primaryKey(),
   url: text("url").notNull(),
@@ -262,3 +273,4 @@ export type PriceHistory = typeof priceHistory.$inferSelect;
 export type NewPriceHistory = typeof priceHistory.$inferInsert;
 export type Share = typeof shares.$inferSelect;
 export type NewShare = typeof shares.$inferInsert;
+export type Setting = typeof settings.$inferSelect;

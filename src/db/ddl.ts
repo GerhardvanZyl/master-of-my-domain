@@ -139,6 +139,12 @@ CREATE TABLE IF NOT EXISTS shares (
   UNIQUE(property_id, to_profile)
 );
 
+CREATE TABLE IF NOT EXISTS settings (
+  key            TEXT PRIMARY KEY,
+  json           TEXT NOT NULL,
+  updated_at     TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS scrape_jobs (
   id             TEXT PRIMARY KEY,
   url            TEXT NOT NULL,

@@ -221,3 +221,27 @@ export function saveVibeConfig(cfg: VibeConfig): void {
     /* ignore */
   }
 }
+
+const LOCAL_OVERRIDE_KEY = "vibeConfigLocal";
+
+/**
+ * Per-browser opt-out of the shared server config (see use-vibe-config.ts).
+ * Absent/false = off = the shared/server value wins, which is the default for
+ * both profiles. true = this browser keeps whatever config is currently
+ * showing and never syncs to/from the server.
+ */
+export function loadVibeConfigLocal(): boolean {
+  if (typeof localStorage === "undefined") return false;
+  try {
+    return localStorage.getItem(LOCAL_OVERRIDE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+export function saveVibeConfigLocal(local: boolean): void {
+  try {
+    localStorage.setItem(LOCAL_OVERRIDE_KEY, local ? "true" : "false");
+  } catch {
+    /* ignore */
+  }
+}

@@ -1,12 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import {
-  DEFAULT_VIBE_CONFIG,
-  loadVibeConfig,
-  saveVibeConfig,
-  type VibeConfig,
-} from "@/lib/vibes";
+import { DEFAULT_VIBE_CONFIG, type VibeConfig } from "@/lib/vibes";
+import { useVibeConfig } from "@/lib/use-vibe-config";
 
 // Editable fields grouped for the panel. idealPrice is driven by the slider, so
 // it's omitted here.
@@ -45,16 +41,18 @@ const FIELDS: {
 ];
 
 export default function VibeSettings() {
+  const { cfg: storedCfg, save: saveVibeConfig } = useVibeConfig();
   const [open, setOpen] = useState(false);
+  // Draft edited in the panel before "Save & apply" commits it.
   const [cfg, setCfg] = useState<VibeConfig>(DEFAULT_VIBE_CONFIG);
 
   function openPanel() {
-    setCfg(loadVibeConfig());
+    setCfg(storedCfg);
     setOpen(true);
   }
   function save() {
     saveVibeConfig(cfg);
-    // Scores are computed client-side from localStorage; reload to apply them.
+    // Scores are computed client-side; reload to apply them everywhere.
     window.location.reload();
   }
 

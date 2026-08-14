@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Property } from "@/db/schema";
 import type { PropertyListItem } from "@/db/queries/properties";
 import { PROFILES, useProfile } from "@/lib/profile";
-import { DEFAULT_VIBE_CONFIG, loadVibeConfig, vibeBreakdown, type VibeConfig } from "@/lib/vibes";
+import { vibeBreakdown } from "@/lib/vibes";
+import { useVibeConfig } from "@/lib/use-vibe-config";
 
 type Ratings = PropertyListItem["ratings"];
 
@@ -50,12 +51,11 @@ export default function PropertyRail({
   const { profile } = useProfile();
   const [ratings, setRatings] = useState<Ratings>(initialRatings);
   const [prop, setProp] = useState(property);
-  const [cfg, setCfg] = useState<VibeConfig>(DEFAULT_VIBE_CONFIG);
+  const { cfg } = useVibeConfig();
   const [proDraft, setProDraft] = useState("");
   const [conDraft, setConDraft] = useState("");
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => setCfg(loadVibeConfig()), []);
   // ponytail: no router.refresh() / prop-sync effect after a write. Nothing but
   // this rail edits these fields, so the optimistic state IS the truth until
   // the next navigation — syncing from props just let a slow in-flight refresh

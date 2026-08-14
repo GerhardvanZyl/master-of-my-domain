@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { PropertyListItem } from "@/db/queries/properties";
 import { formatPrice } from "@/lib/format";
-import { DEFAULT_VIBE_CONFIG, loadVibeConfig, vibeScore } from "@/lib/vibes";
+import { vibeScore } from "@/lib/vibes";
+import { useVibeConfig } from "@/lib/use-vibe-config";
 import { TILE, project } from "@/lib/mercator";
 
 const HEIGHT = 600;
@@ -36,9 +37,8 @@ export default function MapView({ properties }: { properties: PropertyListItem[]
 
   const pins = properties.filter((p) => p.latitude != null && p.longitude != null);
 
-  // Same rule as the grid: localStorage only after mount, never during render.
-  const [cfg, setCfg] = useState(DEFAULT_VIBE_CONFIG);
-  useEffect(() => setCfg(loadVibeConfig()), []);
+  // Same rule as the grid: localStorage/server only after mount, never during render.
+  const { cfg } = useVibeConfig();
 
   // Auto-fit: largest integer zoom where every pin still fits, then user nudge.
   const view = useMemo(() => {

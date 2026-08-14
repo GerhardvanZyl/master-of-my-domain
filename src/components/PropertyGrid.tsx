@@ -9,7 +9,8 @@ import { imageUrl } from "@/lib/images";
 import { priceLine, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDate } from "@/lib/format";
 import { formatInspection } from "@/lib/inspection";
 import { commuteDestination } from "@/lib/commute";
-import { DEFAULT_VIBE_CONFIG, loadVibeConfig, saveVibeConfig, vibeScore } from "@/lib/vibes";
+import { DEFAULT_VIBE_CONFIG, loadVibeConfig, vibeScore } from "@/lib/vibes";
+import { useVibeConfig } from "@/lib/use-vibe-config";
 import { SHORTLIST_TAGS, useProfile } from "@/lib/profile";
 import { useDebounced } from "@/lib/useDebounced";
 import { loadViewed } from "@/lib/viewed";
@@ -657,11 +658,12 @@ export default function PropertyGrid({
   // would blank out the Sydney grid. "vic" keeps the pre-existing key.
   const fkey = `filters:${region === "vic" ? "" : region + ":"}${profile ?? "default"}`;
 
-  // Hydrate the saved vibe-weight config after mount. Reading localStorage
-  // DURING a render makes the client markup disagree with the server's and
-  // React throws a hydration error, so the config lives in state.
-  const [savedCfg, setSavedCfg] = useState(DEFAULT_VIBE_CONFIG);
-  useEffect(() => setSavedCfg(loadVibeConfig()), []);
+  // Shared, DB-backed vibe-weight config (localStorage cache + offline
+  // fallback, per-device opt-out) — see use-vibe-config.ts. Hydrated after
+  // mount for the same reason it always was: reading it DURING a render would
+  // make the client markup disagree with the server's and React would throw a
+  // hydration error.
+  const { cfg: savedCfg, save: saveVibeConfig } = useVibeConfig();
 
   // Viewed-property ids (localStorage, see src/lib/viewed.ts) — same
   // hydrate-after-mount rule as everything else on this page. Keyed by
@@ -708,6 +710,9 @@ export default function PropertyGrid({
     setRatedFilter(asTri(s.ratedFilter));
     setNewFilter(/^[1-4]w$/.test(String(s.newFilter)) ? (s.newFilter as string) : "off");
     setPinned(!!s.pinned);
+    // Read the cache imperatively, NOT savedCfg: this effect runs once on
+    // mount (loaded.current gates it), while savedCfg is still the default —
+    // the hook hydrates in a later commit, which this would never see.
     setIdealPrice(typeof s.idealPrice === "number" ? s.idealPrice : loadVibeConfig().idealPrice);
     loaded.current = fkey;
   }, [fkey]);
@@ -1176,10 +1181,11 @@ export default function PropertyGrid({
             step={PRICE_STEP}
             value={idealPrice}
             onChange={(e) => setIdealPrice(Number(e.target.value))}
-            // Was saving to localStorage on every tick of the drag, which
-            // blocked the paint. Once on release is enough.
-            onPointerUp={() => saveVibeConfig({ ...loadVibeConfig(), idealPrice })}
-            onKeyUp={() => saveVibeConfig({ ...loadVibeConfig(), idealPrice })}
+            // Was saving on every tick of the drag, which blocked the paint.
+            // Once on release is enough. Goes through the hook so it reaches
+            // the shared server config too, not just this browser's cache.
+            onPointerUp={() => saveVibeConfig({ ...savedCfg, idealPrice })}
+            onKeyUp={() => saveVibeConfig({ ...savedCfg, idealPrice })}
             className="min-w-0 flex-1 accent-[#B9762A] sm:w-28 sm:flex-none"
           />
         </label>

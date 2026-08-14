@@ -1,15 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { PropertyListItem } from "@/db/queries/properties";
-import {
-  DEFAULT_VIBE_CONFIG,
-  loadVibeConfig,
-  saveVibeConfig,
-  vibeScore,
-  type VibeConfig,
-} from "@/lib/vibes";
+import { DEFAULT_VIBE_CONFIG, vibeScore, type VibeConfig } from "@/lib/vibes";
+import { useVibeConfig } from "@/lib/use-vibe-config";
 
 type Field = { key: keyof VibeConfig; label: string; hint?: string; step?: number };
 
@@ -106,14 +100,10 @@ export default function VibesConfig({
 }: {
   properties: PropertyListItem[];
 }) {
-  // Start from defaults so server and first client render match, then hydrate.
-  const [cfg, setCfg] = useState<VibeConfig>(DEFAULT_VIBE_CONFIG);
-  useEffect(() => setCfg(loadVibeConfig()), []);
+  const { cfg, save, local, setLocal } = useVibeConfig();
 
   function set(key: keyof VibeConfig, value: number) {
-    const next = { ...cfg, [key]: value };
-    setCfg(next);
-    saveVibeConfig(next);
+    save({ ...cfg, [key]: value });
   }
 
   const ranked = [...properties]
@@ -129,10 +119,20 @@ export default function VibesConfig({
         </h1>
         <p className="mt-2 max-w-[680px] text-sm text-mute">
           Every property starts at 100, then gains or loses points from the rules
-          below. Values are magnitudes — the sign is shown in the label. Changes
-          save to this browser and apply instantly across the grid, compare and
-          detail views.
+          below. Values are magnitudes — the sign is shown in the label. Changes{" "}
+          {local
+            ? "save to this browser only and apply instantly here, but are not shared with the other profile."
+            : "are shared across devices and both profiles, and apply instantly across the grid, compare and detail views."}
         </p>
+        <label className="mt-3 flex items-center gap-2 text-xs text-mute">
+          <input
+            type="checkbox"
+            checked={local}
+            onChange={(e) => setLocal(e.target.checked)}
+            className="accent-[#1F4A3A]"
+          />
+          Use my own settings on this device (don&apos;t share with the other profile)
+        </label>
       </div>
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1.6fr_1fr]">
@@ -160,10 +160,7 @@ export default function VibesConfig({
             </div>
           ))}
           <button
-            onClick={() => {
-              setCfg(DEFAULT_VIBE_CONFIG);
-              saveVibeConfig(DEFAULT_VIBE_CONFIG);
-            }}
+            onClick={() => save(DEFAULT_VIBE_CONFIG)}
             className="justify-self-start text-xs text-mute hover:text-forest"
           >
             reset to defaults

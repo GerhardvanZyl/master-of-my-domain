@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useProfile } from "@/lib/profile";
 import { PropertyRow } from "@/components/PropertyGrid";
-import { DEFAULT_VIBE_CONFIG, loadVibeConfig, vibeScore, type VibeConfig } from "@/lib/vibes";
+import { vibeScore } from "@/lib/vibes";
+import { useVibeConfig } from "@/lib/use-vibe-config";
 import { fmtRelative } from "@/lib/format";
 import type { SharedListItem } from "@/db/queries/shares";
 
@@ -19,13 +20,10 @@ export default function InboxPage() {
   const [items, setItems] = useState<SharedListItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Same score every property gets on the home grid — read from the same
-  // localStorage key PropertyGrid uses (loadVibeConfig), not the hardcoded
-  // default, or anyone who's touched /config sees two different numbers for
-  // the same property. Hydrated in an effect for the same reason PropertyGrid
-  // does it: reading localStorage during render would disagree with SSR markup.
-  const [vibeCfg, setVibeCfg] = useState<VibeConfig>(DEFAULT_VIBE_CONFIG);
-  useEffect(() => setVibeCfg(loadVibeConfig()), []);
+  // Same score every property gets on the home grid — shared, DB-backed config
+  // (see use-vibe-config.ts), not the hardcoded default, or anyone who's
+  // touched /config sees two different numbers for the same property.
+  const { cfg: vibeCfg } = useVibeConfig();
 
   useEffect(() => {
     if (!ready || !profile) return;
