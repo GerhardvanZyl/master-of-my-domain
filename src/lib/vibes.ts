@@ -9,6 +9,7 @@ import type { Property } from "@/db/schema";
 export interface VibeConfig {
   idealPrice: number;
   perStation250m: number; // −1 per 250 m from nearest station
+  stationExponent: number; // 1 = linear; >1 punishes distance super-linearly
   perAbove5000: number; // −1 per $5k above ideal
   perBelow10000: number; // −1 per $10k below ideal
   perGreenCrossKm: number; // −1 per 1 km from Green Cross Vets
@@ -16,6 +17,7 @@ export interface VibeConfig {
   perCon: number; // −3 per listed con
   noPlaygrounds: number; // −5 if no playground within 500 m
   perFlinders5min: number; // −3 per 5 min travel to Flinders St
+  flindersExponent: number; // 1 = linear; >1 punishes long commutes super-linearly
   noEaves: number; // −5 if no all-around eaves
   noPergola: number; // −3 if no covered pergola/veranda/deck
   noLawn: number; // −10 if no lawn
@@ -36,6 +38,7 @@ export interface VibeConfig {
 export const DEFAULT_VIBE_CONFIG: VibeConfig = {
   idealPrice: 850_000,
   perStation250m: 1,
+  stationExponent: 1,
   perAbove5000: 1,
   perBelow10000: 1,
   perGreenCrossKm: 1,
@@ -43,6 +46,7 @@ export const DEFAULT_VIBE_CONFIG: VibeConfig = {
   perCon: 3,
   noPlaygrounds: 5,
   perFlinders5min: 3,
+  flindersExponent: 1,
   noEaves: 5,
   noPergola: 3,
   noLawn: 10,
@@ -86,6 +90,15 @@ type Scorable = Pick<
   | "cons"
 >;
 
+/**
+ * units^k, the shape both distance penalties share. k = 1 is the original
+ * linear rule; k > 1 makes far properties hurt disproportionately (retune the
+ * per-unit weight down to compensate). A non-positive k is meaningless here —
+ * 0 flattens the penalty to a constant and k < 0 returns Infinity at zero
+ * distance, which would NaN the whole grid — so it is clamped, not trusted.
+ */
+const curve = (units: number, k: number) => Math.pow(units, Math.max(0.1, k));
+
 export interface BreakdownRow {
   label: string;
   pts: number;
@@ -103,7 +116,10 @@ export function vibeBreakdown(
   };
 
   if (p.stationDistanceM != null)
-    push(`Station ${p.stationDistanceM} m away`, -(p.stationDistanceM / 250) * cfg.perStation250m);
+    push(
+      `Station ${p.stationDistanceM} m away`,
+      -curve(p.stationDistanceM / 250, cfg.stationExponent) * cfg.perStation250m,
+    );
   if (p.priceNumeric != null) {
     if (p.priceNumeric > cfg.idealPrice)
       push("Above ideal price", -((p.priceNumeric - cfg.idealPrice) / 5000) * cfg.perAbove5000);
@@ -116,7 +132,10 @@ export function vibeBreakdown(
   }
   if (!p.playgrounds500m) push("No playground ≤500 m", -cfg.noPlaygrounds);
   if (p.ptMinutesToFlinders != null)
-    push("Transit to Flinders St", -(p.ptMinutesToFlinders / 5) * cfg.perFlinders5min);
+    push(
+      "Transit to Flinders St",
+      -curve(p.ptMinutesToFlinders / 5, cfg.flindersExponent) * cfg.perFlinders5min,
+    );
   // ponytail: only penalize a KNOWN-absent feature (0). null = not-yet-harvested,
   // so an un-inspected property isn't docked for missing data.
   if (p.hasEaves === 0) push("No all-around eaves", -cfg.noEaves);

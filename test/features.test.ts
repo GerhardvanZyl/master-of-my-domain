@@ -77,6 +77,30 @@ assert.equal(vet(80_000), -20);
 // Zero-magnitude terms are dropped rather than listed as "0".
 assert.ok(rows.every((r) => r.pts !== 0));
 
+// The two distance curves are independent, and exponent 1 is the old linear rule.
+const term = (label: string, cfg: Partial<typeof DEFAULT_VIBE_CONFIG>) =>
+  vibeBreakdown(p, [], { ...DEFAULT_VIBE_CONFIG, ...cfg }).find((r) =>
+    r.label.startsWith(label),
+  )!.pts;
+assert.equal(term("Station", {}), -4.8, "1200 m = 4.8 units × 1, linear");
+assert.equal(term("Transit", {}), -33, "55 min = 11 units × 3, linear");
+// Squaring the station curve must not touch the Flinders term, and vice versa.
+assert.equal(term("Station", { stationExponent: 2 }), -23);
+assert.equal(term("Transit", { stationExponent: 2 }), -33);
+assert.equal(term("Transit", { flindersExponent: 2 }), -363);
+assert.equal(term("Station", { flindersExponent: 2 }), -4.8);
+// A stored 0 or negative exponent is clamped, not allowed to flatten the
+// penalty to a constant or return Infinity at zero distance.
+assert.ok(Number.isFinite(term("Station", { stationExponent: 0 })));
+assert.ok(
+  Number.isFinite(
+    vibeBreakdown({ ...p, stationDistanceM: 0 }, [], {
+      ...DEFAULT_VIBE_CONFIG,
+      stationExponent: -2,
+    }).reduce((a, r) => a + r.pts, 0),
+  ),
+);
+
 // --- parseVibeConfig: one bad stored value must not NaN the whole grid -------
 // Spreading the parsed JSON used to let a string/null/NaN reach the arithmetic,
 // and NaN propagates to the score, the sort and every tile badge at once.

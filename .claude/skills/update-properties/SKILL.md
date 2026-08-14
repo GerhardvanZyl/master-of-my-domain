@@ -1,6 +1,6 @@
 ---
 name: update-properties
-description: Fetch the latest Point Cook / Williams Landing / Torquay listings from Domain, load them with full galleries INCLUDING floorplans, set exact Domain cover heroes, tag rooms with the local model, refresh transit and price history, and update the live app. Use when the user says "update the properties", "fetch the latest properties", "sync Domain", "get the new listings", or asks for any part of that round.
+description: Fetch the latest Point Cook / Williams Landing / Torquay / Seabrook listings from Domain, load them with full galleries INCLUDING floorplans, set exact Domain cover heroes, tag rooms with the local model, refresh transit and price history, and update the live app. Use when the user says "update the properties", "fetch the latest properties", "sync Domain", "get the new listings", or asks for any part of that round.
 ---
 
 # Update properties (the full round)
@@ -56,7 +56,7 @@ it were today's is a silent, expensive mistake.
 Navigate to the standing search and run `scripts/browser/feed-harvest.js`:
 
 ```
-https://www.domain.com.au/sale/?suburb=point-cook-vic-3030,williams-landing-vic-3027,torquay-vic-3228&bedrooms=3-any&bathrooms=2-any&carspaces=2-any&price=600000-1100000&ssubs=0
+https://www.domain.com.au/sale/?suburb=point-cook-vic-3030,williams-landing-vic-3027,torquay-vic-3228,seabrook-vic-3028&bedrooms=3-any&bathrooms=2-any&carspaces=2-any&price=600000-1100000&ssubs=0
 ```
 
 Search pages are WAF-tolerant — page them rapidly (1.3s). The call ends by

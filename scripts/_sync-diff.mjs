@@ -17,7 +17,8 @@ const now = db
 // The suburb filter is ESSENTIAL: without it the 25 frozen NSW/Sydney rows —
 // which are not part of this search and must never be touched — show up as
 // "missing from feed" on every single run.
-const isTarget = (u) => /(point-cook-vic-3030|williams-landing-vic-3027|torquay-vic-3228)/.test(u || "");
+const isTarget = (u) =>
+  /(point-cook-vic-3030|williams-landing-vic-3027|torquay-vic-3228|seabrook-vic-3028)/.test(u || "");
 const delisted = new Set(
   db
     .prepare("SELECT url FROM scrape_jobs WHERE status IN ('delisted','sold','withdrawn')")

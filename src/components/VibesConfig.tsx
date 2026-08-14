@@ -26,7 +26,19 @@ const GROUPS: { title: string; fields: Field[] }[] = [
     title: "Commute",
     fields: [
       { key: "perStation250m", label: "− per 250 m from the station" },
+      {
+        key: "stationExponent",
+        label: "…raised to this power",
+        step: 0.1,
+        hint: "1 = linear. Above 1 the deduction grows exponentially with distance — drop the weight above to compensate (e.g. 0.06 at power 2)",
+      },
       { key: "perFlinders5min", label: "− per 5 min to Flinders St" },
+      {
+        key: "flindersExponent",
+        label: "…raised to this power",
+        step: 0.1,
+        hint: "1 = linear. Above 1 a long commute hurts disproportionately (e.g. 0.2 at power 2)",
+      },
     ],
   },
   {

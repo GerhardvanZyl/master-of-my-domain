@@ -3,7 +3,7 @@
 import Database from "better-sqlite3";
 const db = new Database("data/app.db", { readonly: true });
 const one = (s, ...a) => db.prepare(s).get(...a);
-const VIC = `(listing_url LIKE '%point-cook-vic-3030%' OR listing_url LIKE '%williams-landing-vic-3027%' OR listing_url LIKE '%torquay-vic-3228%')`;
+const VIC = `(listing_url LIKE '%point-cook-vic-3030%' OR listing_url LIKE '%williams-landing-vic-3027%' OR listing_url LIKE '%torquay-vic-3228%' OR listing_url LIKE '%seabrook-vic-3028%')`;
 
 console.log(
   JSON.stringify(

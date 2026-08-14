@@ -12,7 +12,8 @@
 // and full galleries come from the per-listing pass. Keeping all ~21 URLs per
 // listing pushed the hash bridge past 200KB for no benefit.
 (async () => {
-  const SUBURBS = "point-cook-vic-3030,williams-landing-vic-3027,torquay-vic-3228";
+  const SUBURBS =
+    "point-cook-vic-3030,williams-landing-vic-3027,torquay-vic-3228,seabrook-vic-3028";
   const QS = `suburb=${SUBURBS}&bedrooms=3-any&bathrooms=2-any&carspaces=2-any&price=600000-1100000&ssubs=0`;
   const base = (u) => (u || "").split("/").pop().split("?")[0];
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

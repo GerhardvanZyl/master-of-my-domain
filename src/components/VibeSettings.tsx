@@ -10,8 +10,14 @@ import {
 
 // Editable fields grouped for the panel. idealPrice is driven by the slider, so
 // it's omitted here.
-const FIELDS: { key: keyof VibeConfig; label: string; sign: "−" | "+" | "" }[] = [
+const FIELDS: {
+  key: keyof VibeConfig;
+  label: string;
+  sign: "−" | "+" | "";
+  step?: number;
+}[] = [
   { key: "perStation250m", label: "per 250m from station", sign: "−" },
+  { key: "stationExponent", label: "…^this (1 = linear)", sign: "", step: 0.1 },
   { key: "perAbove5000", label: "per $5k above ideal", sign: "−" },
   { key: "perBelow10000", label: "per $10k below ideal", sign: "−" },
   { key: "perGreenCrossKm", label: "per 1km from Green Cross", sign: "−" },
@@ -19,6 +25,7 @@ const FIELDS: { key: keyof VibeConfig; label: string; sign: "−" | "+" | "" }[]
   { key: "perCon", label: "per con listed", sign: "−" },
   { key: "noPlaygrounds", label: "no playground ≤500m", sign: "−" },
   { key: "perFlinders5min", label: "per 5min to Flinders", sign: "−" },
+  { key: "flindersExponent", label: "…^this (1 = linear)", sign: "", step: 0.1 },
   { key: "noEaves", label: "no all-around eaves", sign: "−" },
   { key: "noPergola", label: "no covered pergola/deck", sign: "−" },
   { key: "noLawn", label: "no lawn", sign: "−" },
@@ -90,6 +97,7 @@ export default function VibeSettings() {
                   <input
                     type="number"
                     min={0}
+                    step={f.step ?? 1}
                     value={cfg[f.key]}
                     onChange={(e) =>
                       setCfg((c) => ({ ...c, [f.key]: Number(e.target.value) }))
