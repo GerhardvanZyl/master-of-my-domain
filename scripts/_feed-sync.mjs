@@ -22,6 +22,11 @@ const parsePrice = (t) => {
 // catch the ones re-listed under a tidied address.
 const isHnlType = (t) => /^new\s/i.test(t || "") || /off the plan/i.test(t || "");
 const isHnlAddress = (a) => /^lot\s/i.test(a) || /turnkey/i.test(a) || /^corner\s/i.test(a) || /\s-\s/.test(a);
+// Address withheld AND a single exact price is the package signature: a real
+// vendor lists a range or "contact agent", a builder quotes "$715,982" for a
+// fixed package. Neither signal alone is enough — "Address By Request" listings
+// with a price range are genuine. Caught 4 on 2026-08-15 that typed as "House".
+const isPackagePrice = (p) => /^\s*\$[\d,]+\s*$/.test(p || "");
 
 const items = [];
 const hnl = [];
@@ -32,7 +37,7 @@ for (const [url, price, tag, beds, baths, parking, land, street, suburb, postcod
   const externalId = (/-(\d+)$/.exec(url) || [])[1];
   const address = [street, suburb, state, postcode].filter(Boolean).join(", ");
   if (/\bsold\b/i.test(price) || /\bsold\b/i.test(tag)) soldish.push({ listingUrl, street, price, tag });
-  if (isHnlType(ptype) || isHnlAddress(street || "")) {
+  if (isHnlType(ptype) || isHnlAddress(street || "") || (!street && isPackagePrice(price))) {
     hnl.push({ listingUrl, street, price, ptype });
     continue; // user rule: completed homes only — never load house-and-land packages
   }

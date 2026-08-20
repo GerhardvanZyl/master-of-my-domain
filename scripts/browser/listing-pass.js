@@ -157,7 +157,33 @@
     await sleep(SPACING_MS);
   }
 
-  const enc = encodeURIComponent(JSON.stringify(out));
+  // COMPRESS before bridging — this is what lets one approval cover ~20+
+  // listings instead of the 14 an uncompressed payload caps at. Three parts of
+  // every image URL are redundant across a run:
+  //   https://rimh2.domainstatic.com.au/  constant  -> dropped
+  //   <sig>=                              unique    -> KEPT (it signs the exact
+  //                                                    transform; a rebuilt URL
+  //                                                    with the wrong one 403s)
+  //   /fit-in/WxH/filters:...no_upscale()  few       -> dictionary index
+  // ~172 chars a URL becomes ~66. scripts/_pass-expand.mjs rebuilds them.
+  const P = "https://rimh2.domainstatic.com.au/";
+  const tf = [];
+  const pack = (u) => {
+    if (!u.startsWith(P)) return "!" + u;
+    const rest = u.slice(P.length);
+    const i = rest.indexOf("/");
+    const j = rest.lastIndexOf("/");
+    if (i < 0 || j <= i) return "!" + u;
+    const t = rest.slice(i, j);
+    let k = tf.indexOf(t);
+    if (k < 0) k = tf.push(t) - 1;
+    return `${rest.slice(0, i)}|${k}|${rest.slice(j + 1)}`;
+  };
+  const packed = {};
+  for (const [k, v] of Object.entries(out))
+    packed[k] = v.imgs ? { ...v, imgs: v.imgs.map(pack) } : v;
+
+  const enc = encodeURIComponent(JSON.stringify({ tf, d: packed }));
   location.href = "http://127.0.0.1:3300/#MOMD=" + enc;
   return {
     listings: Object.keys(out).length,

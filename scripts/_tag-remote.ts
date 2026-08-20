@@ -35,7 +35,10 @@ const get = async (u: string) => {
 const basename = (u: string) => u.split("/").pop()!.split("?")[0];
 
 async function main() {
-  const pass1: Record<string, { imgs?: string[] }> = read("pass-1.json");
+  // PASS_JSON: which harvest to tag. A resumed round produces pass-2, pass-3…
+  // and re-running the whole of pass-1 would re-classify photos that are
+  // already tagged (the model pass is the expensive part).
+  const pass1: Record<string, { imgs?: string[] }> = read(process.env.PASS_JSON ?? "pass-1.json");
   const feed: { rows: unknown[][] } = read("feed.json");
   const items: { listingUrl: string; address?: string }[] = read("feed-items.json");
 
@@ -67,8 +70,12 @@ async function main() {
   const tags: Record<string, unknown>[] = [];
   let classified = 0, skipped = 0, errored = 0;
 
-  for (const [listingUrl, v] of Object.entries(pass1)) {
+  for (const [key, v] of Object.entries(pass1)) {
     if (!v.imgs?.length) continue;
+    // The pass stores RELATIVE keys ("/5-moncrieff-…"); coverByUrl/addrByUrl are
+    // keyed absolute. Without this every cover lookup misses and every listing
+    // silently gets "hero slot -1" — same normalisation _pass-apply.mjs does.
+    const listingUrl = key.startsWith("http") ? key : "https://www.domain.com.au" + key;
     const addr = addrByUrl.get(listingUrl) ?? "";
     const pid = byAddr.get(addr) ?? byNorm.get(slugAddr(listingUrl));
     if (!pid) {
@@ -127,6 +134,11 @@ async function main() {
             ? "floorplan"
             : `local:${MODEL}`;
         tags.push({
+          // Not part of TagInput — stripped before the payload is pushed. It is
+          // here so the group top-up can pick one representative image per
+          // property per room without a second pass over the live pages.
+          propertyId: pid,
+          ordinal: i,
           imageId: im.id,
           roomType: verdict.room,
           confidence: verdict.confidence,

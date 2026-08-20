@@ -23,7 +23,14 @@ for (const r of diff.missing) add(r.listing_url, "missing");
 for (const s of triage.soldish) add(s.listingUrl, "soldish");
 // Listings whose advertised price is unusable free text ("But", "Contact Agent"
 // is fine — that one is a real state) get re-read from their own page.
-for (const r of diff.changed) if ((r.price_display || "").trim().length < 5) add(r.listing_url, "junkprice");
+// A price that changed INTO text with no dollar figure at all ("Timeless Hampton
+// Style | Carlisle-Built Home") is the agent overwriting the guide, not a real
+// state — re-read it from the listing page. "Contact Agent"/"Auction"/"EOI" are
+// genuine states and must NOT be re-passed, or ~36 listings join the WAF queue.
+const junk = (t) =>
+  (t || "").trim().length < 5 ||
+  (!/\$/.test(t || "") && !/contact\s*agent|auction|eoi|expression|offers?\s+(invited|above)|price\s*guide/i.test(t || ""));
+for (const r of diff.changed) if (junk(r.price_display)) add(r.listing_url, "junkprice");
 
 const list = [...targets.values()];
 fs.writeFileSync("data/harvest/_pass-targets.json", JSON.stringify(list, null, 1));
@@ -38,7 +45,10 @@ for (let i = 0; i < list.length; i += CHUNK) {
   const n = chunks.length + 1;
   fs.writeFileSync(
     `data/harvest/_pass-${n}.js`,
-    tpl.replace("__TARGETS__", JSON.stringify(part.map((t) => [t.url, t.ext]))),
+    // replaceAll, not replace: the FIRST "__TARGETS__" is in the template's
+    // header comment, so a single replace leaves the real one in place and the
+    // pasted script dies on an undefined identifier.
+    tpl.replaceAll("__TARGETS__", JSON.stringify(part.map((t) => [t.url, t.ext]))),
   );
   chunks.push({ chunk: n, listings: part.length, minutes: Math.round((part.length * 45) / 60) });
 }

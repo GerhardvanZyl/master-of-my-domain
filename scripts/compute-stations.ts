@@ -25,12 +25,27 @@ function stationName(tags: Record<string, string>): string | null {
 }
 
 async function main() {
-  const rows = sqlite
-    .prepare(
-      "SELECT listing_url u, latitude lat, longitude lng, suburb FROM properties WHERE latitude IS NOT NULL",
-    )
-    .all() as Row[];
-  console.log(`Loaded ${rows.length} properties with coordinates.`);
+  // PROPS_JSON / OUT_JSON, same contract as compute-metadata.ts: run against a
+  // harvest file instead of the DB, for listings that live only on the live app
+  // (all writes go over HTTP) and were never loaded locally.
+  const src = process.env.PROPS_JSON;
+  const rows: Row[] = src
+    ? (
+        JSON.parse(fs.readFileSync(src, "utf8")) as Array<{
+          listingUrl: string;
+          latitude: number | null;
+          longitude: number | null;
+          suburb: string | null;
+        }>
+      )
+        .filter((p) => p.latitude != null && p.longitude != null)
+        .map((p) => ({ u: p.listingUrl, lat: p.latitude!, lng: p.longitude!, suburb: p.suburb }))
+    : (sqlite
+        .prepare(
+          "SELECT listing_url u, latitude lat, longitude lng, suburb FROM properties WHERE latitude IS NOT NULL",
+        )
+        .all() as Row[]);
+  console.log(`Loaded ${rows.length} properties with coordinates${src ? ` from ${src}` : ""}.`);
 
   const points: Point[] = rows.map((r) => ({ lat: r.lat, lng: r.lng }));
   // >=30km padding per cluster bbox, per brief: Point Cook and Torquay both
@@ -74,7 +89,8 @@ async function main() {
     };
   });
 
-  const dest = path.resolve(process.cwd(), "data/harvest/stations.json");
+  // OUT_JSON keeps a partial run from clobbering the full-coverage file.
+  const dest = path.resolve(process.cwd(), process.env.OUT_JSON ?? "data/harvest/stations.json");
   fs.writeFileSync(dest, JSON.stringify(out, null, 2));
   console.log(`Wrote ${out.length} rows to ${dest}`);
 

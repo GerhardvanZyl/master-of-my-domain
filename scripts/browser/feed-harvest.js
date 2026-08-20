@@ -14,7 +14,7 @@
 (async () => {
   const SUBURBS =
     "point-cook-vic-3030,williams-landing-vic-3027,torquay-vic-3228,seabrook-vic-3028";
-  const QS = `suburb=${SUBURBS}&bedrooms=3-any&bathrooms=2-any&carspaces=2-any&price=600000-1100000&ssubs=0`;
+  const QS = `suburb=${SUBURBS}&bedrooms=3-any&bathrooms=2-any&carspaces=1-any&price=600000-1100000&ssubs=0`;
   const base = (u) => (u || "").split("/").pop().split("?")[0];
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
