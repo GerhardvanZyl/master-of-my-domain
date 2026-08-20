@@ -68,8 +68,12 @@ if (mode === "urls") {
       missing.push(p.addr);
       continue;
     }
+    // "495 Werribee" = feeder bus then train. A row with no leading route
+    // number is a walk to the station — Williams Landing is close enough that
+    // Google returns no bus leg at all.
     const bus = /^(\d+)\s/.exec(m.route)?.[1];
-    const summary = bus ? `Bus ${bus} + Werribee train` : m.route;
+    const line = m.route.replace(/^\d+\s+/, "").trim() || "Werribee";
+    const summary = bus ? `Bus ${bus} + ${line} train` : `Walk + ${line} train`;
     out.push({
       listingUrl: p.url,
       ptMinutesToFlinders: m.min,
