@@ -21,6 +21,14 @@ The user has asked for each of these explicitly and emphatically:
 - **The live app is on another machine.** This workstation is 192.168.68.105;
   `.125` is the instance that must be current when you finish. Nothing listens
   on `127.0.0.1:3225` unless you start it.
+- **The local `data/app.db` is READ-ONLY. Every write goes to `.125` over
+  `POST /api/batch`.** That is a standing user rule, and it has a consequence
+  the steps below are built around: the local DB lags a full round, so it cannot
+  serve as the baseline either. `_snapshot.mjs`, `_sync-diff.mjs`,
+  `_pass-apply.mjs`, `_alt-new.ts` and `_verify.mjs` all open it — every one has
+  a `-live` sibling that reads the same facts back over HTTP instead. **Use the
+  `-live` ones.** Reach for a local-DB script and you will silently drop the
+  listings this round just inserted, because they exist only on `.125`.
 - **Browser automation is local-only, per connection.** Call `switch_browser`
   and let the user click Connect. Never pick a browser yourself. Then *prove*
   it is local: point it at the loopback-only receiver and confirm the file
@@ -40,7 +48,7 @@ The user has asked for each of these explicitly and emphatically:
 
 ```bash
 node scripts/_receiver.mjs &          # writes POSTed harvest to data/harvest/
-node scripts/_snapshot.mjs            # prices + marker; the diff needs this
+node scripts/_snapshot-live.mjs       # baseline pulled from .125; the diff needs this
 ```
 
 Then `switch_browser`, navigate the tab to `http://127.0.0.1:3300/?name=_localcheck`,
@@ -56,7 +64,7 @@ it were today's is a silent, expensive mistake.
 Navigate to the standing search and run `scripts/browser/feed-harvest.js`:
 
 ```
-https://www.domain.com.au/sale/?suburb=point-cook-vic-3030,williams-landing-vic-3027,torquay-vic-3228,seabrook-vic-3028&bedrooms=3-any&bathrooms=2-any&carspaces=2-any&price=600000-1100000&ssubs=0
+https://www.domain.com.au/sale/?suburb=point-cook-vic-3030,williams-landing-vic-3027,torquay-vic-3228,seabrook-vic-3028&bedrooms=3-any&bathrooms=2-any&carspaces=1-any&price=600000-1100000&ssubs=0
 ```
 
 Search pages are WAF-tolerant — page them rapidly (1.3s). The call ends by
@@ -79,8 +87,10 @@ The feed gives, for free and with no listing fetch:
 
 ```bash
 node scripts/_feed-sync.mjs                       # -> feed-items.json + triage
-npm run load -- data/harvest/feed-items.json
-node scripts/_sync-diff.mjs                       # -> _diff.json
+node scripts/batch-push.mjs --base=http://192.168.68.125:3225 \
+  --file=<{properties:[...feed-items]}>           # upsert by listing_url
+node scripts/_snapshot-live.mjs                   # re-baseline AFTER the insert
+node scripts/_sync-diff-live.mjs                  # -> _diff.json
 ```
 
 - **Price parsing must be `$`-anchored.** Domain's price is free text ("Call
@@ -93,6 +103,16 @@ node scripts/_sync-diff.mjs                       # -> _diff.json
 - **The suburb filter in the MISSING query is essential.** Without it the 25
   frozen NSW/Sydney rows are swept in as missing on every run. Those rows are
   frozen — never update them.
+- **MISSING is judged against the RAW feed, not the filtered items.** A
+  house-and-land listing is still live on Domain — we just refuse to load it.
+  Diffing against `feed-items.json` marks every one of them withdrawn.
+- **React Flight doubles a leading `$`.** The live app's snapshot arrives with
+  every price as `$$790,000`, because a leading `$` marks a reference in the
+  Flight protocol. `_snapshot-live.mjs` unescapes it. Skip that and ~190 rows
+  look like price changes on every single run — it reads exactly like data
+  corruption and it is not.
+- **Filter the snapshot to rows whose `listing_url` is a URL.** The config
+  pseudo-row stores a timestamp there, so a truthiness check lets it through.
 
 ## 3. Per-listing pass (floorplans + sold prices)
 
@@ -131,20 +151,29 @@ says SOLD, and unusable price text.
   photos is a capture failure, not a thin listing; re-pass it.
 
 ```bash
-node scripts/_pass-apply.mjs pass-1               # -> _gallery-*.json, _status-*.json
-npm run load:images -- data/harvest/_gallery-pass-1.json
+node scripts/_pass-apply-live.mjs pass-1          # -> _gallery-*.json, _status-*.json
+node scripts/batch-push.mjs --base=http://192.168.68.125:3225 \
+  --file=data/harvest/_gallery-pass-1.json        # images section — SLOW, chunk it
 ```
 
 Dedupe on **basename**, not `source_url`: Domain re-signs every URL per capture,
 so `syncImages` cannot tell a re-harvest from a new photo and will store the
-gallery twice.
+gallery twice. The live snapshot gives `image_count` but not basenames, so the
+only safe rule over HTTP is the one `_pass-apply-live.mjs` enforces: **load a
+gallery only for a property at zero photos**, and report the rest rather than
+guessing. It also drops what the app would never render anyway — squares,
+banner strips, sub-500px icons, read off the `-w<W>-h<H>` basename. Those come
+in via the page-HTML source and then sit permanently untagged, because the
+property page never lists them for the tagger to reach.
 
 **Sold vs withdrawn:** Domain keeps sold/under-offer listings IN the feed under
 `tags.tagText = "Under offer"`, so absence is not the only signal. Treat as
 **sold** only when the price text matches `/\bsold\b/i`; plain "Under
 contract"/"Under offer" is not settled — leave it live. A page redirecting to
-`/property-profile/` with no listingModel is **withdrawn**. Apply with
-`npm run mark-sold -- --url=<url> --price=<n|none> [--date=]`.
+`/property-profile/` with no listingModel is **withdrawn**. Apply through the
+batch payload's `sold` / `withdrawn` sections (same code path as
+`npm run mark-sold`, which writes the local DB and must not be used here) —
+`_pass-apply-live.mjs` writes both lists to `_status-pass-<n>.json` ready to push.
 
 ## 4. Tag rooms with the local model — BEFORE heroes
 
@@ -153,37 +182,56 @@ Needs LM Studio serving a vision model at `http://127.0.0.1:1234/v1` with
 running, **ask the user to start it** rather than silently hand-tagging.
 
 ```bash
-npm run tag:auto -- --threshold=0.8
+npx tsx scripts/_tag-remote.ts data/harvest/_tags-1.json    # then push the file
 ```
 
-`--threshold` measures nothing — the model returns ≥0.95 on 98% of photos
-*including its mistakes*, so every value 0.70–0.95 is byte-identical. Don't tune
-it and don't run a benchmark to pick one. Agreement with hand tags is ~93%;
-accept that and correct the rest in the app.
+`tag:auto` reads `data/app.db` and `data/images`, neither of which holds this
+round's photos. `_tag-remote.ts` does the same job over HTTP: it discovers image
+ids from the live property pages (document order = ordinal order), pulls the
+bytes from `/api/img`, classifies with the same local model, and emits a
+`/api/batch` tags payload. It **also sets the hero in the same pass** — see
+step 5 for why that is the correct order rather than a shortcut.
 
-Then read the low-confidence queue yourself, and tag floorplans explicitly:
+**The confidence number measures nothing.** The model returns ≥0.95 on 98% of
+photos *including its mistakes*, so any threshold between 0.70 and 0.95 gives a
+byte-identical result. Don't tune one and don't benchmark to pick one. Agreement
+with hand tags is ~93%; accept that and correct the rest in the app.
 
-```bash
-npx tsx scripts/tag-set.ts --image=<id> --room=other --notes=floorplan
-```
+Non-hero tags go out with `ifAbsent: true`, so re-running the pass can never
+clobber a hand correction — a top-up that re-classifies everything is harmless
+and reports `written: 0, skipped: <n>`.
 
 `notes='floorplan'` beats `pickFloorplan`'s shape heuristic, which misses
-floorplans rendered at 4:3, 1.29, 1.47 and even 3:2. Finally top up the six
-comparison groups, one representative image per property per group.
+floorplans rendered at 4:3, 1.29, 1.47 and even 3:2. `_tag-remote.ts` applies it
+automatically to a last-position photo the model called "other".
 
-**Call `npx tsx scripts/tag-set.ts` directly — `npm run tag:set -- --image=…`
+Then top up the six comparison groups — one representative image per property
+per group, because the app renders one column per property:
+
+```bash
+node scripts/_groups-from-tags.mjs data/harvest/_groups.json data/harvest/_tags-*.json
+```
+
+`_group-topup.ts` queries the local DB. This builds the same thing from the tag
+payloads the round just produced: `_tag-remote.ts` records `propertyId` and
+`ordinal` next to each tag (both stripped before the push), so the lowest-ordinal
+photo of each room type is pickable with no second pass over the live pages.
+
+**Call scripts via `npx tsx`/`node` directly. `npm run <script> -- --key=value`
 drops the `=` arguments on this PowerShell.**
 
 ## 5. Heroes — Domain's exact cover, AFTER tagging
 
-```bash
-node scripts/_apply-heroes.mjs --dry-run     # then without the flag
-```
+Nothing to run — `_tag-remote.ts` set them in step 4. This section is the *why*,
+because the ordering constraint is the part that bites.
 
 **Order matters and it is not obvious.** Applying heroes first inserts an
 `image_tags` row carrying only `notes='hero'`; `tag:auto` writes through
 `setImageTagIfAbsent` (`ON CONFLICT DO NOTHING`), so it would skip that row and
-leave the cover photo permanently untagged. Tag first, then set heroes.
+leave the cover photo permanently untagged. Tag first, then set heroes — which
+is why `_tag-remote.ts` classifies the cover photo like any other and merely
+overwrites its `notes` with `hero` (`ifAbsent: false` for that one row, `true`
+for every other, so a hand correction is never clobbered).
 
 Match the full basename, falling back to the `<listingId>_<photoIndex>_` prefix
 (relisted properties' covers carry a different listingId than our external_id).
@@ -193,35 +241,61 @@ Domain leads with, and it is exactly why exact beats the old aspect heuristic.
 ## 6. Enrichment + transit
 
 ```bash
-npx tsx scripts/compute-stations.ts && npm run load -- data/harvest/stations.json
-npx tsx scripts/compute-metadata.ts && npm run load -- data/harvest/metadata.json
-npx tsx scripts/_alt-new.ts                      # altitude, NSW excluded
+PROPS_JSON=<this round's rows> npx tsx scripts/compute-stations.ts
+PROPS_JSON=<this round's rows> npx tsx scripts/compute-metadata.ts
+node scripts/_alt-new-live.mjs                   # altitude, NSW excluded
+# then push stations.json / metadata.json / the altitude payload to .125
 ```
 
 `compute-altitude.ts` loads with no filter, so it cannot be used on the mixed
 DB — scope to `WHERE altitude_m IS NULL AND state<>'NSW'`. `compute-stations` /
-`compute-metadata` write files first, so strip NSW before loading.
+`compute-metadata` write files first, so strip NSW before pushing. Both accept
+`PROPS_JSON`, so feed them this round's rows rather than the stale local DB.
 
-Transit to Flinders St at 07:30 weekday, for new listings only — Google Maps URL
-template with a dummy place-id and coords, `!3e3` for transit, epoch = next
-Monday 07:30 as **UTC wall-clock** (this browser feeds Maps UTC and Maps reads it
-as Melbourne local). `get_page_text` times out on Maps; read
-`document.body.innerText` and take the headline duration. Fallback:
-`npx tsx scripts/_transit-estimate.ts --apply` (nearest measured neighbour,
-zone-split so Torquay never borrows a Point Cook time). `pt_steps` must not
-start "Estimated" unless it really is — that prefix drives the UI's `*` marker.
+Transit to Flinders St at 07:30 Monday, for new listings only:
+
+```bash
+node scripts/_transit-measure.mjs urls  data/harvest/_measure-metro.json
+node scripts/_transit-measure.mjs apply data/harvest/_measure-metro.json \
+  data/harvest/_measured.json data/harvest/_batch-transit.json
+```
+
+The URL contract is in that file's header and is worth reading before touching
+it — the `data=` blob is a protobuf-ish token stream whose length prefixes Maps
+validates, so it cannot be hand-trimmed. Two traps in particular:
+
+- **`!1s` is NOT a dummy place-id.** The destination comes from that feature id,
+  not from the readable path segment. Leaving a Sydney id in place while writing
+  Flinders into the path returns a Melbourne → Museum Station, *Sydney* trip.
+- **Read the FIRST trip, not the shortest.** Google decorates trip rows with
+  Private Use Area glyphs (U+E88E sits between the duration and the time), which
+  are not `\s` — a whitespace-anchored regex skips the earliest departures and
+  silently matches a later, shorter one. Strip `[\uE000-\uF8FF]` first.
+
+`get_page_text` times out on Maps; read `document.body.innerText`, and note that
+an async IIFE returns `{}` in this harness — wait, then evaluate synchronously.
+
+Fallback: `npx tsx scripts/_transit-estimate.ts --apply` (nearest measured
+neighbour, zone-split so Torquay never borrows a Point Cook time). It is
+accurate to ~3 min on average, but the outliers are ±14 — measure when you can.
+`pt_steps` must not start "Estimated" unless it really is; that prefix drives
+the UI's `*` marker.
 
 Torquay's commute is **drive to Waurn Ponds + V/Line to Southern Cross**, not
-the bus-to-Flinders routing Google returns by default.
+the bus-to-Flinders routing Google returns by default: measure the drive with
+`!3e0`, then feed it to `scripts/_torquay-commute-build.mjs`. That builder
+hardcodes its output path — **back up `data/harvest/torquay-commute.json`
+first**, it will clobber the previous round's record. Its V/Line timetable is
+also hardcoded (scraped Mon 10 Aug 2026); re-scrape if V/Line has changed.
 
 ## 7. Price history
 
-```bash
-npm run price:observe        # our own dated record, append-only, idempotent
-```
+The batch payload's `priceObserve` section — our own dated record, append-only,
+idempotent. (`npm run price:observe` is the same code path, but it writes the
+local DB.)
 
-Never add observations via `npm run load` with a `priceHistory` array as a way
-of replacing history. For new listings, Domain's own timeline comes from
+Never add observations via a `priceHistory` array on the `properties` section as
+a way of replacing history. For new listings, Domain's own timeline comes from
 `/property-profile/<slug>` (Apollo `timeline`) — that sweep is WAF-heavy, so
 pace it and accept partial coverage.
 
@@ -243,12 +317,13 @@ Otherwise commit `data/` and have the user `git pull` + rebuild on `.125`.
 ## Finish
 
 ```bash
-node scripts/_verify.mjs    # checks every claim the report will make
-npm run tag:status
+node scripts/_verify-live.mjs    # checks every claim the report will make
 ```
 
-`_verify.mjs` exists because the per-step output is easy to over-read: it
-re-derives the counts from the DB, and asserts the things that quietly go wrong
+`_verify-live.mjs` exists because the per-step output is easy to over-read: it
+re-derives every count from `.125` over HTTP — never from the local DB, which
+would happily report a clean run while the live instance sat untouched — and
+asserts the things that quietly go wrong
 — live listings with photos but no explicit hero, VIC rows with null transit or
 station, and that the 25 frozen NSW rows still number 25 with their transit
 intact.
