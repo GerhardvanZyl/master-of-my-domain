@@ -33,11 +33,56 @@ const AMENITIES: { key: string; label: string; ok: (p: PropertyListItem) => bool
   { key: "transit", label: "Transit ≤60 min", ok: (p) => (p.ptMinutesToFlinders ?? Infinity) <= 60 },
 ];
 
-export default function MapView({ properties }: { properties: PropertyListItem[] }) {
+// px of pointer movement before a pointerdown-move-up sequence counts as a
+// drag rather than a click. Below this, a pin's onClick still fires — without
+// it, the unavoidable few pixels of jitter in a real click would silently eat
+// every pin tap once drag-to-pan existed.
+const DRAG_SLOP = 6;
+
+// One notch of a standard mouse wheel reports deltaY ~100-120; trackpads
+// report many small deltaY events (often single digits) per swipe. Both are
+// summed into this accumulator and consumed a whole WHEEL_STEP at a time, so
+// a trackpad swipe takes several events to produce the same one zoom level a
+// single mouse-wheel click produces immediately — see the wheel handler.
+const WHEEL_STEP = 120;
+
+interface ViewState {
+  z: number;
+  originX: number;
+  originY: number;
+}
+
+// Fallback map centre when nothing on the page has coordinates at all, keyed
+// by region so a NSW-only route (/sydney/map) doesn't fall back to Melbourne
+// under its own "no coordinates" notice. Exported only so the cheap
+// same-file test below can assert on it directly, without needing a fixture
+// with zero geocoded NSW properties.
+export const REGION_FALLBACK_CENTRE: Record<string, { lat: number; lng: number }> = {
+  vic: { lat: -37.8136, lng: 144.9631 }, // Melbourne CBD
+  nsw: { lat: -33.8688, lng: 151.2093 }, // Sydney CBD
+};
+
+// Guards against non-finite view state ever reaching render. A synthetic
+// event with e.g. Infinity in deltaY/clientX (unreachable from real mouse or
+// trackpad hardware, but reachable from a script already running in the
+// page) would otherwise leak into z/originX/originY, and the tile loop's
+// bounds (`Math.floor(originX / TILE) ... <= Math.floor((originX + width) /
+// TILE)`) never terminate once one of those is Infinity or NaN. Checked at
+// every setView call site so no future one can reintroduce the class of bug.
+function isFiniteView(v: ViewState): boolean {
+  return Number.isFinite(v.z) && Number.isFinite(v.originX) && Number.isFinite(v.originY);
+}
+
+export default function MapView({
+  properties,
+  region,
+}: {
+  properties: PropertyListItem[];
+  region: string;
+}) {
   const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(1200);
-  const [zoomAdj, setZoomAdj] = useState(0);
   const [amen, setAmen] = useState<string[]>([]);
   const { profile } = useProfile();
 
@@ -56,18 +101,15 @@ export default function MapView({ properties }: { properties: PropertyListItem[]
   // about what's currently filtered in).
   const pinsWithCoords = properties.filter((p) => p.latitude != null && p.longitude != null);
 
-  // The grid's filters live in localStorage, per region ("vic" for the home
-  // page, "nsw" for /sydney) and per profile — see PropertyGrid's `fkey`.
-  // This page shows both regions' properties on one map, so it restores both
-  // regions' saved filters and applies each to its own properties, same
-  // reading FilterState-only, never writing it — there is no filter UI here.
-  const [filters, setFilters] = useState<{ vic: FilterState; nsw: FilterState }>({
-    vic: DEFAULT_FILTER_STATE,
-    nsw: DEFAULT_FILTER_STATE,
-  });
+  // The grid's filters live in localStorage, per region ("vic" for /map,
+  // "nsw" for /sydney/map) and per profile — see PropertyGrid's `fkey`. This
+  // page is single-region (the `region` prop), so it restores just that
+  // region's saved filters — reading FilterState-only, never writing it,
+  // since there's no filter UI here.
+  const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTER_STATE);
   useEffect(() => {
-    setFilters({ vic: loadRegionFilters("vic", profile), nsw: loadRegionFilters("nsw", profile) });
-  }, [profile]);
+    setFilters(loadRegionFilters(region, profile));
+  }, [region, profile]);
 
   // "Viewed" set backing the viewedFilter tri-chip — same per-profile
   // localStorage read PropertyGrid does, needed here for the same reason.
@@ -81,9 +123,7 @@ export default function MapView({ properties }: { properties: PropertyListItem[]
       viewedSet,
       isRated: (p: PropertyListItem) => isRatedProperty(p, profile),
     };
-    const vic = pinsWithCoords.filter((p) => p.state !== "NSW");
-    const nsw = pinsWithCoords.filter((p) => p.state === "NSW");
-    return [...filterProperties(vic, filters.vic, ctx), ...filterProperties(nsw, filters.nsw, ctx)];
+    return filterProperties(pinsWithCoords, filters, ctx);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- pinsWithCoords is
     // derived fresh from `properties` every render; including it would defeat
     // the memo. `properties` is the real dependency and is listed instead.
@@ -98,18 +138,26 @@ export default function MapView({ properties }: { properties: PropertyListItem[]
   const scoreOf = useMemo(() => new Map(pins.map((p) => [p.id, vibeScore(p, p.ratings, cfg)])), [pins, cfg]);
   const pinDiameter = useMemo(() => pinDiameterScale([...scoreOf.values()]), [scoreOf]);
 
-  // Auto-fit: largest integer zoom where every pin still fits, then user nudge.
-  // Filters excluding every plotted property must not blank the whole map: the
-  // extent falls back to the unfiltered pinsWithCoords (or a fixed Melbourne
-  // CBD centre if there's nothing geocoded at all), so the basemap still
-  // renders and the "hidden by your filters" notice below has something to
-  // point at instead of a featureless grey box.
-  const view = useMemo(() => {
+  // Auto-fit: largest integer zoom where every pin still fits. Filters
+  // excluding every plotted property must not blank the whole map: the extent
+  // falls back to the unfiltered pinsWithCoords (or a region-scoped CBD
+  // centre if there's nothing geocoded at all — see REGION_FALLBACK_CENTRE),
+  // so the basemap still renders and the "hidden by your filters" notice
+  // below has something to point at instead of a featureless grey box.
+  //
+  // This recomputes on every relevant change (pins/width) rather than being
+  // captured once, so a user who has never panned/zoomed keeps seeing a live
+  // auto-fit — e.g. toggling a filter chip re-centres them. `view` below
+  // overrides it the moment they interact.
+  const autoView = useMemo((): ViewState => {
     const extentSource = pins.length > 0 ? pins : pinsWithCoords;
-    // Melbourne CBD — used only when nothing on the page has coordinates at
-    // all, so there's still a sensible place to show the (pin-less) basemap.
-    const lats = extentSource.length > 0 ? extentSource.map((p) => p.latitude!) : [-37.8136];
-    const lngs = extentSource.length > 0 ? extentSource.map((p) => p.longitude!) : [144.9631];
+    // Region-scoped CBD — used only when nothing on the page has coordinates
+    // at all, so there's still a sensible place to show the (pin-less)
+    // basemap, keyed by `region` so /sydney/map doesn't fall back to
+    // Melbourne. Falls back to the vic centre for an unrecognised region.
+    const fallbackCentre = REGION_FALLBACK_CENTRE[region] ?? REGION_FALLBACK_CENTRE.vic;
+    const lats = extentSource.length > 0 ? extentSource.map((p) => p.latitude!) : [fallbackCentre.lat];
+    const lngs = extentSource.length > 0 ? extentSource.map((p) => p.longitude!) : [fallbackCentre.lng];
     const centre = {
       lat: (Math.min(...lats) + Math.max(...lats)) / 2,
       lng: (Math.min(...lngs) + Math.max(...lngs)) / 2,
@@ -124,14 +172,170 @@ export default function MapView({ properties }: { properties: PropertyListItem[]
         break;
       }
     }
-    z = Math.min(18, Math.max(3, z + zoomAdj));
+    z = Math.min(18, Math.max(3, z));
     const c = project(centre.lat, centre.lng, z);
     return { z, originX: c.x - width / 2, originY: c.y - HEIGHT / 2 };
-  }, [pins, width, zoomAdj]);
+  }, [pins, pinsWithCoords, width, region]);
+
+  // Explicit user view, set the first time they drag or zoom. Null means
+  // "not yet interacted" — the rendered view falls back to the live auto-fit
+  // above, so the initial screen is always exactly the auto-fit. Once set, it
+  // sticks: further filter/amenity changes no longer move the camera.
+  const [view, setView] = useState<ViewState | null>(null);
+  const effectiveView = view ?? autoView;
+
+  // Applies a zoom step around a focal point (screen px, relative to the map
+  // box) so the world point under the cursor/centre stays put — zooming
+  // toward the mouse rather than snapping to the box centre. Returns null if
+  // clamping at 3..18 means nothing actually changes.
+  const zoomFrom = (cur: ViewState, delta: number, fx: number, fy: number): ViewState | null => {
+    const z = Math.min(18, Math.max(3, cur.z + delta));
+    if (z === cur.z) return null;
+    const ratio = 2 ** (z - cur.z);
+    return { z, originX: (cur.originX + fx) * ratio - fx, originY: (cur.originY + fy) * ratio - fy };
+  };
+
+  function zoomButton(delta: number) {
+    const next = zoomFrom(effectiveView, delta, width / 2, HEIGHT / 2);
+    if (next && isFiniteView(next)) setView(next);
+  }
+
+  // Drag-to-pan and its click-suppression. `dragRef` tracks the in-flight
+  // gesture; `draggedRef` stays true from the moment a real drag is detected
+  // until the click that follows pointerup has been swallowed, so a drag that
+  // ends on a pin doesn't navigate — see the onClickCapture below.
+  //
+  // Pointer capture is deliberately NOT taken on pointerdown. Confirmed in a
+  // real browser (headless Chromium): when capture is already active at
+  // pointerup, the resulting click is dispatched to the CAPTURING element
+  // (this box), not the element under the cursor — so a pin's own onClick
+  // never fires, drag or not. Capture is instead taken the moment a real drag
+  // is detected (in handlePointerMove, once DRAG_SLOP is crossed) and released
+  // in endDrag, so a plain click never involves capture at all while a real
+  // drag still gets it for the remainder of the gesture (needed so the pan
+  // keeps tracking if the pointer leaves the element).
+  const dragRef = useRef<{
+    pointerId: number;
+    startClientX: number;
+    startClientY: number;
+    startView: ViewState;
+    captured: boolean;
+  } | null>(null);
+  const draggedRef = useRef(false);
+
+  function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === "mouse" && e.button !== 0) return; // left button / primary touch only
+    // A new gesture must not inherit suppression armed by a previous drag
+    // that produced no click of its own to clear it on (e.g. it ended via
+    // pointercancel rather than a click-producing pointerup) — otherwise the
+    // very next genuine click gets silently swallowed.
+    draggedRef.current = false;
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startClientX: e.clientX,
+      startClientY: e.clientY,
+      startView: effectiveView,
+      captured: false,
+    };
+  }
+
+  function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== e.pointerId) return;
+    // A synthetic pointermove with a non-finite clientX/clientY (unreachable
+    // from real hardware) would otherwise produce a non-finite dx/dy below,
+    // and from there a non-finite originX/originY that hangs the tile loop.
+    if (!Number.isFinite(e.clientX) || !Number.isFinite(e.clientY)) return;
+    const dx = e.clientX - d.startClientX;
+    const dy = e.clientY - d.startClientY;
+    // Below DRAG_SLOP this is still "a click that wobbled a couple of
+    // pixels", not a pan — don't move the map or arm the click suppression.
+    if (!draggedRef.current && Math.hypot(dx, dy) < DRAG_SLOP) return;
+    if (!d.captured) {
+      d.captured = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    draggedRef.current = true;
+    const next = { z: d.startView.z, originX: d.startView.originX - dx, originY: d.startView.originY - dy };
+    if (isFiniteView(next)) setView(next);
+  }
+
+  function endDrag(e: React.PointerEvent<HTMLDivElement>) {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== e.pointerId) return;
+    if (d.captured) e.currentTarget.releasePointerCapture(e.pointerId);
+    dragRef.current = null;
+    // draggedRef is deliberately left set — the click event this pointerup
+    // produces (if any) still needs to be swallowed by onClickCapture below.
+  }
+
+  // Runs before any pin's onClick (capture fires root-to-target, ahead of the
+  // pin's own bubble-phase handler) and stops the click outright when it's
+  // the tail end of a drag, regardless of which element it lands on.
+  function handleClickCapture(e: React.MouseEvent<HTMLDivElement>) {
+    if (draggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      draggedRef.current = false;
+    }
+  }
+
+  // Wheel-zoom needs `e.preventDefault()` to stop the page scrolling under
+  // the cursor while zooming, and React's onWheel listeners are attached
+  // passive — preventDefault there is a silent no-op. A native listener with
+  // `{ passive: false }` is the only way to actually block it. A ref (rather
+  // than an effect dep) keeps the listener attached once for the component's
+  // life while still always reading the latest view instead of a stale one.
+  const effectiveViewRef = useRef(effectiveView);
+  effectiveViewRef.current = effectiveView;
+  const wheelAccum = useRef(0);
+
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+      // A synthetic wheel event with a non-finite deltaY (unreachable from
+      // real mouse/trackpad hardware) would otherwise loop forever below —
+      // `Infinity - WHEEL_STEP === Infinity` in IEEE-754 arithmetic, so the
+      // while loop's terminating condition never becomes false and the
+      // page's script thread hangs until the tab is force-closed.
+      if (!Number.isFinite(e.deltaY)) return;
+      const cur = effectiveViewRef.current;
+      const rect = el!.getBoundingClientRect();
+      // Normalise: deltaMode 0 (pixel — most mice and trackpads) is used as
+      // reported; 1 (line, occasionally Firefox) and 2 (page) are converted
+      // to an approximate pixel equivalent so both scale the same accumulator.
+      const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? rect.height : 1;
+      wheelAccum.current += e.deltaY * unit;
+      // A physical mouse-wheel notch reports ~100-120 in deltaY and crosses
+      // WHEEL_STEP in one event; a trackpad reports many small deltas (often
+      // single digits) per swipe that accumulate to the same step over a few
+      // events — this is the "don't assume one notch per event" normalisation.
+      let steps = 0;
+      while (wheelAccum.current >= WHEEL_STEP) {
+        steps -= 1;
+        wheelAccum.current -= WHEEL_STEP;
+      }
+      while (wheelAccum.current <= -WHEEL_STEP) {
+        steps += 1;
+        wheelAccum.current += WHEEL_STEP;
+      }
+      if (steps === 0) return;
+      const fx = e.clientX - rect.left;
+      const fy = e.clientY - rect.top;
+      const next = zoomFrom(cur, steps, fx, fy);
+      if (next && isFiniteView(next)) setView(next);
+    }
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+    // zoomFrom is a plain function recreated each render but has no state of
+    // its own beyond its arguments — safe to omit, and refs carry the rest.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const tiles = useMemo(() => {
-    if (!view) return [];
-    const { z, originX, originY } = view;
+    const { z, originX, originY } = effectiveView;
     const max = 2 ** z;
     const out: { key: string; src: string; left: number; top: number }[] = [];
     for (let tx = Math.floor(originX / TILE); tx <= Math.floor((originX + width) / TILE); tx++) {
@@ -147,7 +351,7 @@ export default function MapView({ properties }: { properties: PropertyListItem[]
       }
     }
     return out;
-  }, [view, width]);
+  }, [effectiveView, width]);
 
   function toggleAmen(key: string) {
     setAmen((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
@@ -163,10 +367,10 @@ export default function MapView({ properties }: { properties: PropertyListItem[]
           <h1 className="font-serif text-[38px] leading-none">Map view</h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setZoomAdj((z) => z - 1)} className="chip" aria-label="Zoom out">
+          <button onClick={() => zoomButton(-1)} className="chip" aria-label="Zoom out">
             −
           </button>
-          <button onClick={() => setZoomAdj((z) => z + 1)} className="chip" aria-label="Zoom in">
+          <button onClick={() => zoomButton(1)} className="chip" aria-label="Zoom in">
             +
           </button>
         </div>
@@ -192,8 +396,13 @@ export default function MapView({ properties }: { properties: PropertyListItem[]
 
       <div
         ref={box}
-        className="relative overflow-hidden rounded-[18px] border border-line bg-fill"
+        className="relative touch-none overflow-hidden rounded-[18px] border border-line bg-fill"
         style={{ height: HEIGHT }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onClickCapture={handleClickCapture}
       >
         {tiles.map((t) => (
           // eslint-disable-next-line @next/next/no-img-element
@@ -208,39 +417,38 @@ export default function MapView({ properties }: { properties: PropertyListItem[]
           />
         ))}
 
-        {view &&
-          pins.map((p) => {
-            const px = project(p.latitude!, p.longitude!, view.z);
-            const on = matches(p);
-            const score = scoreOf.get(p.id) ?? 0;
-            const d = pinDiameter(score);
-            // The visible dot can be as small as 5px; the button's hit area
-            // never shrinks below PIN_HIT_MIN so it stays tappable.
-            const hit = Math.max(d, PIN_HIT_MIN);
-            return (
-              <button
-                key={p.id}
-                data-testid="map-pin"
-                onClick={() => router.push(`/property/${p.id}`)}
-                title={`${p.address ?? "Property"} — ${formatPrice(p.priceDisplay, p.priceNumeric)} · vibe ${score}`}
-                className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center
-                  transition-opacity"
-                style={{
-                  left: px.x - view.originX,
-                  top: px.y - view.originY,
-                  width: hit,
-                  height: hit,
-                  opacity: on ? 1 : 0.25,
-                  zIndex: on ? 2 : 1,
-                }}
-              >
-                <span
-                  className="rounded-full border-2 border-white bg-amber shadow-md"
-                  style={{ width: d, height: d }}
-                />
-              </button>
-            );
-          })}
+        {pins.map((p) => {
+          const px = project(p.latitude!, p.longitude!, effectiveView.z);
+          const on = matches(p);
+          const score = scoreOf.get(p.id) ?? 0;
+          const d = pinDiameter(score);
+          // The visible dot can be as small as 5px; the button's hit area
+          // never shrinks below PIN_HIT_MIN so it stays tappable.
+          const hit = Math.max(d, PIN_HIT_MIN);
+          return (
+            <button
+              key={p.id}
+              data-testid="map-pin"
+              onClick={() => router.push(`/property/${p.id}`)}
+              title={`${p.address ?? "Property"} — ${formatPrice(p.priceDisplay, p.priceNumeric)} · vibe ${score}`}
+              className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center
+                transition-opacity"
+              style={{
+                left: px.x - effectiveView.originX,
+                top: px.y - effectiveView.originY,
+                width: hit,
+                height: hit,
+                opacity: on ? 1 : 0.25,
+                zIndex: on ? 2 : 1,
+              }}
+            >
+              <span
+                className="rounded-full border-2 border-white bg-amber shadow-md"
+                style={{ width: d, height: d }}
+              />
+            </button>
+          );
+        })}
 
         <span className="absolute bottom-1.5 right-2 rounded bg-white/80 px-1.5 text-[10px] text-mute">
           © OpenStreetMap contributors

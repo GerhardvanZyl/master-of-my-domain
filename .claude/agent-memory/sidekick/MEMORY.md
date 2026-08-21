@@ -5,8 +5,9 @@
 - [Floorplan metadata batches](floorplan_metadata_batches.md) — meta:set job: many agency floorplans have no printed dimensions (legit skip); resolution check for illegible ones
 - [load.ts NUL bytes](load_ts_nul_bytes.md) — src/db/queries/load.ts has pre-existing embedded NUL bytes; `git diff` on it needs `-a` or it reports "binary files differ"
 - [Shared property-filter module](shared_property_filter_module.md) — src/lib/property-filters.ts is the one filter-predicate definition PropertyGrid + MapView both use
-- [MapView region scoping](map_view_region_scoping.md) — /map shows both VIC+NSW; grid filters are region-scoped localStorage keys, so /map must read both
+- [MapView region scoping](map_view_region_scoping.md) — since 2026-08-21: /map=VIC, /sydney/map=NSW, MapView takes `region` prop, one filter key (old dual-read deleted)
 - [Native select arrow-key writes](native_select_arrow_key_writes.md) — closed `<select>` consumes arrow keys itself; guard on the control that owns the write, not the global handler
 - [UI test write verification](ui_test_write_verification.md) — prefer page.on("request") over DOM state to prove a write did/didn't happen in test/ui.test.ts
 - [Walkthrough anchor drift](walkthrough_anchor_drift.md) — pr-walkthrough drafts here cite ranges anchored to the wrong nearby boundary; grep the real symbol before trusting a line range
 - [Map pin hit vs visual size](map_pin_hit_vs_visual_size.md) — pin button (24px-floored hit area) != inner span (true 5-50px scaled dot); test the span for size
+- [Drag vs click suppression](drag_vs_click_suppression.md) — capture pointer only once a drag is DETECTED, not on pointerdown (capture-at-down retargets click to the container, swallowing every click); reset draggedRef on pointerdown too

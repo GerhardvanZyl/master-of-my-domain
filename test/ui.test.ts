@@ -133,6 +133,26 @@ function seed(dbPath: string) {
   return { props, total };
 }
 
+/**
+ * The set of addresses (from the same DB copy the server reads) belonging to
+ * one side of the VIC/NSW split — used to check map-pin IDENTITY rather than
+ * just a pin count, so an inverted region filter can't pass by coincidence of
+ * totals. Two static, non-concatenated queries rather than one templated by
+ * a boolean, per the parameterised-query rule.
+ */
+function addressesByRegion(nsw: boolean): Set<string> {
+  const db = new Database(path.join(tmp, "app.db"), { readonly: true });
+  const rows = (
+    nsw
+      ? db.prepare("SELECT address FROM properties WHERE latitude IS NOT NULL AND state = 'NSW'").all()
+      : db
+          .prepare("SELECT address FROM properties WHERE latitude IS NOT NULL AND (state IS NULL OR state <> 'NSW')")
+          .all()
+  ) as { address: string | null }[];
+  db.close();
+  return new Set(rows.map((r) => r.address).filter((a): a is string => !!a));
+}
+
 // ------------------------------------------------------------------- helpers
 const sel = {
   gate: "[data-testid=profile-gate]",
@@ -460,6 +480,75 @@ async function main() {
   });
 
   console.log("\nmap");
+
+  // Regression (corr-001): autoView's no-coordinates fallback centre used to
+  // be a single hardcoded Melbourne CBD pair, reachable from /sydney/map (a
+  // NSW-only route) whenever no NSW property has coordinates — the empty
+  // basemap would centre on Melbourne under its own "no coordinates" notice.
+  // No browser needed: this checks the region lookup itself, directly.
+  await t("the no-coordinates fallback centre differs by region (corr-001)", async () => {
+    const { REGION_FALLBACK_CENTRE } = await import("../src/components/MapView");
+    assert.notDeepEqual(
+      REGION_FALLBACK_CENTRE.vic,
+      REGION_FALLBACK_CENTRE.nsw,
+      "vic and nsw should fall back to different CBD centres",
+    );
+  });
+
+  // A pin's only DOM-visible identity is its `title` — see MapView's
+  // `title={`${p.address} — ${formatPrice(...)} · vibe ${score}`}` — so pull
+  // the address back off it (split on the em dash) rather than trusting a
+  // pin count, which would still pass if the region filter were inverted and
+  // the totals happened to match.
+  function pinAddresses(titles: string[]): string[] {
+    return titles.map((title) => title.split(" — ")[0]);
+  }
+
+  await t("/map renders VIC pins only — no NSW property appears (requirement 1)", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const titles = await pins.evaluateAll((els) => els.map((e) => e.getAttribute("title") ?? ""));
+    assert.ok(titles.length > 0, "expected map pins");
+
+    const nswAddresses = addressesByRegion(true);
+    const vicAddresses = addressesByRegion(false);
+    for (const address of pinAddresses(titles)) {
+      assert.ok(!nswAddresses.has(address), `pin "${address}" is a NSW property and must not appear on /map`);
+      assert.ok(vicAddresses.has(address), `pin "${address}" is not a known VIC property with coordinates`);
+    }
+  });
+
+  await t("/sydney/map renders NSW pins only (requirement 2)", async () => {
+    const nswAddresses = addressesByRegion(true);
+    const vicAddresses = addressesByRegion(false);
+
+    await page.goto(`${base}/sydney/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const pins = page.locator('button[data-testid="map-pin"]');
+
+    if (nswAddresses.size === 0) {
+      // Nothing to assert region-identity against — say so plainly rather
+      // than faking a NSW fixture. Still confirms the page renders and plots
+      // nothing, since there's nothing to plot.
+      console.log("  (no geocoded NSW property in the fixture DB — asserting zero pins only)");
+      await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+      assert.equal(await pins.count(), 0, "no geocoded NSW property means no pins should render");
+      return;
+    }
+
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    await pins.first().waitFor();
+    const titles = await pins.evaluateAll((els) => els.map((e) => e.getAttribute("title") ?? ""));
+    assert.ok(titles.length > 0, "expected /sydney/map to render NSW pins");
+    for (const address of pinAddresses(titles)) {
+      assert.ok(!vicAddresses.has(address), `pin "${address}" is a VIC property and must not appear on /sydney/map`);
+      assert.ok(nswAddresses.has(address), `pin "${address}" is not a known NSW property with coordinates`);
+    }
+  });
+
   await t("plots a pin per geocoded property over OSM tiles", async () => {
     await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
     await hydrated(page);
@@ -552,8 +641,15 @@ async function main() {
   // exclude every plotted property blank /map to a featureless grey box" has
   // no test — reverting it (routing `view`'s extent back through `pins` alone)
   // must fail this. Reuses requirement-4's mechanism (write a `filters:*`
-  // blob, reload, read plain DOM state) and its key, via filterKey — the map
-  // reads BOTH regions' saved filters, so both keys need to exclude everything.
+  // blob, reload, read plain DOM state) and its key, via filterKey.
+  //
+  // CHANGED for the region split: this test used to write BOTH the vic and
+  // nsw filter keys, because /map's MapView read both regions' saved filters
+  // at once and merged their pins. That dual-region reading is exactly what
+  // this run deleted — /map now reads only the "vic" key (see MapView's
+  // single `region` prop) — so writing an nsw key here no longer does
+  // anything and would just be dead code asserting nothing about the current
+  // behaviour. Only the vic key is written now.
   await t("/map still shows a basemap and a notice when filters exclude every property", async () => {
     await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
     await hydrated(page);
@@ -564,15 +660,9 @@ async function main() {
     assert.ok(baseline > 0, "expected an unfiltered baseline of map pins");
 
     const vicKey = filterKey("vic", "gerhard");
-    const nswKey = filterKey("nsw", "gerhard");
-    await page.evaluate(
-      ({ vicKey, nswKey }) => {
-        const blob = JSON.stringify({ q: "zzzz-no-such-street" });
-        localStorage.setItem(vicKey, blob);
-        localStorage.setItem(nswKey, blob);
-      },
-      { vicKey, nswKey },
-    );
+    await page.evaluate((vicKey) => {
+      localStorage.setItem(vicKey, JSON.stringify({ q: "zzzz-no-such-street" }));
+    }, vicKey);
     await page.reload({ waitUntil: "domcontentloaded" });
     await hydrated(page);
     await page.waitForFunction(
@@ -594,13 +684,321 @@ async function main() {
     );
 
     // Clean up so the filter doesn't leak into later tests.
-    await page.evaluate(
-      ({ vicKey, nswKey }) => {
-        localStorage.removeItem(vicKey);
-        localStorage.removeItem(nswKey);
-      },
-      { vicKey, nswKey },
+    await page.evaluate((vicKey) => localStorage.removeItem(vicKey), vicKey);
+  });
+
+  // Pan/zoom interaction tests below. None of this logic had ever run in a
+  // real browser before this run — the drag-slop, pointer-capture click
+  // suppression and wheel accumulator were reasoned from spec, not observed.
+  // `div.touch-none` is MapView's map box: the only element in the app with
+  // that class, so it's a stable-enough selector without a dedicated testid.
+  const mapBox = () => page.locator("div.touch-none");
+
+  /** The `z` of the first visible OSM tile, parsed off its `src`. */
+  async function tileZoom(): Promise<number> {
+    const src = await page.locator('img[src*="tile.openstreetmap.org"]').first().getAttribute("src");
+    const m = src?.match(/tile\.openstreetmap\.org\/(\d+)\//);
+    assert.ok(m, `expected a tile src with a /{z}/ segment, got ${src}`);
+    return Number(m![1]);
+  }
+
+  await t("dragging the map pans it — direction and distance match the drag", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+
+    const before = await pins.first().boundingBox();
+    assert.ok(before, "expected the first pin to have a bounding box");
+    const box = await mapBox().boundingBox();
+    assert.ok(box, "expected the map box to have a bounding box");
+
+    // Start well clear of the box edges so the drag stays inside it; the
+    // exact starting point doesn't matter (dragging that starts on a pin is
+    // covered separately below) — only the (dx, dy) applied matters here.
+    const startX = box!.x + 40;
+    const startY = box!.y + 40;
+    const dx = 90;
+    const dy = 55;
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX + dx, startY + dy, { steps: 12 });
+    await page.mouse.up();
+    await page.waitForTimeout(150);
+
+    const after = await pins.first().boundingBox();
+    assert.ok(after, "expected the first pin to still have a bounding box after the drag");
+    // Screen position is `pinScreen = projected - origin`, and a drag of
+    // (dx, dy) sets `origin -= (dx, dy)`, so the pin should move by exactly
+    // (dx, dy) — a few px of tolerance for the browser's own subpixel
+    // rounding, not for any uncertainty in the direction or magnitude.
+    assert.ok(
+      Math.abs(after!.x - before!.x - dx) <= 3,
+      `dragging right by ${dx}px should move the pin right by ~${dx}px, moved ${after!.x - before!.x}`,
     );
+    assert.ok(
+      Math.abs(after!.y - before!.y - dy) <= 3,
+      `dragging down by ${dy}px should move the pin down by ~${dy}px, moved ${after!.y - before!.y}`,
+    );
+  });
+
+  // The most important test in this handoff: pointer capture (set on
+  // pointerdown so drag-move/up keep targeting the map box regardless of
+  // what's under the cursor) must not also let a real drag's terminal click
+  // reach a pin's onClick and navigate. Two shapes, per the brief: release
+  // over a pin having started elsewhere, and having started ON a pin.
+  await t("a drag that ends over a pin does not navigate to it", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const box = await mapBox().boundingBox();
+    const pin = await pins.first().boundingBox();
+    assert.ok(box && pin, "expected both the map box and a pin to have bounding boxes");
+
+    const targetX = pin!.x + pin!.width / 2;
+    const targetY = pin!.y + pin!.height / 2;
+    // Start comfortably clear of the pin (well past DRAG_SLOP=6) but still
+    // inside the map box.
+    const startX = Math.max(box!.x + 10, targetX - 80);
+    const startY = targetY;
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(targetX, targetY, { steps: 12 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+
+    assert.equal(new URL(page.url()).pathname, "/map", "a drag ending on a pin must not navigate");
+  });
+
+  await t("a drag that starts on a pin does not navigate to it", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const pin = await pins.first().boundingBox();
+    assert.ok(pin, "expected a pin to have a bounding box");
+
+    const startX = pin!.x + pin!.width / 2;
+    const startY = pin!.y + pin!.height / 2;
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(startX + 70, startY + 45, { steps: 12 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+
+    assert.equal(new URL(page.url()).pathname, "/map", "a drag starting on a pin must not navigate");
+  });
+
+  // The complement of the two tests above, and the one that would catch
+  // over-suppression: if draggedRef stayed set (or click suppression fired
+  // unconditionally) a genuine tap would silently stop navigating too, and
+  // the drag-suppression tests would keep passing while the feature broke.
+  await t("clicking a pin still navigates to its property, even with a pixel or two of jitter", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const pin = await pins.first().boundingBox();
+    assert.ok(pin, "expected a pin to have a bounding box");
+
+    const cx = pin!.x + pin!.width / 2;
+    const cy = pin!.y + pin!.height / 2;
+    await page.mouse.move(cx, cy);
+    await page.mouse.down();
+    // A real click always wobbles a pixel or two between down and up. This
+    // moves ~3.6px (Math.hypot(3, 2)) — comfortably under MapView's 6px
+    // DRAG_SLOP — so the sequence still fires handlePointerMove without
+    // arming drag-suppression. Without this move, handlePointerMove never
+    // fires at all and DRAG_SLOP itself is never exercised (confirmed:
+    // removing the DRAG_SLOP check survives the whole suite without it).
+    await page.mouse.move(cx + 3, cy + 2);
+    await page.mouse.up();
+    await page.waitForURL(/\/property\//, { timeout: 5000 });
+
+    assert.match(page.url(), /\/property\//, "a plain click on a pin should navigate to its property");
+  });
+
+  // Regression: draggedRef must not outlive the gesture that armed it. A real
+  // drag's pointerup almost always does produce a following click (Chromium
+  // fires exactly one from a genuine mousedown/mouseup pair, retargeted to
+  // whichever element holds pointer capture), which is why the two
+  // drag-suppression tests above can rely on onClickCapture to clear the flag
+  // normally. But a drag can also end via pointercancel (onPointerCancel is
+  // wired to the same endDrag as onPointerUp) — the browser stops delivering
+  // events for that gesture, capture is released, and NO click follows at
+  // all. Confirmed empirically (see the pointer-capture repro used to verify
+  // this fix): once capture is released outside of a click-producing
+  // pointerup, a click on the map box genuinely never fires. Before this
+  // gesture, if draggedRef were still cleared only inside handleClickCapture,
+  // it would stay permanently armed and silently swallow the very next click.
+  //
+  // This is reproduced by ending a real drag with a genuine pointercancel
+  // rather than pointerup: a synthetic 'pointercancel' dispatched on the map
+  // box still reaches the real, registered onPointerCancel handler (dispatch
+  // delivers to real listeners regardless of the dispatching event's
+  // trusted-ness) and that handler makes a REAL releasePointerCapture() call,
+  // which genuinely releases the browser's capture. Releasing the actual
+  // mouse button afterwards, away from the map entirely, then produces a
+  // click that has nowhere captured to be retargeted to — so it never
+  // reaches the map box, and the drag's gesture truly ends with no click.
+  await t("a drag cancelled without a click still allows the next click through", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const box = await mapBox().boundingBox();
+    assert.ok(box, "expected the map box to have a bounding box");
+
+    // Capture the real pointerId of the mouse gesture so the synthetic
+    // pointercancel below can be dispatched for the SAME pointer the browser
+    // is already tracking capture for.
+    await page.evaluate(() => {
+      const el = document.querySelector("div.touch-none")!;
+      el.addEventListener(
+        "pointerdown",
+        (e) => {
+          (window as unknown as { __pid: number }).__pid = (e as PointerEvent).pointerId;
+        },
+        { once: true },
+      );
+    });
+
+    const startX = box!.x + 30;
+    const startY = box!.y + 30;
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    // Cross DRAG_SLOP for real, so the app takes real pointer capture.
+    await page.mouse.move(startX + 60, startY + 40, { steps: 12 });
+
+    // End the gesture via a genuine (if synthetically-dispatched) pointercancel
+    // instead of pointerup — this is what the app's onPointerCancel handles,
+    // and it releases capture for real.
+    await page.evaluate(() => {
+      const el = document.querySelector("div.touch-none")!;
+      const pid = (window as unknown as { __pid: number }).__pid;
+      el.dispatchEvent(new PointerEvent("pointercancel", { pointerId: pid, bubbles: true, cancelable: true }));
+    });
+
+    // Release the real mouse button well away from the map box, so the click
+    // this produces (capture already released) cannot land anywhere near it.
+    await page.mouse.move(startX, box!.y - 60);
+    await page.mouse.up();
+    await page.waitForTimeout(150);
+    assert.equal(new URL(page.url()).pathname, "/map", "the cancelled drag itself must not navigate");
+
+    // Now a plain click on a pin, in the same page load. Pre-fix, draggedRef
+    // is still armed from the cancelled drag above and this click gets
+    // swallowed; post-fix, handlePointerDown resets it for the new gesture.
+    const pin = await pins.first().boundingBox();
+    assert.ok(pin, "expected a pin to have a bounding box after the cancelled drag");
+    await page.mouse.move(pin!.x + pin!.width / 2, pin!.y + pin!.height / 2);
+    await page.mouse.down();
+    await page.mouse.up();
+    await page.waitForURL(/\/property\//, { timeout: 5000 });
+
+    assert.match(page.url(), /\/property\//, "a plain click after a click-less cancelled drag should still navigate");
+  });
+
+  await t("scrolling the wheel zooms the map, in and back out", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const box = await mapBox().boundingBox();
+    assert.ok(box, "expected the map box to have a bounding box");
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+
+    const z0 = await tileZoom();
+    // Negative deltaY (scroll up / wheel notch toward the user) must zoom IN.
+    await page.mouse.wheel(0, -300);
+    await page.waitForTimeout(150);
+    const z1 = await tileZoom();
+    assert.ok(z1 > z0, `scrolling up should zoom in (z0=${z0}, z1=${z1})`);
+
+    // Positive deltaY (scroll down) must zoom back OUT.
+    await page.mouse.wheel(0, 300);
+    await page.waitForTimeout(150);
+    const z2 = await tileZoom();
+    assert.ok(z2 < z1, `scrolling down should zoom back out (z1=${z1}, z2=${z2})`);
+  });
+
+  await t("zoom stays clamped to 3..18 even after extreme scrolling", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const box = await mapBox().boundingBox();
+    assert.ok(box, "expected the map box to have a bounding box");
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+
+    await page.mouse.wheel(0, -6000);
+    await page.waitForTimeout(200);
+    const zMax = await tileZoom();
+    assert.ok(zMax <= 18, `zoom must not exceed 18, got ${zMax}`);
+    assert.equal(zMax, 18, `extreme zoom-in should clamp at 18, got ${zMax}`);
+
+    await page.mouse.wheel(0, 6000);
+    await page.waitForTimeout(200);
+    const zMin = await tileZoom();
+    assert.ok(zMin >= 3, `zoom must not drop below 3, got ${zMin}`);
+    assert.equal(zMin, 3, `extreme zoom-out should clamp at 3, got ${zMin}`);
+  });
+
+  // Regression (sec-001): the wheel handler's accumulator loop —
+  // `while (wheelAccum.current >= WHEEL_STEP) { ...; wheelAccum.current -=
+  // WHEEL_STEP; }` — never terminates once `wheelAccum.current` is Infinity,
+  // because `Infinity - WHEEL_STEP === Infinity` in IEEE-754 arithmetic. Real
+  // mouse/trackpad hardware never reports a non-finite deltaY, but a script
+  // already running in the page (e.g. a malicious extension) can construct
+  // an event whose deltaY reads back as Infinity and dispatch it.
+  //
+  // `new WheelEvent("wheel", { deltaY: Infinity })` cannot be used to build
+  // that event directly — confirmed empirically: WheelEventInit's deltaY is
+  // WebIDL `double` (not `unrestricted double`), so the constructor throws a
+  // TypeError ("The provided double value is non-finite") before the event
+  // even exists. The construction below instead builds a normal event and
+  // overrides `deltaY` afterwards with `Object.defineProperty`, which is
+  // exactly the shape of object a page script could hand to `dispatchEvent`.
+  //
+  // Both `page.evaluate` calls below are raced against a plain `setTimeout`
+  // rather than awaited directly: if the bug is present, the dispatch hangs
+  // the page's script thread forever, and an un-raced `await` here would hang
+  // this entire test run rather than failing this one test. The timeout lives
+  // in Node, not the browser, so it fires regardless of whether the page's
+  // JS thread is stuck.
+  await t("a non-finite wheel deltaY must not hang the page (sec-001)", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+
+    const dispatched = await Promise.race([
+      page
+        .evaluate(() => {
+          const el = document.querySelector("div.touch-none")!;
+          const ev = new WheelEvent("wheel", { deltaY: 10, bubbles: true, cancelable: true });
+          Object.defineProperty(ev, "deltaY", { value: Infinity, configurable: true });
+          el.dispatchEvent(ev);
+        })
+        .then(() => true),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 4000)),
+    ]);
+    assert.ok(
+      dispatched,
+      "dispatching a wheel event with a non-finite deltaY hung the page — the accumulator loop " +
+        "never terminates once deltaY is Infinity",
+    );
+
+    // Not just that the dispatch call itself returned — the page must still
+    // be able to run a trivial script afterwards.
+    const responsive = await Promise.race([
+      page.evaluate(() => 1 + 1).then(() => true),
+      new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 4000)),
+    ]);
+    assert.ok(responsive, "page should still respond to a trivial evaluate after the non-finite wheel event");
   });
 
   console.log("\nrooms");
