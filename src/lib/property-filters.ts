@@ -25,7 +25,7 @@ export interface FilterState {
   hideUnderOffer: boolean;
   hideDelisted: boolean;
   inspectingFilter: string;
-  attendedFilter: string;
+  /** "off" | "viewed" | "to-view" | "none" — the one inspection-state filter. */
   viewedFilter: string;
   ratedFilter: string;
   newFilter: string;
@@ -47,7 +47,6 @@ export const DEFAULT_FILTER_STATE: FilterState = {
   hideUnderOffer: false,
   hideDelisted: false,
   inspectingFilter: "off",
-  attendedFilter: "off",
   viewedFilter: "off",
   ratedFilter: "off",
   newFilter: "off",
@@ -63,6 +62,13 @@ export const NEW_FOR_MS = 7 * 86400_000;
    and `asTri` is the only thing that has to be careful. Older saved values
    from before the rework fall back to "off" rather than being migrated. */
 const asTri = (v: unknown): string => (v === "in" || v === "ex" ? v : "off");
+
+/* The inspection-state filter is a 4-way cycle, not a tri-chip: a property is
+   exactly one of "viewed" / "to-view" / neither, so "exclude" has no single
+   meaning. Off shows everything. */
+export const VIEWED_FILTERS = ["off", "viewed", "to-view", "none"] as const;
+const asViewedFilter = (v: unknown): string =>
+  (VIEWED_FILTERS as readonly string[]).includes(String(v)) ? String(v) : "off";
 
 /** Keeps a property when the chip is off, or when it matches the chip's side. */
 const triKeep = (mode: string, has: boolean): boolean =>
@@ -136,8 +142,14 @@ export function parseFilterState(raw: unknown): FilterState {
     hideUnderOffer: !!s.hideUnderOffer,
     hideDelisted: !!s.hideDelisted,
     inspectingFilter: asTri(s.inspectingFilter),
-    attendedFilter: asTri(s.attendedFilter),
-    viewedFilter: asTri(s.viewedFilter),
+    // Back-compat: the old pair of tri-chips. `attendedFilter: "in"` is the
+    // only old selection with an exact new equivalent — the rest ("not
+    // attended", and the whole page-visit-based viewedFilter, which is gone)
+    // fall back to "off" rather than being guessed at.
+    viewedFilter:
+      s.viewedFilter === undefined && s.attendedFilter === "in"
+        ? "viewed"
+        : asViewedFilter(s.viewedFilter),
     ratedFilter: asTri(s.ratedFilter),
     newFilter: /^[1-4]w$/.test(String(s.newFilter)) ? (s.newFilter as string) : "off",
   };
@@ -171,14 +183,13 @@ export function loadRegionFilters(region: string, profile: string | null): Filte
 }
 
 /** Accessors the predicate needs but can't compute on its own — a property's
- *  "attended"/"shortlist" value may be overlaid with an unsaved local edit
+ *  "viewed"/"shortlist" value may be overlaid with an unsaved local edit
  *  (PropertyGrid) or read straight off the server row (MapView, which never
  *  edits). `isRated` is passed in rather than reconstructed here because it
  *  also needs `profile`, which the predicate itself has no reason to know. */
 export interface FilterCtx {
   shortlistOf: (p: PropertyListItem) => string | null;
-  attendedOf: (p: PropertyListItem) => string | null;
-  viewedSet: Set<string>;
+  viewedOf: (p: PropertyListItem) => string | null;
   isRated: (p: PropertyListItem) => boolean;
 }
 
@@ -209,8 +220,7 @@ export function filterProperties(
     if (state.hideUnderOffer && isUnderOffer(p)) return false;
     if (state.hideDelisted && p.delisted) return false;
     if (!triKeep(state.inspectingFilter, isThisWeekend(p.nextInspection))) return false;
-    if (!triKeep(state.attendedFilter, !!ctx.attendedOf(p))) return false;
-    if (!triKeep(state.viewedFilter, ctx.viewedSet.has(p.id))) return false;
+    if (state.viewedFilter !== "off" && (ctx.viewedOf(p) ?? "none") !== state.viewedFilter) return false;
     if (!triKeep(state.ratedFilter, ctx.isRated(p))) return false;
     if (state.newFilter !== "off") {
       const age = Date.now() - new Date(p.createdAt).getTime();

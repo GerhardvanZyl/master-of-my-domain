@@ -13,10 +13,10 @@ import { DEFAULT_VIBE_CONFIG, loadVibeConfig, vibeScore } from "@/lib/vibes";
 import { useVibeConfig } from "@/lib/use-vibe-config";
 import { SHORTLIST_TAGS, useProfile } from "@/lib/profile";
 import { useDebounced } from "@/lib/useDebounced";
-import { loadViewed } from "@/lib/viewed";
 import {
   NEW_FOR_MS,
   PRICE_MAX,
+  VIEWED_FILTERS,
   filterKey,
   filterProperties,
   isRatedProperty,
@@ -102,7 +102,31 @@ function TriChip({
   );
 }
 
-/** "Visited 26 Jul" — fixed locale + timezone so server/client markup agree. */
+/** The one inspection-state filter: off → viewed → to-view → none → off.
+ *  Not a TriChip — the three states are mutually exclusive, so "exclude" has
+ *  no single meaning; you pick the one you want to see. */
+function ViewedChip({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const i = VIEWED_FILTERS.indexOf(value as (typeof VIEWED_FILTERS)[number]);
+  const next = VIEWED_FILTERS[(i < 0 ? 0 : i + 1) % VIEWED_FILTERS.length];
+  const label: Record<string, string> = {
+    off: "Viewed",
+    viewed: "Viewed",
+    "to-view": "To view",
+    none: "Not viewed",
+  };
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(next)}
+      title={next === "off" ? "Show all" : `Show only ${label[next].toLowerCase()}`}
+      className={`chip whitespace-nowrap ${value === "off" ? "hover:border-forest" : value === "none" ? "chip-ex" : "chip-on"}`}
+    >
+      {label[value] ?? "Viewed"}
+    </button>
+  );
+}
+
+/** "Viewed 26 Jul" — fixed locale + timezone so server/client markup agree. */
 function fmtVisited(iso: string): string {
   return new Intl.DateTimeFormat("en-AU", {
     timeZone: "Australia/Melbourne",
@@ -184,15 +208,15 @@ interface TileProps {
   selectFull: boolean;
   myVibe: string | null;
   canVibe: boolean;
-  attended: string | null;
+  /** "viewed" | "to-view" | null, overlaid with any unsaved local edit. */
+  viewed: string | null;
   shortlist: string | null;
   /** Passed down from the grid's top-level `useProfile()` so ~290 tiles don't
    *  each mount their own hook just for ShareButton — see ShareButton.tsx. */
   profile: string | null;
   onToggle: (id: string) => void;
   onVibe: (id: string, current: string | null, v: string) => void;
-  onAttend: (id: string, current: string | null) => void;
-  onShortlist: (id: string, current: string | null) => void;
+  onViewed: (id: string, current: string | null, value: string) => void;
 }
 
 /**
@@ -207,15 +231,14 @@ const PropertyCard = memo(function PropertyCard({
   selectFull,
   myVibe,
   canVibe,
-  attended,
+  viewed,
   shortlist,
   profile,
   compact,
   mapSize,
   onToggle,
   onVibe,
-  onAttend,
-  onShortlist,
+  onViewed,
 }: TileProps & { compact: boolean; mapSize: string }) {
   const nav = useCardNav(`/property/${p.id}`);
   const tag = SHORTLIST_TAGS.find((t) => t.id === shortlist);
@@ -352,7 +375,11 @@ const PropertyCard = memo(function PropertyCard({
             </span>
           )}
         </div>
-        {attended && <div className="mb-2.5 text-[11.5px] text-mute">Visited {fmtVisited(attended)}</div>}
+        {/* State from the overlaid prop so an optimistic click flips it; the
+            date itself only exists once the server has stamped it. */}
+        {viewed === "viewed" && p.viewedAt && (
+          <div className="mb-2.5 text-[11.5px] text-mute">Viewed {fmtVisited(p.viewedAt)}</div>
+        )}
         {inspect?.upcoming && (
           <div className="mb-2.5 inline-flex items-center gap-1.5 rounded-full bg-forest/10 px-2.5 py-1 text-[12px] font-semibold text-forest">
             📅 Inspect {inspect.label}
@@ -399,7 +426,7 @@ const PropertyCard = memo(function PropertyCard({
               </div>
             )}
           </div>
-          {/* Emotes + Attended + To view + Share. Always its own full-width row
+          {/* Emotes + the viewed/to-view pair + Share. Always its own full-width row
               and free to wrap onto a second line: they don't fit beside the
               distance text at card width, and the old shrink-0 + sm:w-auto made
               them overflow the card instead. (Compare moved up to a checkbox
@@ -425,30 +452,27 @@ const PropertyCard = memo(function PropertyCard({
                 );
               })}
             </div>
-            <button
-              onClick={() => onAttend(p.id, attended)}
-              aria-pressed={!!attended}
-              title={attended ? "Mark as not attended" : "Mark as attended"}
-              className={`shrink-0 rounded-[9px] border px-3 py-1.5 text-xs font-bold transition ${
-                attended
-                  ? "border-forest bg-forest/15 text-forest"
-                  : "border-line bg-white text-body hover:border-forest"
-              }`}
-            >
-              {attended ? "✓ Attended" : "Attended"}
-            </button>
-            <button
-              onClick={() => onShortlist(p.id, shortlist)}
-              aria-pressed={shortlist === "must-see"}
-              title={shortlist === "must-see" ? "Remove from to-view list" : "Add to to-view list"}
-              className={`shrink-0 rounded-[9px] border px-3 py-1.5 text-xs font-bold transition ${
-                shortlist === "must-see"
-                  ? "border-forest bg-forest/15 text-forest"
-                  : "border-line bg-white text-body hover:border-forest"
-              }`}
-            >
-              {shortlist === "must-see" ? "✓ To view" : "To view"}
-            </button>
+            {([
+              ["to-view", "To view"],
+              ["viewed", "Viewed"],
+            ] as const).map(([value, label]) => {
+              const on = viewed === value;
+              return (
+                <button
+                  key={value}
+                  onClick={() => onViewed(p.id, viewed, value)}
+                  aria-pressed={on}
+                  title={on ? `Clear “${label}”` : `Mark as “${label}”`}
+                  className={`shrink-0 rounded-[9px] border px-3 py-1.5 text-xs font-bold transition ${
+                    on
+                      ? "border-forest bg-forest/15 text-forest"
+                      : "border-line bg-white text-body hover:border-forest"
+                  }`}
+                >
+                  {on ? `✓ ${label}` : label}
+                </button>
+              );
+            })}
             <ShareButton propertyId={p.id} profile={profile} />
           </div>
         </div>
@@ -589,10 +613,9 @@ export default function PropertyGrid({
   // router.refresh(), which re-rendered all ~290 cards on the server (~1.2s of
   // dead time) and re-sorted the grid out from under the cursor.
   const [vibeEdits, setVibeEdits] = useState<Record<string, string>>({});
-  // Local attendance writes, id -> ISO date | null. Same optimistic pattern.
-  const [attendedEdits, setAttendedEdits] = useState<Record<string, string | null>>({});
-  // Local shortlist writes, id -> tag | null. Same optimistic pattern.
-  const [shortlistEdits, setShortlistEdits] = useState<Record<string, string | null>>({});
+  // Local inspection-state writes, id -> "viewed" | "to-view" | null. Same
+  // optimistic pattern. One map, because it is one mutually exclusive state.
+  const [viewedEdits, setViewedEdits] = useState<Record<string, string | null>>({});
   // Transient "cap reached" message shown in the compare tray for ~3s.
   const [capMsg, setCapMsg] = useState<string | null>(null);
   const capMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -614,7 +637,7 @@ export default function PropertyGrid({
   const [hideDelisted, setHideDelisted] = useState(false);
   // Tri-state chips (see TriChip): "off" | "in" (only these) | "ex" (hide these).
   const [inspectingFilter, setInspectingFilter] = useState("off");
-  const [attendedFilter, setAttendedFilter] = useState("off");
+  // "off" | "viewed" | "to-view" | "none" — see ViewedChip / VIEWED_FILTERS.
   const [viewedFilter, setViewedFilter] = useState("off");
   const [ratedFilter, setRatedFilter] = useState("off");
   // "off" | "1w".."4w" — created within the last N weeks (NEW_FOR_MS-based).
@@ -638,12 +661,6 @@ export default function PropertyGrid({
   // make the client markup disagree with the server's and React would throw a
   // hydration error.
   const { cfg: savedCfg, save: saveVibeConfig } = useVibeConfig();
-
-  // Viewed-property ids (localStorage, see src/lib/viewed.ts) — same
-  // hydrate-after-mount rule as everything else on this page. Keyed by
-  // profile, so re-run when `profile` hydrates/switches.
-  const [viewedSet, setViewedSet] = useState<Set<string>>(new Set());
-  useEffect(() => setViewedSet(loadViewed(profile)), [profile]);
 
   // `profile` hydrates in an effect, so fkey flips default→<profile> right after
   // mount. Without this guard the save effect fires on that flip carrying the
@@ -676,7 +693,6 @@ export default function PropertyGrid({
     setHideUnderOffer(f.hideUnderOffer);
     setHideDelisted(f.hideDelisted);
     setInspectingFilter(f.inspectingFilter);
-    setAttendedFilter(f.attendedFilter);
     setViewedFilter(f.viewedFilter);
     setRatedFilter(f.ratedFilter);
     setNewFilter(f.newFilter);
@@ -697,14 +713,14 @@ export default function PropertyGrid({
       try {
         localStorage.setItem(
           fkey,
-          JSON.stringify({ sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, viewedFilter, ratedFilter, newFilter, pinned }),
+          JSON.stringify({ sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, viewedFilter, ratedFilter, newFilter, pinned }),
         );
       } catch (e) {
         console.warn("filter save failed", e); // quota/private mode — don't fail silently
       }
     }, 400);
     return () => clearTimeout(t);
-  }, [fkey, sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, viewedFilter, ratedFilter, newFilter, pinned]);
+  }, [fkey, sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, viewedFilter, ratedFilter, newFilter, pinned]);
 
   // Compare selection persists per region, independent of the profile filter
   // bucket above — you might switch profiles mid-compare.
@@ -825,16 +841,14 @@ export default function PropertyGrid({
   );
 
   // The attendance shown on a tile: local edit if there is one, else the server's.
-  const attendedOf = useCallback(
-    (p: PropertyListItem) => (p.id in attendedEdits ? attendedEdits[p.id] : p.attendedAt),
-    [attendedEdits],
+  const viewedOf = useCallback(
+    (p: PropertyListItem) => (p.id in viewedEdits ? viewedEdits[p.id] : p.viewed),
+    [viewedEdits],
   );
 
-  // The shortlist tag shown on a tile: local edit if there is one, else the server's.
-  const shortlistOf = useCallback(
-    (p: PropertyListItem) => (p.id in shortlistEdits ? shortlistEdits[p.id] : p.shortlistTag),
-    [shortlistEdits],
-  );
+  // The shortlist tag shown on a tile. Read-only here now: the grid's only
+  // shortlist writer was the "must-see" button, which is `viewed` these days.
+  const shortlistOf = useCallback((p: PropertyListItem) => p.shortlistTag, []);
 
   // "Rated" = the user has expressed ANY opinion, from EITHER profile — the
   // shared definition (@/lib/property-filters), fed MY vibe via vibeOf() so a
@@ -861,12 +875,11 @@ export default function PropertyGrid({
         hideUnderOffer,
         hideDelisted,
         inspectingFilter,
-        attendedFilter,
         viewedFilter,
         ratedFilter,
         newFilter,
       },
-      { shortlistOf, attendedOf, viewedSet, isRated },
+      { shortlistOf, viewedOf, isRated },
     );
     if (sort === "vibes") {
       list = [...list].sort((a, b) => (scoreOf.get(b.id) ?? 0) - (scoreOf.get(a.id) ?? 0));
@@ -877,7 +890,7 @@ export default function PropertyGrid({
       if (cfg?.num) list = [...list].sort(byNum(cfg.num, cfg.dir));
     }
     return list;
-  }, [properties, suburb, minBeds, minBaths, minParking, dMaxPrice, dQ, sort, scoreOf, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, attendedFilter, attendedOf, shortlistOf, myScore, viewedFilter, viewedSet, ratedFilter, isRated, newFilter]);
+  }, [properties, suburb, minBeds, minBaths, minParking, dMaxPrice, dQ, sort, scoreOf, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, shortlistOf, myScore, viewedFilter, viewedOf, ratedFilter, isRated, newFilter]);
 
   // Hand the current on-screen order to the detail page's prev/next pager, so
   // stepping through listings follows the filter+sort you're actually looking
@@ -913,28 +926,17 @@ export default function PropertyGrid({
     });
   }, []);
 
-  // Mark/unmark "I've been to this one" for a tile. Same optimistic,
-  // fire-and-forget pattern as setVibe below — no router.refresh().
-  const setAttended = useCallback((id: string, current: string | null) => {
-    const next = current ? null : new Date().toISOString();
-    setAttendedEdits((prev) => ({ ...prev, [id]: next }));
+  // Set the inspection state for a tile. Clicking the active value clears it,
+  // so the three states cycle without ever overlapping. Optimistic and
+  // fire-and-forget, same as setVibe below — no router.refresh().
+  const setViewedState = useCallback((id: string, current: string | null, value: string) => {
+    const next = current === value ? null : value;
+    setViewedEdits((prev) => ({ ...prev, [id]: next }));
     fetch(`/api/properties/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ attendedAt: next }),
-    }).catch((e) => console.warn("attended save failed", e));
-  }, []);
-
-  // Toggle "must-see" for a tile. Same optimistic, fire-and-forget pattern as
-  // setAttended above — no router.refresh().
-  const setShortlist = useCallback((id: string, current: string | null) => {
-    const next = current === "must-see" ? null : "must-see";
-    setShortlistEdits((prev) => ({ ...prev, [id]: next }));
-    fetch(`/api/properties/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ shortlistTag: next }),
-    }).catch((e) => console.warn("shortlist save failed", e));
+      body: JSON.stringify({ viewed: next }),
+    }).catch((e) => console.warn("viewed save failed", e));
   }, []);
 
   // Rate a property's "vibe" for the active profile straight from its tile.
@@ -981,8 +983,8 @@ export default function PropertyGrid({
     hideDelisted && "no sold",
     inspectingFilter !== "off" &&
       (inspectingFilter === "in" ? "inspecting this weekend" : "not inspecting this weekend"),
-    attendedFilter !== "off" && (attendedFilter === "in" ? "attended" : "not attended"),
-    viewedFilter !== "off" && (viewedFilter === "in" ? "viewed" : "not viewed"),
+    viewedFilter !== "off" &&
+      (viewedFilter === "viewed" ? "viewed" : viewedFilter === "to-view" ? "to view" : "not viewed"),
     ratedFilter !== "off" && (ratedFilter === "in" ? "rated" : "unrated"),
     newFilter !== "off" &&
       (newFilter === "1w" ? "new this week" : `new these ${parseInt(newFilter, 10)} weeks`),
@@ -1003,7 +1005,6 @@ export default function PropertyGrid({
     setHideAuction(false);
     setHideUnderOffer(false);
     setHideDelisted(false);
-    setAttendedFilter("off");
     setViewedFilter("off");
     setRatedFilter("off");
     setNewFilter("off");
@@ -1210,8 +1211,7 @@ export default function PropertyGrid({
             label="Inspecting this weekend"
             exLabel="Not inspecting this weekend"
           />
-          <TriChip value={attendedFilter} onChange={setAttendedFilter} label="Attended" exLabel="Not attended" />
-          <TriChip value={viewedFilter} onChange={setViewedFilter} label="Viewed" exLabel="Not viewed" />
+          <ViewedChip value={viewedFilter} onChange={setViewedFilter} />
           <TriChip value={ratedFilter} onChange={setRatedFilter} label="Rated" exLabel="Unrated" />
           {/* New is include-only, so it just cycles 1→4 weeks and back off. */}
           <button
@@ -1293,12 +1293,11 @@ export default function PropertyGrid({
               canVibe={!!profile}
               profile={profile}
               myVibe={vibeOf(p)}
-              attended={attendedOf(p)}
+              viewed={viewedOf(p)}
               shortlist={shortlistOf(p)}
               onToggle={toggle}
               onVibe={setVibe}
-              onAttend={setAttended}
-              onShortlist={setShortlist}
+              onViewed={setViewedState}
             />
           ))}
         </div>

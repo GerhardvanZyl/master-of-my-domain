@@ -8,7 +8,6 @@ import { vibeScore } from "@/lib/vibes";
 import { useVibeConfig } from "@/lib/use-vibe-config";
 import { TILE, project } from "@/lib/mercator";
 import { useProfile } from "@/lib/profile";
-import { loadViewed } from "@/lib/viewed";
 import {
   DEFAULT_FILTER_STATE,
   filterProperties,
@@ -111,23 +110,17 @@ export default function MapView({
     setFilters(loadRegionFilters(region, profile));
   }, [region, profile]);
 
-  // "Viewed" set backing the viewedFilter tri-chip — same per-profile
-  // localStorage read PropertyGrid does, needed here for the same reason.
-  const [viewedSet, setViewedSet] = useState<Set<string>>(new Set());
-  useEffect(() => setViewedSet(loadViewed(profile)), [profile]);
-
   const pins = useMemo(() => {
     const ctx = {
       shortlistOf: (p: PropertyListItem) => p.shortlistTag,
-      attendedOf: (p: PropertyListItem) => p.attendedAt,
-      viewedSet,
+      viewedOf: (p: PropertyListItem) => p.viewed,
       isRated: (p: PropertyListItem) => isRatedProperty(p, profile),
     };
     return filterProperties(pinsWithCoords, filters, ctx);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- pinsWithCoords is
     // derived fresh from `properties` every render; including it would defeat
     // the memo. `properties` is the real dependency and is listed instead.
-  }, [properties, filters, viewedSet, profile]);
+  }, [properties, filters, profile]);
 
   // Same rule as the grid: localStorage/server only after mount, never during render.
   const { cfg } = useVibeConfig();

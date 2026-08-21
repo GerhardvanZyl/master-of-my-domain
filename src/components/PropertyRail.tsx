@@ -232,48 +232,43 @@ export default function PropertyRail({
       )}
 
       <Card title="Inspected">
-        <button
-          onClick={() =>
-            patchProperty({
-              shortlistTag: prop.shortlistTag === "must-see" ? null : "must-see",
-            })
-          }
-          aria-pressed={prop.shortlistTag === "must-see"}
-          className={`mb-3 w-full rounded-[10px] border px-3 py-2.5 text-[13px] font-medium ${
-            prop.shortlistTag === "must-see"
-              ? "border-forest bg-[#F2F6F2] text-forest"
-              : "border-line bg-white text-mute"
-          }`}
-        >
-          {prop.shortlistTag === "must-see" ? "✓ To view" : "Add to to-view list"}
-        </button>
-        <div className="flex items-center justify-between gap-3">
-          <button
-            onClick={() =>
-              patchProperty({
-                attendedAt: prop.attendedAt ? null : new Date().toISOString(),
-              })
-            }
-            className={`flex-1 rounded-[10px] border px-3 py-2.5 text-[13px] font-medium ${
-              prop.attendedAt
-                ? "border-forest bg-[#F2F6F2] text-forest"
-                : "border-line bg-white text-mute"
-            }`}
-          >
-            {prop.attendedAt ? "✓ Visited" : "Mark as visited"}
-          </button>
-          {prop.attendedAt && (
+        {/* One state, three mutually exclusive values — clicking the active
+            one clears it back to "none". Two independent toggles used to let a
+            property be "attended" and "to view" at the same time. */}
+        <div className="mb-3 flex gap-2">
+          {([
+            ["to-view", "To view"],
+            ["viewed", "Viewed"],
+          ] as const).map(([value, label]) => {
+            const on = prop.viewed === value;
+            return (
+              <button
+                key={value}
+                onClick={() => patchProperty({ viewed: on ? null : value })}
+                aria-pressed={on}
+                className={`flex-1 rounded-[10px] border px-3 py-2.5 text-[13px] font-medium ${
+                  on ? "border-forest bg-[#F2F6F2] text-forest" : "border-line bg-white text-mute"
+                }`}
+              >
+                {on ? `✓ ${label}` : label}
+              </button>
+            );
+          })}
+        </div>
+        {prop.viewed === "viewed" && prop.viewedAt && (
+          <label className="flex items-center justify-between gap-3 text-[13px] text-mute">
+            Viewed on
             <input
               type="date"
-              value={prop.attendedAt.slice(0, 10)}
+              value={prop.viewedAt.slice(0, 10)}
               onChange={(e) => {
                 if (!e.target.value) return;
-                patchProperty({ attendedAt: new Date(e.target.value).toISOString() });
+                patchProperty({ viewedAt: new Date(e.target.value).toISOString() });
               }}
               className="field w-[150px] text-xs"
             />
-          )}
-        </div>
+          </label>
+        )}
       </Card>
 
       <div className="card p-4">

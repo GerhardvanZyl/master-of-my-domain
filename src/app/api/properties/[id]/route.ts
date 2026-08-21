@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { properties } from "@/db/schema";
 
 // Fields the detail rail may edit. Anything else in the body is ignored.
 const TRI = ["hasEaves", "pergolaCovered", "hasLawn"] as const; // 1 | 0 | null
 const TEXTS = ["pros", "cons"] as const; // newline-separated lists
-const SHORTLIST = ["must-see", "maybe", "rejected"];
+const SHORTLIST = ["maybe", "rejected"]; // "must-see" became viewed = "to-view"
+const VIEWED = ["viewed", "to-view"]; // + null = neither. The only inspection state.
 
-// PATCH /api/properties/<id>  { shortlistTag?, hasEaves?, pros?, … }
+// PATCH /api/properties/<id>  { viewed?, shortlistTag?, hasEaves?, pros?, … }
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -41,13 +42,27 @@ export async function PATCH(
   for (const k of TEXTS) {
     if (k in body) patch[k] = String(body[k] ?? "").trim() || null;
   }
-  // "I walked through this one" — an ISO date, or null to un-mark it.
-  if ("attendedAt" in body) {
-    const v = body.attendedAt;
-    if (v !== null && Number.isNaN(Date.parse(String(v)))) {
-      return NextResponse.json({ error: "bad attendedAt" }, { status: 400 });
+  // The one inspection state. Writing it also owns viewed_at, so the date and
+  // the enum can't disagree: entering "viewed" stamps today unless a date is
+  // already there (COALESCE, so a hand-corrected date survives a re-click),
+  // and anything else clears it.
+  if ("viewed" in body) {
+    const v = body.viewed;
+    if (v !== null && !VIEWED.includes(String(v))) {
+      return NextResponse.json({ error: "bad viewed" }, { status: 400 });
     }
-    patch.attendedAt = v === null ? null : String(v);
+    patch.viewed = v === null ? null : String(v);
+    patch.viewedAt =
+      v === "viewed" ? sql`COALESCE(viewed_at, ${new Date().toISOString()})` : null;
+  }
+  // Correcting the date by hand. After the block above, so a body carrying
+  // both wins on the explicit date.
+  if ("viewedAt" in body) {
+    const v = body.viewedAt;
+    if (v !== null && Number.isNaN(Date.parse(String(v)))) {
+      return NextResponse.json({ error: "bad viewedAt" }, { status: 400 });
+    }
+    patch.viewedAt = v === null ? null : String(v);
   }
   if (Object.keys(patch).length === 1) {
     return NextResponse.json({ error: "nothing to update" }, { status: 400 });

@@ -8,14 +8,15 @@ import { imageUrl } from "@/lib/images";
 export const dynamic = "force-dynamic";
 
 /**
- * Saturday-route planning list: must-see properties you haven't attended yet,
+ * Saturday-route planning list: properties marked "to view" (i.e. not yet
+ * viewed — the two are one enum now, so no extra check is needed),
  * grouped by their next open-for-inspection day. Server component, no vibes/
  * profile scoring — reuses listProperties() rather than PropertyGrid's
  * PropertyRow, which needs a profile score this page has no use for.
  */
 export default function InspectPage() {
   const wanted = listProperties().filter(
-    (p) => p.shortlistTag === "must-see" && !p.attendedAt && !p.delisted,
+    (p) => p.viewed === "to-view" && !p.delisted,
   );
   const groups = groupByInspectionDay(wanted);
 
@@ -25,7 +26,7 @@ export default function InspectPage() {
 
       {groups.length === 0 && (
         <p className="rounded-2xl border border-dashed border-line bg-paper p-16 text-center text-mute">
-          Nothing tagged must-see yet.
+          Nothing marked “to view” yet.
         </p>
       )}
 

@@ -72,8 +72,9 @@ export const properties = sqliteTable("properties", {
   advPricePreviousLabel: text("adv_price_previous_label"),
   // ISO datetime of the next upcoming open-for-inspection (Australia/Melbourne).
   nextInspection: text("next_inspection"),
-  // ISO date we actually walked through it. Not per profile — you inspect together.
-  attendedAt: text("attended_at"),
+  // ISO date we actually walked through it — set/cleared by `viewed` below,
+  // correctable by hand. Not per profile — you inspect together.
+  viewedAt: text("viewed_at"),
   // Neighbourhood metadata computed from lat/lng (straight-line) + OpenStreetMap.
   greenCrossDistanceM: integer("green_cross_distance_m"),
   colesDistanceM: integer("coles_distance_m"),
@@ -97,7 +98,12 @@ export const properties = sqliteTable("properties", {
   lawnType: text("lawn_type"), // "real" | "fake" | null
   // Shortlist triage + free-text pros/cons. ponytail: pros/cons are one TEXT
   // column each, newline-separated — a list this small doesn't need a table.
-  shortlistTag: text("shortlist_tag"), // must-see | maybe | rejected | null
+  shortlistTag: text("shortlist_tag"), // maybe | rejected | null
+  // The ONE inspection state: "viewed" (been there in person) | "to-view"
+  // (want to go) | null (neither). Replaced the old attended_at flag, the
+  // shortlist_tag = "must-see" tag and a localStorage "viewed" set, which
+  // were three independent switches for two mutually exclusive states.
+  viewed: text("viewed"),
   pros: text("pros"),
   cons: text("cons"),
   // property.com.au enrichment. Both null for every row on day one — populated

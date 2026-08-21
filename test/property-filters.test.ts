@@ -52,7 +52,7 @@ function mkProp(overrides: Partial<PropertyListItem> = {}): PropertyListItem {
     advPricePrevious: null,
     advPricePreviousLabel: null,
     nextInspection: null,
-    attendedAt: null,
+    viewedAt: null,
     greenCrossDistanceM: null,
     colesDistanceM: null,
     colesName: null,
@@ -72,6 +72,7 @@ function mkProp(overrides: Partial<PropertyListItem> = {}): PropertyListItem {
     hasLawn: null,
     lawnType: null,
     shortlistTag: null,
+    viewed: null,
     pros: null,
     cons: null,
     propertyComAuUrl: null,
@@ -99,8 +100,7 @@ function ids(props: PropertyListItem[]): string[] {
 function ctx(overrides: Partial<FilterCtx> = {}): FilterCtx {
   return {
     shortlistOf: (p) => p.shortlistTag,
-    attendedOf: (p) => p.attendedAt,
-    viewedSet: new Set<string>(),
+    viewedOf: (p) => p.viewed,
     isRated: () => false,
     ...overrides,
   };
@@ -190,11 +190,11 @@ function ctx(overrides: Partial<FilterCtx> = {}): FilterCtx {
 
 // --- tagFilter (shortlist) ----------------------------------------------------
 {
-  const mustSee = mkProp({ shortlistTag: "must-see" });
+  const rejected = mkProp({ shortlistTag: "rejected" });
   const maybe = mkProp({ shortlistTag: "maybe" });
   assert.deepEqual(
-    ids(filterProperties([mustSee, maybe], { ...DEFAULT_FILTER_STATE, tagFilter: "must-see" }, ctx())),
-    [mustSee.id],
+    ids(filterProperties([rejected, maybe], { ...DEFAULT_FILTER_STATE, tagFilter: "rejected" }, ctx())),
+    [rejected.id],
   );
 }
 
@@ -221,39 +221,61 @@ function ctx(overrides: Partial<FilterCtx> = {}): FilterCtx {
 // --- tri-state chips: off / in / ex, each asserted, since off vs ex is where
 // a tri-state bug hides (an inverted "ex" could silently behave like "in"). ---
 {
-  const attended = mkProp({ attendedAt: "2026-08-01" });
-  const notAttended = mkProp({ attendedAt: null });
-  const props = [attended, notAttended];
+  const rated = mkProp();
+  const unrated = mkProp();
+  const props = [rated, unrated];
+  const ratedCtx = ctx({ isRated: (p) => p.id === rated.id });
 
   assert.deepEqual(
-    ids(filterProperties(props, { ...DEFAULT_FILTER_STATE, attendedFilter: "off" }, ctx())),
+    ids(filterProperties(props, { ...DEFAULT_FILTER_STATE, ratedFilter: "off" }, ratedCtx)),
     ids(props),
     "off keeps everything regardless of the chip's dimension",
   );
   assert.deepEqual(
-    ids(filterProperties(props, { ...DEFAULT_FILTER_STATE, attendedFilter: "in" }, ctx())),
-    [attended.id],
+    ids(filterProperties(props, { ...DEFAULT_FILTER_STATE, ratedFilter: "in" }, ratedCtx)),
+    [rated.id],
     "in keeps ONLY properties matching the chip",
   );
   assert.deepEqual(
-    ids(filterProperties(props, { ...DEFAULT_FILTER_STATE, attendedFilter: "ex" }, ctx())),
-    [notAttended.id],
+    ids(filterProperties(props, { ...DEFAULT_FILTER_STATE, ratedFilter: "ex" }, ratedCtx)),
+    [unrated.id],
     "ex keeps ONLY properties NOT matching the chip — the opposite of in, not a no-op",
   );
 
-  // ratedFilter and viewedFilter go through ctx rather than a direct column;
-  // exercise their off/in/ex too since the wiring (not just triKeep) can drift.
-  const rated = mkProp();
-  const unrated = mkProp();
-  const ratedCtx = ctx({ isRated: (p) => p.id === rated.id });
-  assert.deepEqual(ids(filterProperties([rated, unrated], { ...DEFAULT_FILTER_STATE, ratedFilter: "in" }, ratedCtx)), [rated.id]);
-  assert.deepEqual(ids(filterProperties([rated, unrated], { ...DEFAULT_FILTER_STATE, ratedFilter: "ex" }, ratedCtx)), [unrated.id]);
-
-  const viewed = mkProp();
-  const unviewed = mkProp();
-  const viewedCtx = ctx({ viewedSet: new Set([viewed.id]) });
-  assert.deepEqual(ids(filterProperties([viewed, unviewed], { ...DEFAULT_FILTER_STATE, viewedFilter: "in" }, viewedCtx)), [viewed.id]);
-  assert.deepEqual(ids(filterProperties([viewed, unviewed], { ...DEFAULT_FILTER_STATE, viewedFilter: "ex" }, viewedCtx)), [unviewed.id]);
+  // The viewed filter is NOT a tri-chip: three mutually exclusive states, each
+  // selectable, "off" showing all. Every value asserted against every state,
+  // because the bug this replaced was exactly a state that couldn't be left.
+  const viewed = mkProp({ viewed: "viewed" });
+  const toView = mkProp({ viewed: "to-view" });
+  const neither = mkProp({ viewed: null });
+  const all = [viewed, toView, neither];
+  assert.deepEqual(
+    ids(filterProperties(all, { ...DEFAULT_FILTER_STATE, viewedFilter: "off" }, ctx())),
+    ids(all),
+    "viewedFilter off keeps every state",
+  );
+  assert.deepEqual(
+    ids(filterProperties(all, { ...DEFAULT_FILTER_STATE, viewedFilter: "viewed" }, ctx())),
+    [viewed.id],
+  );
+  assert.deepEqual(
+    ids(filterProperties(all, { ...DEFAULT_FILTER_STATE, viewedFilter: "to-view" }, ctx())),
+    [toView.id],
+  );
+  assert.deepEqual(
+    ids(filterProperties(all, { ...DEFAULT_FILTER_STATE, viewedFilter: "none" }, ctx())),
+    [neither.id],
+    "null is a state you can filter to, not just the absence of one",
+  );
+  // The overlay path the grid uses for an unsaved click, which is where
+  // switching between values actually has to work.
+  assert.deepEqual(
+    ids(
+      filterProperties(all, { ...DEFAULT_FILTER_STATE, viewedFilter: "viewed" }, ctx({ viewedOf: (p) => (p.id === toView.id ? "viewed" : p.viewed) })),
+    ),
+    [viewed.id, toView.id],
+    "an optimistic local edit moves a property between states",
+  );
 
   // inspectingFilter (isThisWeekend) is never routed through filterProperties
   // anywhere else in this file — the only other mention is parseFilterState's

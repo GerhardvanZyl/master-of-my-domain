@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS properties (
   adv_price_previous          TEXT,
   adv_price_previous_label    TEXT,
   next_inspection             TEXT,
-  attended_at                 TEXT,
+  viewed_at                   TEXT,
   green_cross_distance_m      INTEGER,
   coles_distance_m            INTEGER,
   coles_name                  TEXT,
@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS properties (
   has_lawn                    INTEGER,
   lawn_type                   TEXT,
   shortlist_tag               TEXT,
+  viewed                      TEXT,
   pros                        TEXT,
   cons                        TEXT,
   property_com_au_url         TEXT,
@@ -181,6 +182,15 @@ export function migrateColumns(db: {
   const cols = new Set(
     (db.pragma("table_info(properties)") as Array<{ name: string }>).map((c) => c.name),
   );
+
+  // attended_at -> viewed_at. A rename, not an add-and-copy, so the dates come
+  // across untouched and there is never a moment where both columns exist.
+  if (cols.has("attended_at") && !cols.has("viewed_at")) {
+    db.exec("ALTER TABLE properties RENAME COLUMN attended_at TO viewed_at");
+    cols.delete("attended_at");
+    cols.add("viewed_at");
+  }
+
   const add: Record<string, string> = {
     nearest_station: "TEXT",
     station_distance_m: "INTEGER",
@@ -193,7 +203,7 @@ export function migrateColumns(db: {
     adv_price_previous: "TEXT",
     adv_price_previous_label: "TEXT",
     next_inspection: "TEXT",
-    attended_at: "TEXT",
+    viewed_at: "TEXT",
     green_cross_distance_m: "INTEGER",
     coles_distance_m: "INTEGER",
     coles_name: "TEXT",
@@ -220,6 +230,23 @@ export function migrateColumns(db: {
   };
   for (const [name, type] of Object.entries(add)) {
     if (!cols.has(name)) db.exec(`ALTER TABLE properties ADD COLUMN ${name} ${type}`);
+  }
+
+  // The three old inspection switches — attended_at, shortlist_tag='must-see'
+  // and a per-browser localStorage set — collapse into one `viewed` enum.
+  // "Been there" wins over "want to go" when a row somehow carried both.
+  // Guarded on the column's absence and wrapped in a transaction, so it runs
+  // exactly once per DB, all-or-nothing: a half-applied backfill would look
+  // "already migrated" on the next connect and silently lose the rest.
+  if (!cols.has("viewed")) {
+    db.exec(`
+      BEGIN;
+      ALTER TABLE properties ADD COLUMN viewed TEXT;
+      UPDATE properties SET viewed = 'viewed'  WHERE viewed_at IS NOT NULL;
+      UPDATE properties SET viewed = 'to-view' WHERE viewed IS NULL AND shortlist_tag = 'must-see';
+      UPDATE properties SET shortlist_tag = NULL WHERE shortlist_tag = 'must-see';
+      COMMIT;
+    `);
   }
 
   const rateCols = new Set(

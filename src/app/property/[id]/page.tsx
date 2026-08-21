@@ -18,7 +18,6 @@ import NotesEditor from "@/components/NotesEditor";
 import PropertyRail from "@/components/PropertyRail";
 import PropertyPager from "@/components/PropertyPager";
 import MediaUploader from "@/components/MediaUploader";
-import MarkViewed from "@/components/MarkViewed";
 import MetadataEditor from "@/components/MetadataEditor";
 import ShareButton from "@/components/ShareButton";
 import { listMedia } from "@/lib/media";
@@ -217,18 +216,17 @@ export default async function PropertyDetail({
     return { ...r, change };
   });
 
-  const attendedLabel = property.attendedAt
+  const viewedLabel = property.viewedAt
     ? new Intl.DateTimeFormat("en-AU", {
         timeZone: "Australia/Melbourne",
         day: "numeric",
         month: "short",
         year: "numeric",
-      }).format(new Date(property.attendedAt))
+      }).format(new Date(property.viewedAt))
     : null;
 
   return (
     <section className="rise">
-      <MarkViewed propertyId={property.id} />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/"
@@ -425,9 +423,9 @@ export default async function PropertyDetail({
                 </div>
               ) : null;
             })()}
-            {attendedLabel && (
+            {property.viewed === "viewed" && (
               <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-sand px-3 py-1 text-[13px] font-medium text-mute">
-                ✓ Visited {attendedLabel}
+                ✓ Viewed{viewedLabel ? ` ${viewedLabel}` : ""}
               </div>
             )}
             <a

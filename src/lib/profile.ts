@@ -46,9 +46,9 @@ export function useProfile(): { profile: ProfileId | null; ready: boolean } {
   return { profile, ready };
 }
 
-/** Shortlist triage vocabulary, shared by the grid chips and the detail rail. */
+/** Shortlist triage vocabulary, shared by the grid chips and the detail rail.
+ *  "Must see" is deliberately absent — it is `viewed = "to-view"` now. */
 export const SHORTLIST_TAGS = [
-  { id: "must-see", label: "Must see", colour: "#1F4A3A" },
   { id: "maybe", label: "Maybe", colour: "#B9762A" },
   { id: "rejected", label: "Rejected", colour: "#B84A3A" },
 ] as const;
