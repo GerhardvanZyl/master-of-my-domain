@@ -49,3 +49,6 @@ data/media/
 
 # subagent-driven-development scratch (ledger, briefs, review packages)
 /.superpowers/
+
+# Image cache pulled from the live app by scripts/_tag-remote.ts (regenerable)
+.remote-imgs/

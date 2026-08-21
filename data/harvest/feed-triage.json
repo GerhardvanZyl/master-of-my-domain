@@ -1,6 +1,12 @@
 {
  "hnl": [
   {
+   "listingUrl": "https://www.domain.com.au/144-briody-grove-briody-drive-torquay-vic-3228-2021080202",
+   "street": "144 Briody Grove - Briody Drive",
+   "price": "$881,880",
+   "ptype": "New House & Land"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989559",
    "street": "149 Briody Grove - Briody Drive",
    "price": "$868,760",
@@ -37,6 +43,24 @@
    "ptype": "New House & Land"
   },
   {
+   "listingUrl": "https://www.domain.com.au/143-briody-grove-briody-drive-torquay-vic-3228-2020865361",
+   "street": "143 Briody Grove - Briody Drive",
+   "price": "$912,841",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/142-briody-grove-briody-drive-torquay-vic-3228-2020865385",
+   "street": "142 Briody Grove - Briody Drive",
+   "price": "$986,959",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867237",
+   "street": "911 Stretton - Pipit Way",
+   "price": "$996,390",
+   "ptype": "New House & Land"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867246",
    "street": "911 Stretton Pipit Way",
    "price": "$993,690",
@@ -67,6 +91,18 @@
    "ptype": "New House & Land"
   },
   {
+   "listingUrl": "https://www.domain.com.au/574-wirilda-street-torquay-vic-3228-2020584849",
+   "street": "574 Wirilda Street",
+   "price": "$900,888",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020590238",
+   "street": "568 Rosella Road",
+   "price": "$1,085,700",
+   "ptype": "New House & Land"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865312",
    "street": "145 Briody Grove - Briody Drive",
    "price": "$860,548",
@@ -85,27 +121,15 @@
    "ptype": "New House & Land"
   },
   {
-   "listingUrl": "https://www.domain.com.au/143-briody-grove-briody-drive-torquay-vic-3228-2020865361",
-   "street": "143 Briody Grove - Briody Drive",
-   "price": "$912,841",
+   "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020584815",
+   "street": "568 Rosella Road",
+   "price": "$897,550",
    "ptype": "New House & Land"
   },
   {
-   "listingUrl": "https://www.domain.com.au/142-briody-grove-briody-drive-torquay-vic-3228-2020865385",
-   "street": "142 Briody Grove - Briody Drive",
-   "price": "$986,959",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867237",
-   "street": "911 Stretton - Pipit Way",
-   "price": "$996,390",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/574-wirilda-street-torquay-vic-3228-2020584849",
-   "street": "574 Wirilda Street",
-   "price": "$900,888",
+   "listingUrl": "https://www.domain.com.au/575-wirilda-street-torquay-vic-3228-2020584881",
+   "street": "575 Wirilda Street",
+   "price": "$891,554",
    "ptype": "New House & Land"
   },
   {
@@ -127,27 +151,9 @@
    "ptype": "New House & Land"
   },
   {
-   "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020590238",
-   "street": "568 Rosella Road",
-   "price": "$1,085,700",
-   "ptype": "New House & Land"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020590274",
    "street": "568 Rosella Road",
    "price": "$1,085,700",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020584815",
-   "street": "568 Rosella Road",
-   "price": "$897,550",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/575-wirilda-street-torquay-vic-3228-2020584881",
-   "street": "575 Wirilda Street",
-   "price": "$891,554",
    "ptype": "New House & Land"
   },
   {
@@ -155,15 +161,69 @@
    "street": "",
    "price": "$645,000",
    "ptype": "New Apartments / Off the Plan"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2020736595",
+   "street": "",
+   "price": "$904,000",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2020736637",
+   "street": "",
+   "price": "$978,000",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184010",
+   "street": "",
+   "price": "$732,845",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184038",
+   "street": "",
+   "price": "$720,437",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184052",
+   "street": "",
+   "price": "$726,845",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/torquay-vic-3228-2019219245",
+   "street": "",
+   "price": "$944,825",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/torquay-vic-3228-2019219254",
+   "street": "",
+   "price": "$1,057,015",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/torquay-vic-3228-2019219265",
+   "street": "",
+   "price": "$1,026,047",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/torquay-vic-3228-2019219302",
+   "street": "",
+   "price": "$1,030,246",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184007",
+   "street": "",
+   "price": "$715,982",
+   "ptype": "House"
   }
  ],
  "soldish": [
-  {
-   "listingUrl": "https://www.domain.com.au/29-sumner-crescent-point-cook-vic-3030-2020915386",
-   "street": "29 Sumner Crescent",
-   "price": "SOLD By ASH",
-   "tag": "Under offer"
-  },
   {
    "listingUrl": "https://www.domain.com.au/47-yacht-road-point-cook-vic-3030-2019501372",
    "street": "47 Yacht Road",
