@@ -63,6 +63,116 @@ async function main() {
   assert.equal(propA.address, "1 Alpha St", "partial load did not null the address");
   assert.equal(count("SELECT COUNT(*) c FROM properties"), 2, "no duplicate rows");
 
+  // --- property.com.au enrichment: tri-state partial-update contract ---
+  const REAL_URL = "https://www.property.com.au/vic/point-cook-3030/villiers-dr/20-pid-9472083/";
+  const r1b = await post({
+    properties: [{ listingUrl: URL_A, propertyComAuUrl: REAL_URL, yearBuilt: 2008 }],
+  });
+  assert.equal(r1b.status, 200);
+  assert.equal(r1b.json.ok, true);
+  const enriched = sqlite
+    .prepare("SELECT property_com_au_url u, year_built y FROM properties WHERE listing_url = ?")
+    .get(URL_A) as { u: string; y: number };
+  assert.equal(enriched.u, REAL_URL, "propertyComAuUrl persisted via POST /api/batch");
+  assert.equal(enriched.y, 2008, "yearBuilt persisted via POST /api/batch");
+
+  const coverageBefore = await (async () => {
+    const { GET } = await import("../src/app/api/batch/route");
+    return (await GET()).json() as Promise<Json>;
+  })();
+  assert.ok(
+    (sec<number>(coverageBefore, "propertyComAuUrl")) >= 1,
+    "GET /api/batch coverage reflects propertyComAuUrl",
+  );
+  assert.ok((sec<number>(coverageBefore, "yearBuilt")) >= 1, "GET /api/batch coverage reflects yearBuilt");
+
+  // The most important test: sending ONLY propertyComAuUrl must not null out
+  // yearBuilt, and vice versa — that's the entire reason the sanitizers return
+  // `undefined` (not sent) rather than `null` (explicit clear) on anything
+  // that isn't itself a deliberate clear.
+  await post({ properties: [{ listingUrl: URL_A, propertyComAuUrl: REAL_URL.replace("20-pid", "21-pid") }] });
+  let row = sqlite
+    .prepare("SELECT property_com_au_url u, year_built y FROM properties WHERE listing_url = ?")
+    .get(URL_A) as { u: string; y: number };
+  assert.equal(row.y, 2008, "sending only propertyComAuUrl must NOT null out yearBuilt");
+  assert.ok(row.u.endsWith("21-pid-9472083/"), "propertyComAuUrl itself did update");
+
+  await post({ properties: [{ listingUrl: URL_A, yearBuilt: 2015 }] });
+  row = sqlite
+    .prepare("SELECT property_com_au_url u, year_built y FROM properties WHERE listing_url = ?")
+    .get(URL_A) as { u: string; y: number };
+  assert.equal(row.y, 2015, "yearBuilt itself did update");
+  assert.ok(row.u.endsWith("21-pid-9472083/"), "sending only yearBuilt must NOT null out propertyComAuUrl");
+
+  // A malformed URL in one row of a batch must not 500 the request, must not
+  // discard the other rows, and must leave a previously-good value on THAT row
+  // intact (malformed -> undefined -> "not sent", never a silent null).
+  const rMixed = await post({
+    properties: [
+      { listingUrl: URL_A, propertyComAuUrl: "not a url", beds: 6 },
+      { listingUrl: URL_B, beds: 7 },
+    ],
+  });
+  assert.equal(rMixed.status, 200, "a malformed enrichment field does not 500 the batch");
+  assert.equal(
+    sec<{ updated: number }>(rMixed.json, "properties").updated,
+    2,
+    "the other (good) row in the same batch is not discarded",
+  );
+  const afterMixed = sqlite
+    .prepare("SELECT property_com_au_url u, beds b FROM properties WHERE listing_url = ?")
+    .get(URL_A) as { u: string; b: number };
+  assert.ok(afterMixed.u.endsWith("21-pid-9472083/"), "malformed URL left the previously-good value intact");
+  assert.equal(afterMixed.b, 6, "the row's OTHER (valid) field still applied");
+  // A malformed enrichment field must be VISIBLE, not just silently dropped —
+  // "not sent" and "rejected" look identical in inserted/updated/errors alone,
+  // which contradicts the documented "check errors, a 200 is not proof of a
+  // clean apply" contract. tech-003(b).
+  assert.equal(
+    sec<{ rejected: number }>(rMixed.json, "properties").rejected,
+    1,
+    "the one malformed propertyComAuUrl is counted as rejected",
+  );
+
+  // A batch that sends nothing malformed reports zero rejected.
+  const rClean = await post({ properties: [{ listingUrl: URL_B, beds: 8 }] });
+  assert.equal(
+    sec<{ rejected: number }>(rClean.json, "properties").rejected,
+    0,
+    "a clean batch reports zero rejected",
+  );
+
+  // Idempotency: re-applying the same clean payload changes nothing further.
+  const beforeIdempotent = sqlite
+    .prepare("SELECT property_com_au_url u, year_built y FROM properties WHERE listing_url = ?")
+    .get(URL_A);
+  await post({ properties: [{ listingUrl: URL_A, propertyComAuUrl: enriched.u.replace("20-pid", "21-pid"), yearBuilt: 2015 }] });
+  const afterIdempotent = sqlite
+    .prepare("SELECT property_com_au_url u, year_built y FROM properties WHERE listing_url = ?")
+    .get(URL_A);
+  assert.deepEqual(afterIdempotent, beforeIdempotent, "re-applying the same payload is a no-op");
+
+  // Explicit `null` is a deliberate CLEAR, distinct from "not sent" (which
+  // must leave the column untouched — asserted above). tests-001: this half
+  // of the tri-state contract had no test anywhere in the suite. URL_A here
+  // still carries real values for both columns from the idempotency block
+  // just above.
+  await post({ properties: [{ listingUrl: URL_A, propertyComAuUrl: null }] });
+  let clearedRow = sqlite
+    .prepare("SELECT property_com_au_url u, year_built y FROM properties WHERE listing_url = ?")
+    .get(URL_A) as { u: string | null; y: number | null };
+  assert.equal(clearedRow.u, null, "explicit null clears propertyComAuUrl");
+  assert.equal(clearedRow.y, 2015, "clearing propertyComAuUrl must NOT touch yearBuilt");
+
+  // Put propertyComAuUrl back so the mirror case starts from a real value too.
+  await post({ properties: [{ listingUrl: URL_A, propertyComAuUrl: REAL_URL }] });
+  await post({ properties: [{ listingUrl: URL_A, yearBuilt: null }] });
+  clearedRow = sqlite
+    .prepare("SELECT property_com_au_url u, year_built y FROM properties WHERE listing_url = ?")
+    .get(URL_A) as { u: string | null; y: number | null };
+  assert.equal(clearedRow.y, null, "explicit null clears yearBuilt");
+  assert.equal(clearedRow.u, REAL_URL, "clearing yearBuilt must NOT touch propertyComAuUrl");
+
   // --- tags: notes is what carries hero / floorplan / master ---
   const now = new Date().toISOString();
   sqlite

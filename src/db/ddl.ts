@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS properties (
   shortlist_tag               TEXT,
   pros                        TEXT,
   cons                        TEXT,
+  property_com_au_url         TEXT,
+  year_built                  INTEGER,
   raw_json       TEXT,
   scraped_at     TEXT NOT NULL,
   created_at     TEXT NOT NULL,
@@ -213,6 +215,8 @@ export function migrateColumns(db: {
     shortlist_tag: "TEXT",
     pros: "TEXT",
     cons: "TEXT",
+    property_com_au_url: "TEXT",
+    year_built: "INTEGER",
   };
   for (const [name, type] of Object.entries(add)) {
     if (!cols.has(name)) db.exec(`ALTER TABLE properties ADD COLUMN ${name} ${type}`);

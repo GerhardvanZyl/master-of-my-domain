@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, isNotNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { properties } from "@/db/schema";
 import { syncImages } from "@/scrape/images";
@@ -189,5 +189,24 @@ export async function POST(req: Request) {
 /** GET /api/batch — coverage summary, so a remote run can verify what it wrote. */
 export async function GET() {
   const counts = db.select({ id: properties.id }).from(properties).all().length;
-  return NextResponse.json({ ok: true, properties: counts, ...tagStatus() });
+  // Coverage for the property.com.au enrichment — both are 0/null for every
+  // row until a future sync round populates them; useful to confirm a batch
+  // that sent these fields actually landed.
+  const propertyComAuUrl = db
+    .select({ id: properties.id })
+    .from(properties)
+    .where(isNotNull(properties.propertyComAuUrl))
+    .all().length;
+  const yearBuilt = db
+    .select({ id: properties.id })
+    .from(properties)
+    .where(isNotNull(properties.yearBuilt))
+    .all().length;
+  return NextResponse.json({
+    ok: true,
+    properties: counts,
+    propertyComAuUrl,
+    yearBuilt,
+    ...tagStatus(),
+  });
 }

@@ -14,6 +14,14 @@ import { useVibeConfig } from "@/lib/use-vibe-config";
 import { SHORTLIST_TAGS, useProfile } from "@/lib/profile";
 import { useDebounced } from "@/lib/useDebounced";
 import { loadViewed } from "@/lib/viewed";
+import {
+  NEW_FOR_MS,
+  PRICE_MAX,
+  filterKey,
+  filterProperties,
+  isRatedProperty,
+  parseFilterState,
+} from "@/lib/property-filters";
 import MultiSelect from "./MultiSelect";
 import StaticMap from "./StaticMap";
 import ShareButton from "./ShareButton";
@@ -39,8 +47,7 @@ const SORTS: { key: string; label: string; num?: NumGetter; dir: "asc" | "desc" 
 ];
 
 const PRICE_MIN = 400_000;
-const PRICE_MAX = 1_500_000; // slider top = "no cap"
-const PRICE_STEP = 25_000;
+const PRICE_STEP = 25_000; // PRICE_MAX ("no cap") comes from @/lib/property-filters — the filter needs it too
 const fmtK = (n: number) => (n >= PRICE_MAX ? "any" : `$${(n / 1000).toFixed(0)}k`);
 
 // Vibe rating buttons shown on each tile. Values and point deltas must stay in
@@ -59,13 +66,6 @@ const MAP_SIZES: Record<string, string> = {
   lg: "w-1/2",
 };
 
-const NEW_FOR_MS = 7 * 86400_000;
-
-// Sale status is only in the free-text price_display (no dedicated column).
-const isAuction = (p: PropertyListItem) => /auction/i.test(p.priceDisplay ?? "");
-const isUnderOffer = (p: PropertyListItem) =>
-  /under\s*offer|under\s*contract/i.test(p.priceDisplay ?? "");
-
 // Nulls always sort last, regardless of direction.
 function byNum(num: NumGetter, dir: "asc" | "desc") {
   return (a: PropertyListItem, b: PropertyListItem) => {
@@ -77,34 +77,6 @@ function byNum(num: NumGetter, dir: "asc" | "desc") {
     return dir === "asc" ? av - bv : bv - av;
   };
 }
-
-/**
- * True if `iso` falls within the coming Sat 00:00 – Mon 00:00 window.
- * ponytail: plain local Date math, not Melbourne-TZ aware — good enough for a
- * "this weekend" filter chip; the app's users are all in Melbourne anyway.
- */
-function isThisWeekend(iso: string | null): boolean {
-  if (!iso) return false;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return false;
-  const now = new Date();
-  const day = now.getDay(); // 0 = Sun .. 6 = Sat
-  const satOffset = day === 6 ? 0 : day === 0 ? -1 : 6 - day;
-  const satStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + satOffset);
-  const monStart = new Date(satStart.getFullYear(), satStart.getMonth(), satStart.getDate() + 2);
-  return d >= satStart && d < monStart;
-}
-
-/* --- Tri-state filter chips -------------------------------------------------
-   "off" (no fill) → "in" (green: only properties with this) → "ex" (amber:
-   hide properties with this) → "off".
-   ponytail: plain strings, no enum/union type — they never leave this file and
-   `asTri` is the only thing that has to be careful. Older saved values from
-   before the rework fall back to "off" rather than being migrated. */
-const asTri = (v: unknown) => (v === "in" || v === "ex" ? v : "off");
-
-/** Keeps a property when the chip is off, or when it matches the chip's side. */
-const triKeep = (mode: string, has: boolean) => (mode === "off" ? true : mode === "in" ? has : !has);
 
 function TriChip({
   value,
@@ -655,8 +627,10 @@ export default function PropertyGrid({
 
   // Filter/sort state persists per profile (task 17); "default" bucket when none.
   // Per region too — suburb lists are disjoint, so a saved Melbourne suburb
-  // would blank out the Sydney grid. "vic" keeps the pre-existing key.
-  const fkey = `filters:${region === "vic" ? "" : region + ":"}${profile ?? "default"}`;
+  // would blank out the Sydney grid. "vic" keeps the pre-existing key. Shared
+  // with MapView (a reader of the same key) via property-filters.ts, so the
+  // format has one definition.
+  const fkey = filterKey(region, profile);
 
   // Shared, DB-backed vibe-weight config (localStorage cache + offline
   // fallback, per-device opt-out) — see use-vibe-config.ts. Hydrated after
@@ -678,37 +652,34 @@ export default function PropertyGrid({
 
   // Load the last-used filter/sort for the active profile, on mount + switch.
   useEffect(() => {
-    let s: Record<string, unknown> = {};
+    let raw: unknown = {};
     try {
-      s = JSON.parse(localStorage.getItem(fkey) || "{}");
+      raw = JSON.parse(localStorage.getItem(fkey) || "{}");
     } catch {
       /* ignore */
     }
+    const s = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
     setSort(typeof s.sort === "string" ? s.sort : "vibes");
-    // Back-compat: old saved value was a single suburb string.
-    setSuburb(
-      Array.isArray(s.suburb)
-        ? (s.suburb as string[])
-        : typeof s.suburb === "string" && s.suburb
-          ? [s.suburb]
-          : [],
-    );
-    setMinBeds(typeof s.minBeds === "number" ? s.minBeds : 0);
-    setMinBaths(typeof s.minBaths === "number" ? s.minBaths : 0);
-    setMinParking(typeof s.minParking === "number" ? s.minParking : 0);
-    setMaxPrice(typeof s.maxPrice === "number" ? s.maxPrice : PRICE_MAX);
-    setQ(typeof s.q === "string" ? s.q : "");
+    // The 15 fields that decide set membership: one parser, shared with
+    // MapView, so a back-compat rule added here can't be missed there.
+    const f = parseFilterState(s);
+    setSuburb(f.suburb);
+    setMinBeds(f.minBeds);
+    setMinBaths(f.minBaths);
+    setMinParking(f.minParking);
+    setMaxPrice(f.maxPrice);
+    setQ(f.q);
     setMapSize(typeof s.mapSize === "string" ? s.mapSize : "sm");
     setLayout(typeof s.layout === "string" ? s.layout : "gallery");
-    setTagFilter(typeof s.tagFilter === "string" ? s.tagFilter : "");
-    setHideAuction(!!s.hideAuction);
-    setHideUnderOffer(!!s.hideUnderOffer);
-    setHideDelisted(!!s.hideDelisted);
-    setInspectingFilter(asTri(s.inspectingFilter));
-    setAttendedFilter(asTri(s.attendedFilter));
-    setViewedFilter(asTri(s.viewedFilter));
-    setRatedFilter(asTri(s.ratedFilter));
-    setNewFilter(/^[1-4]w$/.test(String(s.newFilter)) ? (s.newFilter as string) : "off");
+    setTagFilter(f.tagFilter);
+    setHideAuction(f.hideAuction);
+    setHideUnderOffer(f.hideUnderOffer);
+    setHideDelisted(f.hideDelisted);
+    setInspectingFilter(f.inspectingFilter);
+    setAttendedFilter(f.attendedFilter);
+    setViewedFilter(f.viewedFilter);
+    setRatedFilter(f.ratedFilter);
+    setNewFilter(f.newFilter);
     setPinned(!!s.pinned);
     // Read the cache imperatively, NOT savedCfg: this effect runs once on
     // mount (loaded.current gates it), while savedCfg is still the default —
@@ -865,50 +836,38 @@ export default function PropertyGrid({
     [shortlistEdits],
   );
 
-  // "Rated" = the user has expressed ANY opinion, from EITHER profile: a
-  // ratings row with a vibe/look/kitchen/score, or free-text pros/cons.
-  // Reuses vibeOf() for MY vibe so a click on the grid's emoji row (which
-  // only updates vibeEdits, not p.ratings) is picked up immediately; the
-  // other profile's vibe and the non-vibe fields aren't overlaid anywhere
-  // else on this page, so those read straight off p.ratings.
+  // "Rated" = the user has expressed ANY opinion, from EITHER profile — the
+  // shared definition (@/lib/property-filters), fed MY vibe via vibeOf() so a
+  // click on the grid's emoji row (which only updates vibeEdits, not
+  // p.ratings) is picked up immediately. MapView has no edits to overlay, so
+  // it calls the same function without an override.
   const isRated = useCallback(
-    (p: PropertyListItem) => {
-      if ((p.pros ?? "").trim() || (p.cons ?? "").trim()) return true;
-      if (vibeOf(p)) return true;
-      return p.ratings.some(
-        (r) => (r.profile !== profile && r.vibe) || r.look || r.kitchen || r.score != null,
-      );
-    },
-    [vibeOf, profile],
+    (p: PropertyListItem) => isRatedProperty(p, profile, vibeOf(p)),
+    [profile, vibeOf],
   );
 
   const view = useMemo(() => {
-    const maxP = dMaxPrice >= PRICE_MAX ? null : dMaxPrice;
-    const needle = dQ.trim().toLowerCase();
-    // Suburb membership is checked per property — a Set beats Array.includes
-    // once you've ticked more than a couple of suburbs.
-    const subs = suburb.length ? new Set(suburb) : null;
-    let list = properties.filter((p) => {
-      if (tagFilter && shortlistOf(p) !== tagFilter) return false;
-      if (subs && (!p.suburb || !subs.has(p.suburb))) return false;
-      if (minBeds && (p.beds ?? 0) < minBeds) return false;
-      if (minBaths && (p.baths ?? 0) < minBaths) return false;
-      if (minParking && (p.parking ?? 0) < minParking) return false;
-      if (maxP != null && (p.priceNumeric ?? Infinity) > maxP) return false;
-      if (needle && !(p.address ?? "").toLowerCase().includes(needle)) return false;
-      if (hideAuction && isAuction(p)) return false;
-      if (hideUnderOffer && isUnderOffer(p)) return false;
-      if (hideDelisted && p.delisted) return false;
-      if (!triKeep(inspectingFilter, isThisWeekend(p.nextInspection))) return false;
-      if (!triKeep(attendedFilter, !!attendedOf(p))) return false;
-      if (!triKeep(viewedFilter, viewedSet.has(p.id))) return false;
-      if (!triKeep(ratedFilter, isRated(p))) return false;
-      if (newFilter !== "off") {
-        const age = Date.now() - new Date(p.createdAt).getTime();
-        if (age >= NEW_FOR_MS * parseInt(newFilter, 10)) return false;
-      }
-      return true;
-    });
+    let list = filterProperties(
+      properties,
+      {
+        suburb,
+        minBeds,
+        minBaths,
+        minParking,
+        maxPrice: dMaxPrice,
+        q: dQ,
+        tagFilter,
+        hideAuction,
+        hideUnderOffer,
+        hideDelisted,
+        inspectingFilter,
+        attendedFilter,
+        viewedFilter,
+        ratedFilter,
+        newFilter,
+      },
+      { shortlistOf, attendedOf, viewedSet, isRated },
+    );
     if (sort === "vibes") {
       list = [...list].sort((a, b) => (scoreOf.get(b.id) ?? 0) - (scoreOf.get(a.id) ?? 0));
     } else if (sort === "score") {

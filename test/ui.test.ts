@@ -19,7 +19,8 @@ import os from "node:os";
 import path from "node:path";
 import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import Database from "better-sqlite3";
-import type { BrowserContext, Page } from "playwright-core";
+import type { BrowserContext, Page, Request } from "playwright-core";
+import { filterKey } from "../src/lib/property-filters";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pc-ui-"));
@@ -463,7 +464,7 @@ async function main() {
     await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
     await hydrated(page);
     await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
-    const pins = page.locator('button[title]:has(span:text("✨"))');
+    const pins = page.locator('button[data-testid="map-pin"]');
     await pins.first().waitFor();
     const n = await pins.count();
     assert.ok(n > 0, "expected map pins");
@@ -471,10 +472,135 @@ async function main() {
     await page.getByRole("button", { name: /Playground/ }).click();
     await page.waitForTimeout(200);
     assert.equal(await pins.count(), n, "filter must not drop pins");
-    const dimmed = await pins.evaluateAll(
+    // Untoggling must restore every pin to full opacity — proves the dimming
+    // is actually wired to the toggle rather than a static style. (Replaces
+    // `assert.ok(dimmed >= 0)`, which was true by construction since `dimmed`
+    // is a `.length` and can never be negative — it asserted nothing.)
+    await page.getByRole("button", { name: /Playground/ }).click();
+    await page.waitForTimeout(200);
+    const dimmedAfterUntoggle = await pins.evaluateAll(
       (els) => els.filter((e) => Number((e as HTMLElement).style.opacity) < 1).length,
     );
-    assert.ok(dimmed >= 0);
+    assert.equal(dimmedAfterUntoggle, 0, "clearing the highlight restores every pin to full opacity");
+  });
+
+  // Regression (verify's requirement-5 gap): pinDiameter() is unit-tested
+  // (test/pin-scale.test.ts) but nothing asserted the *rendered* pin actually
+  // uses it — deleting the width/height binding in MapView left both `npm
+  // test` and `npm run test:ui` green. Reads the visible dot's real size off
+  // the page (the button is the larger, floor-24px tap target; the dot inside
+  // it carries the scaled width/height) rather than calling pinDiameter()
+  // again, so this fails if the binding is removed or constant-ised.
+  await t("map pins render 5-50px, scaled by vibe score (requirement 5)", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const dots = page.locator('button[data-testid="map-pin"] > span');
+    await dots.first().waitFor();
+    const widths = await dots.evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width));
+    assert.ok(widths.length > 0, "expected map pins");
+    assert.ok(
+      widths.every((w) => w >= 5 && w <= 50),
+      `every pin should render within [5, 50]px, got ${JSON.stringify(widths)}`,
+    );
+    assert.ok(
+      new Set(widths).size >= 2,
+      `expected pin widths to vary with vibe score, got ${JSON.stringify(widths)}`,
+    );
+  });
+
+  // Regression (tests-002): requirement 4 ("/map honours the same filters the
+  // home grid uses") had no test that would fail if MapView stopped applying
+  // the grid's filters at all — the only /map test above never sets a grid
+  // filter, so it can't distinguish "filtered" from "filters bypassed
+  // entirely". Writes directly under the key PropertyGrid persists to (see
+  // property-filters.ts's filterKey: "vic" region + "gerhard" profile, the
+  // profile chosen in the very first test of this suite).
+  await t("/map honours the home grid's saved filters (requirement 4)", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const baseline = await pins.count();
+    assert.ok(baseline > 0, "expected an unfiltered baseline of map pins");
+
+    // maxPrice below every real fixture price excludes every VIC property
+    // without needing to know suburb names or exact fixture prices.
+    await page.evaluate(() => {
+      localStorage.setItem("filters:gerhard", JSON.stringify({ maxPrice: 1 }));
+    });
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    await page.waitForFunction(
+      (n) => document.querySelectorAll('button[data-testid="map-pin"]').length < n,
+      baseline,
+      { timeout: 5000 },
+    );
+    const filtered = await pins.count();
+    assert.ok(
+      filtered < baseline,
+      `the grid's saved filter should reduce the map's pins (${filtered} vs baseline ${baseline})`,
+    );
+
+    // Clean up so the filter doesn't leak into later tests.
+    await page.evaluate(() => localStorage.removeItem("filters:gerhard"));
+  });
+
+  // Regression (tests-004): tech-005's fix for the Major "grid filters that
+  // exclude every plotted property blank /map to a featureless grey box" has
+  // no test — reverting it (routing `view`'s extent back through `pins` alone)
+  // must fail this. Reuses requirement-4's mechanism (write a `filters:*`
+  // blob, reload, read plain DOM state) and its key, via filterKey — the map
+  // reads BOTH regions' saved filters, so both keys need to exclude everything.
+  await t("/map still shows a basemap and a notice when filters exclude every property", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const baseline = await pins.count();
+    assert.ok(baseline > 0, "expected an unfiltered baseline of map pins");
+
+    const vicKey = filterKey("vic", "gerhard");
+    const nswKey = filterKey("nsw", "gerhard");
+    await page.evaluate(
+      ({ vicKey, nswKey }) => {
+        const blob = JSON.stringify({ q: "zzzz-no-such-street" });
+        localStorage.setItem(vicKey, blob);
+        localStorage.setItem(nswKey, blob);
+      },
+      { vicKey, nswKey },
+    );
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForFunction(
+      () => document.querySelectorAll('button[data-testid="map-pin"]').length === 0,
+      undefined,
+      { timeout: 5000 },
+    );
+    assert.equal(await pins.count(), 0, "the unmatchable filter should exclude every pin");
+
+    // The point of tech-005's fix: the basemap must still render rather than
+    // going blank when nothing passes the filter.
+    assert.ok(
+      (await page.locator('img[src*="tile.openstreetmap.org"]').count()) > 0,
+      "expected at least one basemap tile even with every pin filtered out",
+    );
+    assert.ok(
+      await page.getByText(/hidden by your grid filters/).isVisible(),
+      "expected the 'hidden by your grid filters' notice",
+    );
+
+    // Clean up so the filter doesn't leak into later tests.
+    await page.evaluate(
+      ({ vicKey, nswKey }) => {
+        localStorage.removeItem(vicKey);
+        localStorage.removeItem(nswKey);
+      },
+      { vicKey, nswKey },
+    );
   });
 
   console.log("\nrooms");
@@ -671,6 +797,188 @@ async function main() {
     await page.keyboard.press("Escape");
     await modal.waitFor({ state: "detached" });
     await page.setViewportSize(DESKTOP);
+  });
+
+  // Regression: a closed native <select> consumes arrow keys itself (changes
+  // the selected option and fires `change`) before Lightbox's own window
+  // keydown handler ever sees them. TagSelect's onChange PATCHes the room tag
+  // immediately, so browsing photos with the arrow keys while focus happens to
+  // sit in the room dropdown silently re-tags photos. Assert on the actual
+  // write (the PATCH request), not just the DOM value, since that's the thing
+  // that can't be undone by looking at the screen.
+  await t("arrow keys in the lightbox never mutate the focused room tag", async () => {
+    await page.setViewportSize(DESKTOP);
+    const tagPatches: string[] = [];
+    const onRequest = (req: Request) => {
+      if (req.method() === "PATCH" && /\/api\/images\/[^/]+\/tag/.test(req.url())) {
+        tagPatches.push(req.url());
+      }
+    };
+    page.on("request", onRequest);
+    await page.goto(`${base}/property/${detailId}`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const opener = page.locator('button[title="Open"]').first();
+    await opener.waitFor();
+    await opener.click();
+    const modal = page.locator("div.fixed.inset-0.z-\\[90\\]");
+    await modal.waitFor();
+    const counter = modal.locator("span.text-sm.text-neutral-300").first();
+    const select = modal.locator("select");
+    await select.waitFor();
+
+    const counterBefore = await counter.innerText();
+    assert.match(counterBefore, /^\d+ \/ [2-9]\d*/, "fixture needs a property with 2+ visible photos");
+    const valueBefore = await select.inputValue();
+    assert.notEqual(valueBefore, "", "fixture's first photo should already carry a room tag");
+
+    await select.focus();
+    // On Chrome/Windows a closed <select> responds to all four arrows (Up/Down
+    // step the option list; Left/Right do too). Up/Down aren't bound to photo
+    // navigation at all, so any of these four still mutating the tag proves
+    // the corruption; ArrowUp/ArrowDown alone (net zero on the photo index
+    // either way) isolate that from the "does Left/Right still browse?" check
+    // below, which a Left-then-Right round trip would otherwise mask.
+    for (const key of ["ArrowDown", "ArrowUp", "ArrowDown", "ArrowUp"]) {
+      await page.keyboard.press(key);
+    }
+    // Give a native `change` → fetch() a moment to land if it was going to.
+    await page.waitForTimeout(300);
+    assert.deepEqual(tagPatches, [], `Up/Down wrote the room tag: ${JSON.stringify(tagPatches)}`);
+    assert.equal(await select.inputValue(), valueBefore, "room select value must not change from arrow keys");
+    assert.equal(await counter.innerText(), counterBefore, "Up/Down should not move the photo either");
+
+    // Left/Right must still browse — the fix isn't allowed to swallow them —
+    // and must still leave the tag alone.
+    await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(300);
+    assert.deepEqual(tagPatches, [], `ArrowRight wrote the room tag: ${JSON.stringify(tagPatches)}`);
+    assert.equal(await select.inputValue(), valueBefore, "room select value must not change from ArrowRight");
+    const counterAfter = await counter.innerText();
+    assert.notEqual(counterAfter, counterBefore, "ArrowRight should still navigate to the next photo");
+
+    page.off("request", onRequest);
+    await page.keyboard.press("Escape");
+    await modal.waitFor({ state: "detached" });
+  });
+
+  // Regression (tech-001): End, PageUp and PageDown step a closed native
+  // <select> exactly like the arrows do, and were not covered by the guard
+  // above — so the same silent re-tag stayed reachable from those three keys.
+  await t("End/PageUp/PageDown in the lightbox never mutate the focused room tag", async () => {
+    await page.setViewportSize(DESKTOP);
+    const tagPatches: string[] = [];
+    const onRequest = (req: Request) => {
+      if (req.method() === "PATCH" && /\/api\/images\/[^/]+\/tag/.test(req.url())) {
+        tagPatches.push(req.url());
+      }
+    };
+    page.on("request", onRequest);
+    await page.goto(`${base}/property/${detailId}`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const opener = page.locator('button[title="Open"]').first();
+    await opener.waitFor();
+    await opener.click();
+    const modal = page.locator("div.fixed.inset-0.z-\\[90\\]");
+    await modal.waitFor();
+    const select = modal.locator("select");
+    await select.waitFor();
+    const valueBefore = await select.inputValue();
+    assert.notEqual(valueBefore, "", "fixture's first photo should already carry a room tag");
+
+    await select.focus();
+    for (const key of ["End", "PageDown", "PageUp", "Home"]) {
+      await page.keyboard.press(key);
+    }
+    await page.waitForTimeout(300);
+    assert.deepEqual(
+      tagPatches,
+      [],
+      `End/PageDown/PageUp/Home wrote the room tag: ${JSON.stringify(tagPatches)}`,
+    );
+    assert.equal(
+      await select.inputValue(),
+      valueBefore,
+      "room select value must not change from End/PageDown/PageUp/Home",
+    );
+
+    page.off("request", onRequest);
+    await page.keyboard.press("Escape");
+    await modal.waitFor({ state: "detached" });
+  });
+
+  await t("choosing a room from the open dropdown still saves (mouse/select)", async () => {
+    await page.setViewportSize(DESKTOP);
+    await page.goto(`${base}/property/${detailId}`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const opener = page.locator('button[title="Open"]').first();
+    await opener.waitFor();
+    await opener.click();
+    const modal = page.locator("div.fixed.inset-0.z-\\[90\\]");
+    await modal.waitFor();
+    const select = modal.locator("select");
+    await select.waitFor();
+    const before = await select.inputValue();
+    const next = before === "kitchen" ? "bathroom" : "kitchen";
+    await saved(page, async () => { await select.selectOption(next); }, /\/api\/images\/[^/]+\/tag/);
+    assert.equal(await select.inputValue(), next, "choosing an option should still update the select");
+    await page.keyboard.press("Escape");
+    await modal.waitFor({ state: "detached" });
+  });
+
+  console.log("\nproperty.com.au enrichment");
+  // Day-one state: both new columns NULL for every row (no backfill yet) — the
+  // detail page must show no "Year built" row and no property.com.au link, and
+  // no empty placeholder/stray label. This is the more important of the two
+  // cases, since it's what every row looks like on day one in prod.
+  await t("detail page shows no year-built row or property.com.au link when both are NULL", async () => {
+    const dbRW = new Database(path.join(tmp, "app.db"));
+    dbRW.prepare("UPDATE properties SET property_com_au_url = NULL, year_built = NULL WHERE id = ?").run(detailId);
+    dbRW.close();
+    await page.goto(`${base}/property/${detailId}`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    // "Listing details" is the card heading, not inside the <dl> — scope on
+    // the whole card, matching the page's own structure.
+    const card = page.locator("div.card", { hasText: "Listing details" }).first();
+    await card.locator("dt").first().waitFor();
+    assert.equal(
+      await card.locator("dt", { hasText: "Year built" }).count(),
+      0,
+      "no Year built row when yearBuilt is NULL",
+    );
+    assert.equal(
+      await card.locator("dt", { hasText: "property.com.au" }).count(),
+      0,
+      "no property.com.au row when propertyComAuUrl is NULL",
+    );
+    assert.equal(
+      await page.locator("a", { hasText: "View listing" }).count(),
+      0,
+      "no dangling 'View listing' link when there's nothing to link to",
+    );
+  });
+
+  await t("detail page renders the year built and property.com.au link when present", async () => {
+    const url = "https://www.property.com.au/vic/point-cook-3030/villiers-dr/20-pid-9472083/";
+    const dbRW = new Database(path.join(tmp, "app.db"));
+    dbRW.prepare("UPDATE properties SET property_com_au_url = ?, year_built = ? WHERE id = ?").run(url, 2008, detailId);
+    dbRW.close();
+    await page.goto(`${base}/property/${detailId}`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const card = page.locator("div.card", { hasText: "Listing details" }).first();
+    await card.locator("dt", { hasText: "Year built" }).waitFor();
+    assert.match(
+      await card.locator("dd").filter({ hasText: /^2008$/ }).innerText(),
+      /2008/,
+      "year built value renders",
+    );
+    const link = page.locator("a", { hasText: "View listing" });
+    await link.waitFor();
+    assert.equal(await link.getAttribute("href"), url, "property.com.au link points at the stored URL");
+    assert.equal(await link.getAttribute("target"), "_blank");
+    // Reset so this doesn't leak into any test that runs after this one.
+    const dbReset = new Database(path.join(tmp, "app.db"));
+    dbReset.prepare("UPDATE properties SET property_com_au_url = NULL, year_built = NULL WHERE id = ?").run(detailId);
+    dbReset.close();
   });
 
   console.log("\nregressions");

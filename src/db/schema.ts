@@ -100,6 +100,11 @@ export const properties = sqliteTable("properties", {
   shortlistTag: text("shortlist_tag"), // must-see | maybe | rejected | null
   pros: text("pros"),
   cons: text("cons"),
+  // property.com.au enrichment. Both null for every row on day one — populated
+  // by a future update-properties sync round, not by this change. Validated on
+  // write in db/queries/load.ts (loadProperties) before ever reaching a column.
+  propertyComAuUrl: text("property_com_au_url"),
+  yearBuilt: integer("year_built"),
   rawJson: text("raw_json"),
   scrapedAt: text("scraped_at").notNull(),
   createdAt: text("created_at").notNull(),

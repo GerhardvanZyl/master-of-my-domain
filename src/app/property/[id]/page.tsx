@@ -26,6 +26,7 @@ import { imageUrl } from "@/lib/images";
 import { formatPrice, fmtAud, fmtNum, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDateLong } from "@/lib/format";
 import { formatInspection } from "@/lib/inspection";
 import { commuteDestination } from "@/lib/commute";
+import { isValidPropertyComAuUrl } from "@/lib/property-com-au";
 import type { ReactNode } from "react";
 
 export const dynamic = "force-dynamic";
@@ -75,13 +76,34 @@ export default async function PropertyDetail({
     ["Green Cross vet (Werribee)", fmtDistance(property.greenCrossDistanceM)],
   ];
 
-  const listingFacts: [string, string][] = [
+  const listingFacts: [string, ReactNode][] = [
     ["Property type", property.propertyType ?? "—"],
     ["Suburb", [property.suburb, property.state, property.postcode].filter(Boolean).join(" ") || "—"],
     ["Agent", [property.agentName, property.agencyName].filter(Boolean).join(", ") || "—"],
     ["Source", property.sourceSite],
     ["Status", property.scrapeStatus],
   ];
+  // Both null for every row on day one (no backfill yet) — pushed only when
+  // present, so there's no "Unknown"/"—" row and no layout shift while empty.
+  if (property.yearBuilt != null) {
+    listingFacts.push(["Year built", String(property.yearBuilt)]);
+  }
+  // Re-validated here (not just trusted from the DB) — it's untrusted,
+  // externally sourced data rendered as a live href.
+  if (isValidPropertyComAuUrl(property.propertyComAuUrl)) {
+    listingFacts.push([
+      "property.com.au",
+      <a
+        key="property-com-au"
+        href={property.propertyComAuUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="text-forest hover:underline"
+      >
+        View listing ↗
+      </a>,
+    ]);
+  }
 
   // Deduced-from-photos metadata (display + correction). null → "—".
   const yesNo = (v: number | null) => (v == null ? "—" : v ? "Yes" : "No");

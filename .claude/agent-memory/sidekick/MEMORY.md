@@ -8,3 +8,5 @@
 - [MapView region scoping](map_view_region_scoping.md) — /map shows both VIC+NSW; grid filters are region-scoped localStorage keys, so /map must read both
 - [Native select arrow-key writes](native_select_arrow_key_writes.md) — closed `<select>` consumes arrow keys itself; guard on the control that owns the write, not the global handler
 - [UI test write verification](ui_test_write_verification.md) — prefer page.on("request") over DOM state to prove a write did/didn't happen in test/ui.test.ts
+- [Walkthrough anchor drift](walkthrough_anchor_drift.md) — pr-walkthrough drafts here cite ranges anchored to the wrong nearby boundary; grep the real symbol before trusting a line range
+- [Map pin hit vs visual size](map_pin_hit_vs_visual_size.md) — pin button (24px-floored hit area) != inner span (true 5-50px scaled dot); test the span for size
