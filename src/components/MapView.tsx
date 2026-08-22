@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import Image from "next/image";
+import Link from "next/link";
 import type { PropertyListItem } from "@/db/queries/properties";
+import { imageUrl } from "@/lib/images";
 import { formatPrice } from "@/lib/format";
 import { vibeScore } from "@/lib/vibes";
 import { useVibeConfig } from "@/lib/use-vibe-config";
@@ -45,6 +47,14 @@ const DRAG_SLOP = 6;
 // single mouse-wheel click produces immediately — see the wheel handler.
 const WHEEL_STEP = 120;
 
+// Popup layout. Width is fixed so horizontal clamping is a plain min/max; the
+// "must fit above" threshold is a ceiling on the popup's own rendered height
+// (fixed-height image + two lines of truncated text), not a measurement — see
+// the placement calc below.
+const POPUP_W = 208;
+const POPUP_MARGIN = 8;
+const POPUP_MIN_SPACE_ABOVE = 190;
+
 interface ViewState {
   z: number;
   originX: number;
@@ -79,11 +89,24 @@ export default function MapView({
   properties: PropertyListItem[];
   region: string;
 }) {
-  const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(1200);
   const [amen, setAmen] = useState<string[]>([]);
   const { profile } = useProfile();
+
+  // Popup for the pin currently clicked. Id rather than the item itself so a
+  // pin that drops out of `pins` (filters change while it's open) closes
+  // itself for free — the lookup below just stops finding it.
+  const [openPinId, setOpenPinId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (openPinId == null) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpenPinId(null);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [openPinId]);
 
   useEffect(() => {
     const el = box.current;
@@ -352,6 +375,38 @@ export default function MapView({
   const matches = (p: PropertyListItem) =>
     amen.every((k) => AMENITIES.find((a) => a.key === k)?.ok(p));
 
+  // Screen position + sizing for a pin, shared by the pin button and the
+  // popup anchor below so the two can never drift apart.
+  function pinScreenPos(p: PropertyListItem) {
+    const px = project(p.latitude!, p.longitude!, effectiveView.z);
+    const score = scoreOf.get(p.id) ?? 0;
+    const d = pinDiameter(score);
+    const hit = Math.max(d, PIN_HIT_MIN);
+    return { x: px.x - effectiveView.originX, y: px.y - effectiveView.originY, d, hit, score };
+  }
+
+  // Popup follows the open pin through pan/zoom rather than closing: its
+  // position is recomputed from `pins`/`effectiveView` on every render just
+  // like a pin's own position, so there's no extra logic to keep it in sync.
+  const openPin = pins.find((p) => p.id === openPinId);
+  const anchor = openPin ? pinScreenPos(openPin) : null;
+  // Accessible name for the popup's navigate link — computed once here rather than inline so
+  // the JSX attribute stays within the line-length limit.
+  const popupLabel = openPin
+    ? `${openPin.address ?? "Property"} — ${formatPrice(openPin.priceDisplay, openPin.priceNumeric)}`
+    : "";
+  let popupLeft = 0;
+  let popupTop = 0;
+  let popupAbove = false;
+  if (anchor) {
+    const rawLeft = anchor.x - POPUP_W / 2;
+    popupLeft = Math.min(Math.max(rawLeft, POPUP_MARGIN), width - POPUP_W - POPUP_MARGIN);
+    popupAbove = anchor.y - anchor.hit / 2 >= POPUP_MIN_SPACE_ABOVE + POPUP_MARGIN;
+    popupTop = popupAbove
+      ? anchor.y - anchor.hit / 2 - POPUP_MARGIN
+      : anchor.y + anchor.hit / 2 + POPUP_MARGIN;
+  }
+
   return (
     <section className="rise space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -411,24 +466,19 @@ export default function MapView({
         ))}
 
         {pins.map((p) => {
-          const px = project(p.latitude!, p.longitude!, effectiveView.z);
+          const { x, y, d, hit, score } = pinScreenPos(p);
           const on = matches(p);
-          const score = scoreOf.get(p.id) ?? 0;
-          const d = pinDiameter(score);
-          // The visible dot can be as small as 5px; the button's hit area
-          // never shrinks below PIN_HIT_MIN so it stays tappable.
-          const hit = Math.max(d, PIN_HIT_MIN);
           return (
             <button
               key={p.id}
               data-testid="map-pin"
-              onClick={() => router.push(`/property/${p.id}`)}
+              onClick={() => setOpenPinId(p.id)}
               title={`${p.address ?? "Property"} — ${formatPrice(p.priceDisplay, p.priceNumeric)} · vibe ${score}`}
               className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center
                 transition-opacity"
               style={{
-                left: px.x - effectiveView.originX,
-                top: px.y - effectiveView.originY,
+                left: x,
+                top: y,
                 width: hit,
                 height: hit,
                 opacity: on ? 1 : 0.25,
@@ -442,6 +492,52 @@ export default function MapView({
             </button>
           );
         })}
+
+        {openPin && anchor && (
+          <div
+            data-testid="map-pin-popup"
+            className="absolute z-10 w-52 overflow-hidden rounded-xl border
+              border-line bg-white shadow-lg"
+            style={{ left: popupLeft, top: popupTop, transform: popupAbove ? "translateY(-100%)" : undefined }}
+          >
+            <button
+              onClick={() => setOpenPinId(null)}
+              aria-label="Close"
+              className="absolute right-1 top-1 z-10 rounded bg-white/80 px-1.5 text-xs
+                text-mute hover:text-forest"
+            >
+              ✕
+            </button>
+            {/* The popup's only navigate surface: a real anchor, not the div above, so Tab
+                reaches it and Enter/Space activate it — a bare onClick on a div does neither.
+                aria-label carries the accessible name (address + price); the image is
+                decorative here since that name already says what the link goes to. */}
+            <Link
+              href={`/property/${openPin.id}`}
+              aria-label={popupLabel}
+              className="block focus-visible:outline focus-visible:outline-2
+                focus-visible:-outline-offset-2 focus-visible:outline-forest"
+            >
+              <div className="relative h-28 bg-fill">
+                {openPin.thumbPath ? (
+                  <Image
+                    src={imageUrl({ localPath: openPin.thumbPath })}
+                    alt=""
+                    fill
+                    sizes={`${POPUP_W}px`}
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-xs text-mute">no image</div>
+                )}
+              </div>
+              <div className="space-y-0.5 p-2">
+                <p className="truncate text-sm font-medium">{openPin.address ?? "Property"}</p>
+                <p className="text-sm text-mute">{formatPrice(openPin.priceDisplay, openPin.priceNumeric)}</p>
+              </div>
+            </Link>
+          </div>
+        )}
 
         <span className="absolute bottom-1.5 right-2 rounded bg-white/80 px-1.5 text-[10px] text-mute">
           © OpenStreetMap contributors
