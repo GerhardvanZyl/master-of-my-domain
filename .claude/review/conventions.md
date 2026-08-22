@@ -55,3 +55,94 @@ identically to a clean file.
 
 Not a defect. NUL is a valid delimiter choice here precisely because it cannot occur
 in the data being joined.
+
+## Measure line length as UTF-8, not bytes
+
+The 120-character limit is a MUST in the `coding-standards` skill (this repo has
+no `.claude/standards.md`, so the baseline governs). This codebase uses
+multi-byte characters liberally in UI copy — `—`, `²`, `…`, `≤`, `×` — and both
+a byte count (`awk '{print length}'`, `wc -L`) and PowerShell's `Get-Content`
+under the console's default encoding **inflate** those lines.
+
+In one run this cost three separate mis-measurements of the same two lines:
+124-129, 147, and 121/122, against a true length of 118 and 119.
+
+Measure the way the compiler reads the file:
+
+```bash
+python -c "import io;print([len(l) for l in io.open('FILE',encoding='utf-8').read().split('\n')])"
+```
+
+or `[System.IO.File]::ReadAllText(...)` in PowerShell. Do not raise a
+line-length finding from a count you have not taken this way.
+
+Note that `src/components/VibesConfig.tsx` has pre-existing lines genuinely over
+120 (the `stationExponent` hint is 145). Those are `stale` — not a licence for
+new ones, and not a finding on a diff that does not touch them.
+
+## `VibeConfig` changes need no migration
+
+`VibeConfig` (`src/lib/vibes.ts`) is persisted as a **JSON blob**, not as
+columns — in `localStorage` under `vibeConfig`, and in a server settings row
+reached through `/api/config` and `src/db/queries/settings.ts`.
+
+`parseVibeConfig` iterates `Object.keys(DEFAULT_VIBE_CONFIG)` and fills any
+absent key from the default, dropping anything non-numeric or non-finite. So
+**adding a field to `VibeConfig` requires no migration, no DDL change, and no
+coordinated deploy**: every stored config picks up the new default on read, and
+an older client silently ignores a key it does not know.
+
+This is the premise that decides loop eligibility for a vibe-config change — it
+is what keeps one out of the full `dev-loop`'s "a migration or schema changes"
+gate — and it is not visible without reading the parser. Adding a field to
+`VibeConfig` is not a schema change. Adding a *column* still is.
+
+## `migrateColumns` is idempotent but NOT concurrency-safe
+
+`migrateColumns` (`src/db/ddl.ts`) says "Idempotent; safe to run on every
+connect". True **serially**. It is a check-then-act across processes with no
+lock: it reads the column set once, then decides. Two processes that both read
+before either writes will both decide to add, and the loser gets
+
+```
+SqliteError: duplicate column name: viewed
+```
+
+Next.js collects page data with parallel workers, so `npm run build` against an
+**unmigrated** `data/app.db` can fail this way. Seen 2026-08-22 on
+`/api/properties/[id]`, and once in the previous run.
+
+Observed rate: **once in four cold builds** against an unmigrated DB — a genuine
+timing race, not a deterministic failure. Do not expect to reproduce it on
+demand, and do not conclude from one green build that it is gone. A DB that is
+already migrated cannot hit it at all, which is why the first build after a
+restore is the risky one.
+
+The transaction wrapper means the loser fails cleanly rather than half-applying,
+so there is no data-loss path. The symptom is a failed build or a failed
+request, and **re-running succeeds** because the winner completed the migration.
+
+Deploy consequence: the DB tracked in git is unmigrated, so the first start on
+`192.168.68.125` after a pull runs the migration. If that instance serves
+concurrent traffic at startup, it can hit the same race. Re-run and it will be
+fine.
+
+## `git status` clean does NOT mean `data/app.db` is unmigrated
+
+This one invalidates the obvious reading of the restore procedure above.
+
+SQLite in WAL mode writes to `data/app.db-wal`, not to `data/app.db`. So a
+process that migrates the DB can leave `git status` reporting **clean** while
+every reader — including `PRAGMA table_info` — sees the migrated schema through
+the WAL.
+
+Consequences:
+
+- Restoring must delete the sidecars *and* checkout the main file, in that
+  order. `rm -f data/app.db-wal data/app.db-shm && git checkout -- data/app.db`.
+  Deleting only the main file, or only the sidecars, leaves a mismatch.
+- To inspect what is actually committed, extract it — `git show HEAD:data/app.db
+  > /tmp/head.db` — and open that. Opening `data/app.db` in place reads the WAL
+  and tells you about the working state, not the committed one.
+- A clean `git status` is not evidence the DB was untouched by a command you
+  just ran. Check for the sidecar files.
