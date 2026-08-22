@@ -21,6 +21,7 @@ import { spawn, spawnSync, type ChildProcess } from "node:child_process";
 import Database from "better-sqlite3";
 import type { BrowserContext, Page, Request } from "playwright-core";
 import { filterKey } from "../src/lib/property-filters";
+import { formatPrice } from "../src/lib/format";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "pc-ui-"));
@@ -151,6 +152,109 @@ function addressesByRegion(nsw: boolean): Set<string> {
   ) as { address: string | null }[];
   db.close();
   return new Set(rows.map((r) => r.address).filter((a): a is string => !!a));
+}
+
+/**
+ * Fixtures for the map pin popup. `withImage` is a VIC geocoded property with
+ * at least one non-excluded image — pickHero's own `imgs[0] ?? null` floor
+ * (src/db/queries/properties.ts) guarantees a non-null thumbPath whenever such
+ * a row exists, regardless of which heuristic actually picks the hero.
+ * `withoutImage` is a VIC geocoded property with NO image rows at all, so
+ * thumbPath is null trivially (pickHero on an empty array is null by
+ * construction) — found at runtime rather than hardcoded, and `null` if the
+ * fixture DB has none (checked, not assumed: see the caller).
+ */
+function mapPopupFixtures(): {
+  withImage: { id: string; address: string; priceDisplay: string | null; priceNumeric: number | null };
+  withoutImage: { id: string; address: string } | null;
+} {
+  const db = new Database(path.join(tmp, "app.db"), { readonly: true });
+  const withImage = db
+    .prepare(
+      `SELECT DISTINCT p.id, p.address, p.price_display priceDisplay, p.price_numeric priceNumeric
+         FROM properties p
+         JOIN images i ON i.property_id = p.id
+         LEFT JOIN image_tags t ON t.image_id = i.id
+        WHERE p.latitude IS NOT NULL AND (p.state IS NULL OR p.state <> 'NSW')
+          AND p.address IS NOT NULL
+          AND (t.room_type IS NULL OR t.room_type <> 'exclude')
+        ORDER BY p.id LIMIT 1`,
+    )
+    .get() as { id: string; address: string; priceDisplay: string | null; priceNumeric: number | null } | undefined;
+  assert.ok(withImage, "need a VIC geocoded property with a non-excluded image to test the popup's hero image");
+
+  const withoutImage = db
+    .prepare(
+      `SELECT p.id, p.address
+         FROM properties p
+        WHERE p.latitude IS NOT NULL AND (p.state IS NULL OR p.state <> 'NSW')
+          AND p.address IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM images i WHERE i.property_id = p.id)
+        ORDER BY p.id LIMIT 1`,
+    )
+    .get() as { id: string; address: string } | undefined;
+  db.close();
+  return { withImage: withImage!, withoutImage: withoutImage ?? null };
+}
+
+/**
+ * Mirrors isPropertyPhoto/isVisibleImage from src/db/queries/properties.ts —
+ * duplicated rather than imported, since that module opens a real DB
+ * connection as an import side effect and this suite must never touch
+ * anything but the throwaway tmp copy.
+ */
+function isVisibleImageLike(i: {
+  width: number | null;
+  height: number | null;
+  roomType: string | null;
+  notes: string | null;
+}): boolean {
+  if (i.roomType === "exclude") return false;
+  if (i.notes === "floorplan" || i.notes === "hero") return true;
+  const a = i.width && i.height ? i.width / i.height : null;
+  if (a == null || !i.width || !i.height) return true;
+  if (Math.max(i.width, i.height) < 500) return false;
+  if (a >= 2.2 || a <= 0.45) return false;
+  return !(a > 0.95 && a < 1.05);
+}
+
+/**
+ * A property with two ADJACENT visible photos, in the same order Lightbox
+ * browses them, tagged with different rooms — the fixture for the
+ * TagSelect-remount regression: without `key={img.id}` on TagSelect
+ * (Lightbox.tsx), advancing to the next photo leaves the room dropdown
+ * showing the room of the one before it.
+ */
+function adjacentRoomChangePhoto(): { propertyId: string; index: number; roomA: string; roomB: string } {
+  const db = new Database(path.join(tmp, "app.db"), { readonly: true });
+  const propertyIds = (
+    db.prepare("SELECT DISTINCT property_id id FROM images ORDER BY property_id").all() as { id: string }[]
+  ).map((r) => r.id);
+  for (const propertyId of propertyIds) {
+    const rows = db
+      .prepare(
+        `SELECT i.width, i.height, t.room_type roomType, t.notes notes
+           FROM images i LEFT JOIN image_tags t ON t.image_id = i.id
+          WHERE i.property_id = ? ORDER BY i.ordinal`,
+      )
+      .all(propertyId) as {
+      width: number | null;
+      height: number | null;
+      roomType: string | null;
+      notes: string | null;
+    }[];
+    const visible = rows.filter(isVisibleImageLike);
+    for (let index = 0; index < visible.length - 1; index++) {
+      const a = visible[index];
+      const b = visible[index + 1];
+      if (a.roomType && b.roomType && a.roomType !== b.roomType) {
+        db.close();
+        return { propertyId, index, roomA: a.roomType, roomB: b.roomType };
+      }
+    }
+  }
+  db.close();
+  throw new Error("fixture needs a property with two adjacent visible photos tagged with different rooms");
 }
 
 // ------------------------------------------------------------------- helpers
@@ -504,6 +608,40 @@ async function main() {
     return titles.map((title) => title.split(" — ")[0]);
   }
 
+  /**
+   * The nth-locator index of the pin for a given address, read off the same
+   * `title` attribute as pinAddresses above rather than a CSS attribute
+   * selector — avoids escaping whatever punctuation a real address contains.
+   */
+  async function pinIndex(address: string): Promise<number> {
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const titles = await pins.evaluateAll((els) => els.map((e) => e.getAttribute("title") ?? ""));
+    const idx = pinAddresses(titles).findIndex((a) => a === address);
+    assert.ok(idx >= 0, `expected a map pin for "${address}"`);
+    return idx;
+  }
+
+  /**
+   * Click a specific pin by its locator index via the DOM node's own
+   * `.click()` rather than Playwright's mouse-driven `locator.click()`.
+   * Point Cook alone plots hundreds of pins and several share (or nearly
+   * share) a screen position at the map's default view — Playwright's real
+   * actionability check then times out with "subtree intercepts pointer
+   * events" because whichever pin paints on top physically receives the
+   * click. These popup tests aren't exercising the drag/jitter pointer-capture
+   * path (see [[drag_vs_click_suppression]]) — draggedRef is only ever set by
+   * a real pointerdown/pointermove sequence, neither of which this fires — so
+   * dispatching straight at the intended node is equivalent for what's being
+   * asserted here and immune to whatever happens to be stacked on top of it.
+   */
+  async function clickPin(index: number) {
+    await page
+      .locator('button[data-testid="map-pin"]')
+      .nth(index)
+      .evaluate((el) => (el as HTMLButtonElement).click());
+  }
+
   await t("/map renders VIC pins only — no NSW property appears (requirement 1)", async () => {
     await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
     await hydrated(page);
@@ -795,33 +933,50 @@ async function main() {
 
   // The complement of the two tests above, and the one that would catch
   // over-suppression: if draggedRef stayed set (or click suppression fired
-  // unconditionally) a genuine tap would silently stop navigating too, and
-  // the drag-suppression tests would keep passing while the feature broke.
-  await t("clicking a pin still navigates to its property, even with a pixel or two of jitter", async () => {
-    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
-    await hydrated(page);
-    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
-    const pins = page.locator('button[data-testid="map-pin"]');
-    await pins.first().waitFor();
-    const pin = await pins.first().boundingBox();
-    assert.ok(pin, "expected a pin to have a bounding box");
+  // unconditionally) a genuine tap would silently stop reaching the pin too,
+  // and the drag-suppression tests would keep passing while the feature broke.
+  //
+  // CHANGED for the popup (feat/map-pin-popup): a plain click no longer
+  // navigates directly, it opens the popup — so "the click reached the pin"
+  // is now evidenced by the popup appearing, not by an immediate URL change.
+  // Kept in the same test (rather than split) because that's still exactly
+  // what it's proving: a plain click, despite a real click's inevitable
+  // jitter, still fires the pin's own onClick. The second half — clicking the
+  // popup itself navigates — is this test's original destination, just one
+  // extra step away now that the click no longer skips straight there.
+  await t(
+    "clicking a pin still opens its popup with a pixel or two of jitter, and the popup navigates",
+    async () => {
+      await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+      await hydrated(page);
+      await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+      const pins = page.locator('button[data-testid="map-pin"]');
+      await pins.first().waitFor();
+      const pin = await pins.first().boundingBox();
+      assert.ok(pin, "expected a pin to have a bounding box");
 
-    const cx = pin!.x + pin!.width / 2;
-    const cy = pin!.y + pin!.height / 2;
-    await page.mouse.move(cx, cy);
-    await page.mouse.down();
-    // A real click always wobbles a pixel or two between down and up. This
-    // moves ~3.6px (Math.hypot(3, 2)) — comfortably under MapView's 6px
-    // DRAG_SLOP — so the sequence still fires handlePointerMove without
-    // arming drag-suppression. Without this move, handlePointerMove never
-    // fires at all and DRAG_SLOP itself is never exercised (confirmed:
-    // removing the DRAG_SLOP check survives the whole suite without it).
-    await page.mouse.move(cx + 3, cy + 2);
-    await page.mouse.up();
-    await page.waitForURL(/\/property\//, { timeout: 5000 });
+      const cx = pin!.x + pin!.width / 2;
+      const cy = pin!.y + pin!.height / 2;
+      await page.mouse.move(cx, cy);
+      await page.mouse.down();
+      // A real click always wobbles a pixel or two between down and up. This
+      // moves ~3.6px (Math.hypot(3, 2)) — comfortably under MapView's 6px
+      // DRAG_SLOP — so the sequence still fires handlePointerMove without
+      // arming drag-suppression. Without this move, handlePointerMove never
+      // fires at all and DRAG_SLOP itself is never exercised (confirmed:
+      // removing the DRAG_SLOP check survives the whole suite without it).
+      await page.mouse.move(cx + 3, cy + 2);
+      await page.mouse.up();
 
-    assert.match(page.url(), /\/property\//, "a plain click on a pin should navigate to its property");
-  });
+      const popup = page.locator('[data-testid="map-pin-popup"]');
+      await popup.waitFor({ timeout: 5000 });
+      assert.equal(await popup.count(), 1, "a plain click with jitter should open exactly one popup");
+
+      await popup.click();
+      await page.waitForURL(/\/property\//, { timeout: 5000 });
+      assert.match(page.url(), /\/property\//, "clicking the popup should navigate to its property");
+    },
+  );
 
   // Regression: draggedRef must not outlive the gesture that armed it. A real
   // drag's pointerup almost always does produce a following click (Chromium
@@ -895,14 +1050,231 @@ async function main() {
     // Now a plain click on a pin, in the same page load. Pre-fix, draggedRef
     // is still armed from the cancelled drag above and this click gets
     // swallowed; post-fix, handlePointerDown resets it for the new gesture.
+    //
+    // CHANGED for the popup (feat/map-pin-popup): the click reaching the pin
+    // is now evidenced by the popup opening rather than an immediate
+    // navigation — see the jitter test above for the same change and why.
     const pin = await pins.first().boundingBox();
     assert.ok(pin, "expected a pin to have a bounding box after the cancelled drag");
     await page.mouse.move(pin!.x + pin!.width / 2, pin!.y + pin!.height / 2);
     await page.mouse.down();
     await page.mouse.up();
-    await page.waitForURL(/\/property\//, { timeout: 5000 });
 
-    assert.match(page.url(), /\/property\//, "a plain click after a click-less cancelled drag should still navigate");
+    const popup = page.locator('[data-testid="map-pin-popup"]');
+    await popup.waitFor({ timeout: 5000 });
+    assert.equal(
+      await popup.count(),
+      1,
+      "a plain click after a click-less cancelled drag should still open the popup",
+    );
+  });
+
+  // --- pin popup: content, drag-suppression, navigation, close, replace -----
+
+  await t("the popup shows the clicked pin's own address and price, not just any text", async () => {
+    const { withImage } = mapPopupFixtures();
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+
+    const idx = await pinIndex(withImage.address);
+    await clickPin(idx);
+
+    const popup = page.locator('[data-testid="map-pin-popup"]');
+    await popup.waitFor();
+    assert.equal(await popup.count(), 1, "expected exactly one popup to open");
+    const text = await popup.innerText();
+    assert.ok(
+      text.includes(withImage.address),
+      `expected the popup to show "${withImage.address}", got: ${JSON.stringify(text)}`,
+    );
+    // Via formatPrice — the same function MapView renders with — not a
+    // hand-built price string, so a change to its formatting can't desync
+    // silently from what this test expects.
+    const expectedPrice = formatPrice(withImage.priceDisplay, withImage.priceNumeric);
+    assert.ok(
+      text.includes(expectedPrice),
+      `expected the popup to show the price "${expectedPrice}", got: ${JSON.stringify(text)}`,
+    );
+  });
+
+  // Edge case (brief): a property with no thumbPath must get the "no image"
+  // fallback rather than a broken <img>. mapPopupFixtures() looks for a VIC
+  // geocoded property with zero image rows at runtime; the fixture DB this
+  // suite snapshots from data/app.db has none as of this run — every geocoded
+  // VIC property has at least one non-excluded photo — so only the
+  // has-an-image half is verified here. Recorded rather than faked: see the
+  // console.log below if this ever runs against a DB where one exists.
+  await t("popup shows a hero image when the property has one (and the fallback when it doesn't)", async () => {
+    const { withImage, withoutImage } = mapPopupFixtures();
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+
+    const idx = await pinIndex(withImage.address);
+    await clickPin(idx);
+    const popup = page.locator('[data-testid="map-pin-popup"]');
+    await popup.waitFor();
+    const img = popup.locator("img");
+    assert.equal(await img.count(), 1, "expected the popup to render a hero image for a property that has one");
+    // next/image rewrites src to /_next/image?url=<encoded>&..., so decode
+    // before checking it still routes through the app's own /api/img handler.
+    const src = await img.getAttribute("src");
+    assert.ok(src, "expected the hero <img> to have a src");
+    assert.ok(
+      decodeURIComponent(src!).includes("/api/img/"),
+      `expected the hero image to route through /api/img, got ${src}`,
+    );
+
+    if (!withoutImage) {
+      console.log(
+        "  (no VIC geocoded property without any images in the fixture DB — fallback half not verified)",
+      );
+      return;
+    }
+
+    await page.locator('button[aria-label="Close"]').click();
+    await popup.waitFor({ state: "detached" });
+    const idx2 = await pinIndex(withoutImage.address);
+    await clickPin(idx2);
+    await popup.waitFor();
+    assert.equal(await popup.locator("img").count(), 0, "expected no <img> when the property has no thumbPath");
+    assert.ok(await popup.getByText(/no image/i).isVisible(), "expected the 'no image' fallback text");
+  });
+
+  await t("a drag across a pin does not open the popup", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const box = await mapBox().boundingBox();
+    const pin = await pins.first().boundingBox();
+    assert.ok(box && pin, "expected both the map box and a pin to have bounding boxes");
+
+    // Same shape as "a drag that ends over a pin does not navigate to it"
+    // above — well past DRAG_SLOP, ending centred on the pin.
+    const targetX = pin!.x + pin!.width / 2;
+    const targetY = pin!.y + pin!.height / 2;
+    const startX = Math.max(box!.x + 10, targetX - 80);
+    const startY = targetY;
+    await page.mouse.move(startX, startY);
+    await page.mouse.down();
+    await page.mouse.move(targetX, targetY, { steps: 12 });
+    await page.mouse.up();
+    await page.waitForTimeout(300);
+
+    assert.equal(
+      await page.locator('[data-testid="map-pin-popup"]').count(),
+      0,
+      "a drag ending on a pin must not open the popup",
+    );
+  });
+
+  await t("clicking the popup navigates to that exact property", async () => {
+    const { withImage } = mapPopupFixtures();
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+
+    const idx = await pinIndex(withImage.address);
+    await clickPin(idx);
+    const popup = page.locator('[data-testid="map-pin-popup"]');
+    await popup.waitFor();
+    await popup.click();
+    await page.waitForURL((url) => url.pathname === `/property/${withImage.id}`, { timeout: 5000 });
+    assert.equal(
+      new URL(page.url()).pathname,
+      `/property/${withImage.id}`,
+      "clicking the popup should navigate to that exact property",
+    );
+  });
+
+  await t("the popup closes via its close button and via Escape", async () => {
+    const { withImage } = mapPopupFixtures();
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const popup = page.locator('[data-testid="map-pin-popup"]');
+    const idx = await pinIndex(withImage.address);
+
+    await clickPin(idx);
+    await popup.waitFor();
+    await page.locator('button[aria-label="Close"]').click();
+    await popup.waitFor({ state: "detached" });
+    assert.equal(await popup.count(), 0, "expected the close button to close the popup");
+
+    await clickPin(idx);
+    await popup.waitFor();
+    await page.keyboard.press("Escape");
+    await popup.waitFor({ state: "detached" });
+    assert.equal(await popup.count(), 0, "expected Escape to close the popup");
+  });
+
+  await t("clicking a second pin replaces the popup rather than stacking", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+    const n = await pins.count();
+    assert.ok(n >= 2, "need at least two map pins to test popup replacement");
+    const popup = page.locator('[data-testid="map-pin-popup"]');
+
+    await clickPin(0);
+    await popup.waitFor();
+    assert.equal(await popup.count(), 1, "expected exactly one popup after the first click");
+    // The accessible name (address + price) lives on the navigate link, not the
+    // wrapping div — see the keyboard-reachability fix. It still distinguishes
+    // properties just as well for this assertion.
+    const firstLabel = await popup.locator("a").getAttribute("aria-label");
+
+    await clickPin(1);
+    await popup.waitFor();
+    assert.equal(await popup.count(), 1, "expected exactly one popup after clicking a second pin — not stacked");
+    const secondLabel = await popup.locator("a").getAttribute("aria-label");
+    assert.notEqual(secondLabel, firstLabel, "expected the popup to now show the second pin's property");
+  });
+
+  // Regression: before this fix the popup's navigate surface was a bare `onClick` on a
+  // `<div>` with no `tabIndex` — reachable by mouse only. Everything below is real
+  // keyboard input (page.keyboard.press), never .click(). The one exception is focusing
+  // the pin itself, which — per clickPin's rationale above — isn't the behaviour under
+  // test; reaching the popup's own control via Tab, and activating it via Enter, is.
+  await t("keyboard-only: Tab/Enter reaches the popup's navigate link and it reaches the property page", async () => {
+    await page.goto(`${base}/map`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    await page.waitForSelector('img[src*="tile.openstreetmap.org"]');
+    const pins = page.locator('button[data-testid="map-pin"]');
+    await pins.first().waitFor();
+
+    // The popup renders as the pins' next DOM sibling (see the JSX), so once it's open,
+    // Tab from the LAST pin reaches its close button first and its navigate link second —
+    // two tabs, deterministic regardless of how many pins the map plots. Any other pin
+    // would first have to tab through every pin after it.
+    await pins.last().focus();
+    await page.keyboard.press("Enter");
+    const popup = page.locator('[data-testid="map-pin-popup"]');
+    await popup.waitFor();
+
+    await page.keyboard.press("Tab");
+    assert.equal(
+      await page.evaluate(() => document.activeElement?.getAttribute("aria-label")),
+      "Close",
+      "first Tab out of the pin should reach the popup's close button",
+    );
+
+    await page.keyboard.press("Tab");
+    const focusedTag = await page.evaluate(() => document.activeElement?.tagName);
+    assert.equal(focusedTag, "A", "second Tab should reach the popup's navigate link");
+
+    await page.keyboard.press("Enter");
+    await page.waitForURL(/\/property\//, { timeout: 5000 });
+    assert.match(
+      page.url(),
+      /\/property\//,
+      "activating the popup's navigate link by keyboard should reach the property page",
+    );
   });
 
   await t("scrolling the wheel zooms the map, in and back out", async () => {
@@ -1300,6 +1672,47 @@ async function main() {
     );
 
     page.off("request", onRequest);
+    await page.keyboard.press("Escape");
+    await modal.waitFor({ state: "detached" });
+  });
+
+  // Regression: TagSelect initialises its selection once via useState(roomType
+  // ?? ""). Without `key={img.id}` on the <TagSelect> in Lightbox.tsx, React
+  // reuses the same component instance across photos, so that initialiser
+  // never re-runs and the dropdown keeps showing the PREVIOUS photo's room
+  // after browsing to the next one — never guess a room, so a stale display
+  // here is worse than a stale label.
+  await t("room select shows the CURRENT photo's room after browsing to the next one", async () => {
+    const { propertyId, index, roomA, roomB } = adjacentRoomChangePhoto();
+    await page.setViewportSize(DESKTOP);
+    await page.goto(`${base}/property/${propertyId}`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const opener = page.locator('button[title="Open"]').nth(index);
+    await opener.waitFor();
+    await opener.click();
+    const modal = page.locator("div.fixed.inset-0.z-\\[90\\]");
+    await modal.waitFor();
+    const counter = modal.locator("span.text-sm.text-neutral-300").first();
+    const select = modal.locator("select");
+    await select.waitFor();
+
+    const counterBefore = await counter.innerText();
+    assert.equal(
+      await select.inputValue(),
+      roomA,
+      "lightbox should open on the clicked photo, showing its room",
+    );
+
+    await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(300);
+    assert.notEqual(await counter.innerText(), counterBefore, "ArrowRight should have advanced the photo");
+    assert.equal(
+      await select.inputValue(),
+      roomB,
+      `after browsing to the next photo the room select must show ITS room (${roomB}), ` +
+        `not the previous photo's (${roomA})`,
+    );
+
     await page.keyboard.press("Escape");
     await modal.waitFor({ state: "detached" });
   });

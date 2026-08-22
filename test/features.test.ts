@@ -106,6 +106,84 @@ assert.ok(
   ),
 );
 
+// --- Price deviation curves -------------------------------------------------
+// p is $50k above ideal (900_000 vs 850_000 = 10 units of $5k). A second
+// fixture, priced below ideal, exercises the other branch without mutating p.
+const pBelow = { ...p, priceNumeric: 800_000 }; // $50k under ideal = 5 units of $10k
+
+// The defaults must reproduce today's numbers exactly — this is the property
+// that makes the change safe to ship.
+assert.equal(term("Above ideal price", {}), -10, "10 units × 1, linear, unchanged by default");
+assert.equal(
+  vibeScore(p, ratings, DEFAULT_VIBE_CONFIG),
+  942.2,
+  "the whole default-config score is unchanged, not just the one row",
+);
+
+// The exponent actually bites.
+assert.equal(term("Above ideal price", { priceAboveExponent: 2 }), -100, "10² × 1 = -100");
+
+// Mutual independence: each of the four exponents moves only its own term.
+assert.equal(term("Station", { priceAboveExponent: 2 }), -4.8, "price exponent doesn't touch Station");
+assert.equal(term("Transit", { priceAboveExponent: 2 }), -33, "price exponent doesn't touch Transit");
+assert.equal(term("Above ideal price", { stationExponent: 2 }), -10, "stationExponent doesn't touch price");
+assert.equal(term("Above ideal price", { flindersExponent: 2 }), -10, "flindersExponent doesn't touch price");
+
+const belowTerm = (cfg: Partial<typeof DEFAULT_VIBE_CONFIG>) =>
+  vibeBreakdown(pBelow, [], { ...DEFAULT_VIBE_CONFIG, ...cfg }).find((r) =>
+    r.label.startsWith("Below ideal price"),
+  )!.pts;
+assert.equal(belowTerm({}), -5, "5 units × 1, linear, unchanged by default");
+assert.equal(belowTerm({ priceBelowExponent: 2 }), -25, "5² × 1 = -25");
+assert.equal(belowTerm({ priceAboveExponent: 2 }), -5, "priceAboveExponent doesn't touch the below-ideal term");
+assert.equal(belowTerm({ stationExponent: 2 }), -5, "stationExponent doesn't touch the below-ideal term");
+assert.equal(belowTerm({ flindersExponent: 2 }), -5, "flindersExponent doesn't touch the below-ideal term");
+assert.equal(
+  vibeBreakdown(pBelow, [], { ...DEFAULT_VIBE_CONFIG, priceBelowExponent: 2 }).find((r) =>
+    r.label.startsWith("Station"),
+  )!.pts,
+  -4.8,
+  "priceBelowExponent doesn't touch Station",
+);
+assert.equal(
+  vibeBreakdown(pBelow, [], { ...DEFAULT_VIBE_CONFIG, priceBelowExponent: 2 }).find((r) =>
+    r.label.startsWith("Transit"),
+  )!.pts,
+  -33,
+  "priceBelowExponent doesn't touch Transit",
+);
+
+// A stored 0 or negative exponent is clamped for both new fields too.
+assert.ok(Number.isFinite(term("Above ideal price", { priceAboveExponent: 0 })));
+assert.ok(Number.isFinite(belowTerm({ priceBelowExponent: 0 })));
+assert.ok(
+  Number.isFinite(
+    vibeBreakdown(p, [], { ...DEFAULT_VIBE_CONFIG, priceAboveExponent: -2 }).reduce(
+      (a, r) => a + r.pts,
+      0,
+    ),
+  ),
+  "negative priceAboveExponent stays finite",
+);
+assert.ok(
+  Number.isFinite(
+    vibeBreakdown(pBelow, [], { ...DEFAULT_VIBE_CONFIG, priceBelowExponent: -2 }).reduce(
+      (a, r) => a + r.pts,
+      0,
+    ),
+  ),
+  "negative priceBelowExponent stays finite",
+);
+
+// Price exactly at ideal: neither branch runs, at any exponent.
+const pAtIdeal = { ...p, priceNumeric: DEFAULT_VIBE_CONFIG.idealPrice };
+assert.ok(
+  !vibeBreakdown(pAtIdeal, [], { ...DEFAULT_VIBE_CONFIG, priceAboveExponent: 3, priceBelowExponent: 3 }).some(
+    (r) => r.label.includes("ideal price"),
+  ),
+  "price at ideal produces no price row, exponents notwithstanding",
+);
+
 // --- parseVibeConfig: one bad stored value must not NaN the whole grid -------
 // Spreading the parsed JSON used to let a string/null/NaN reach the arithmetic,
 // and NaN propagates to the score, the sort and every tile badge at once.

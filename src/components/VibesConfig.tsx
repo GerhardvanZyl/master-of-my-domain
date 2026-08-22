@@ -24,7 +24,19 @@ const GROUPS: { title: string; fields: Field[] }[] = [
     fields: [
       { key: "idealPrice", label: "Ideal price", step: 5000, hint: "The target the score is measured against" },
       { key: "perAbove5000", label: "− per $5k above ideal" },
+      {
+        key: "priceAboveExponent",
+        label: "…raised to this power",
+        step: 0.1,
+        hint: "1 = linear; >1 makes overpaying compound — drop the weight (e.g. 0.025 @^2: $200k over=40u, 40²=1600)",
+      },
       { key: "perBelow10000", label: "− per $10k below ideal", hint: "Suspiciously cheap is also a signal" },
+      {
+        key: "priceBelowExponent",
+        label: "…raised to this power",
+        step: 0.1,
+        hint: "1 = linear; >1 makes underpricing compound — drop the weight (e.g. 0.05 @^2: $200k under=20u, 20²=400)",
+      },
     ],
   },
   {

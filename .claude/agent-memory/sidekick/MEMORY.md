@@ -11,3 +11,7 @@
 - [Walkthrough anchor drift](walkthrough_anchor_drift.md) — pr-walkthrough drafts here cite ranges anchored to the wrong nearby boundary; grep the real symbol before trusting a line range
 - [Map pin hit vs visual size](map_pin_hit_vs_visual_size.md) — pin button (24px-floored hit area) != inner span (true 5-50px scaled dot); test the span for size
 - [Drag vs click suppression](drag_vs_click_suppression.md) — capture pointer only once a drag is DETECTED, not on pointerdown (capture-at-down retargets click to the container, swallowing every click); reset draggedRef on pointerdown too
+- [Photo fixture visibility filter](photo_fixture_visibility_filter.md) — a photo's on-screen Lightbox/PhotoGrid index is the isVisibleImage-filtered index, not its raw `ordinal`; don't hand-pick a UUID+ordinal from inspection
+- [Migration test harness argv override](migration_test_harness_argv_override.md) — pass an alt ddl.ts path as argv[2] to migration-concurrency.test.ts instead of editing ddl.ts in place
+- [MapView pin popup](map_view_pin_popup.md) — hero/address/price popup on pin click; repo's close-affordance convention splits by overlay shape (modal vs anchored popover), and why click-outside was rejected here
+- [Map pin overlap click flakiness](map_pin_overlap_click_flakiness.md) — clicking a specific pin by DB-picked address can hang on an overlapping pin; use `el.click()` via evaluate, not locator.click()

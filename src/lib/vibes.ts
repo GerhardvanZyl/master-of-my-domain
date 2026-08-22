@@ -12,7 +12,9 @@ export interface VibeConfig {
   perStation250m: number; // −1 per 250 m from nearest station
   stationExponent: number; // 1 = linear; >1 punishes distance super-linearly
   perAbove5000: number; // −1 per $5k above ideal
+  priceAboveExponent: number; // 1 = linear; >1 punishes overpaying super-linearly
   perBelow10000: number; // −1 per $10k below ideal
+  priceBelowExponent: number; // 1 = linear; >1 punishes underpricing super-linearly
   perGreenCrossKm: number; // −1 per 1 km from Green Cross Vets
   greenCrossCapKm: number; // distance beyond this counts as this (default 20 km)
   perCon: number; // −3 per listed con
@@ -42,7 +44,9 @@ export const DEFAULT_VIBE_CONFIG: VibeConfig = {
   perStation250m: 1,
   stationExponent: 1,
   perAbove5000: 1,
+  priceAboveExponent: 1,
   perBelow10000: 1,
+  priceBelowExponent: 1,
   perGreenCrossKm: 1,
   greenCrossCapKm: 20,
   perCon: 3,
@@ -124,9 +128,15 @@ export function vibeBreakdown(
     );
   if (p.priceNumeric != null) {
     if (p.priceNumeric > cfg.idealPrice)
-      push("Above ideal price", -((p.priceNumeric - cfg.idealPrice) / 5000) * cfg.perAbove5000);
+      push(
+        "Above ideal price",
+        -curve((p.priceNumeric - cfg.idealPrice) / 5000, cfg.priceAboveExponent) * cfg.perAbove5000,
+      );
     else if (p.priceNumeric < cfg.idealPrice)
-      push("Below ideal price", -((cfg.idealPrice - p.priceNumeric) / 10000) * cfg.perBelow10000);
+      push(
+        "Below ideal price",
+        -curve((cfg.idealPrice - p.priceNumeric) / 10000, cfg.priceBelowExponent) * cfg.perBelow10000,
+      );
   }
   if (p.greenCrossDistanceM != null) {
     const km = Math.min(p.greenCrossDistanceM / 1000, cfg.greenCrossCapKm);
