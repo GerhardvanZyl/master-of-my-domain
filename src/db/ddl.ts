@@ -1,3 +1,5 @@
+import type Database from "better-sqlite3";
+
 /**
  * Idempotent schema DDL. Kept in one place and applied both by the migrate
  * script and automatically on every connection open (see client.ts), so the
@@ -170,23 +172,33 @@ CREATE INDEX IF NOT EXISTS idx_shares_to_read ON shares(to_profile, read_at);
 CREATE INDEX IF NOT EXISTS idx_scrape_jobs_url ON scrape_jobs(url);
 `;
 
-/**
- * Add columns that CREATE TABLE IF NOT EXISTS can't retrofit onto an existing
- * DB. SQLite has no `ADD COLUMN IF NOT EXISTS`, so check table_info first.
- * Idempotent; safe to run on every connect.
- */
-export function migrateColumns(db: {
-  pragma: (s: string) => unknown;
-  exec: (s: string) => void;
-}): void {
-  const cols = new Set(
-    (db.pragma("table_info(properties)") as Array<{ name: string }>).map((c) => c.name),
+/** Just enough of a better-sqlite3 handle to inspect and migrate a schema. */
+type MigrationDb = Pick<Database.Database, "pragma" | "exec" | "transaction">;
+
+type MigratedTable = "properties" | "property_ratings" | "images";
+
+// The table name is a literal union, not a string: PRAGMA can't bind an
+// identifier, and table_info of a table that does not exist returns an empty
+// set rather than erroring, so a typo here would read as "nothing migrated".
+function columnsOf(db: MigrationDb, table: MigratedTable): Set<string> {
+  return new Set(
+    (db.pragma(`table_info(${table})`) as Array<{ name: string }>).map((c) => c.name),
   );
+}
+
+/**
+ * The migration statements this DB still needs, in the order they must run —
+ * empty once it is fully migrated. Reads the schema and decides but writes
+ * nothing, so it serves both as the "is there work?" test and as the work.
+ */
+function pendingMigrations(db: MigrationDb): string[] {
+  const cols = columnsOf(db, "properties");
+  const sql: string[] = [];
 
   // attended_at -> viewed_at. A rename, not an add-and-copy, so the dates come
   // across untouched and there is never a moment where both columns exist.
   if (cols.has("attended_at") && !cols.has("viewed_at")) {
-    db.exec("ALTER TABLE properties RENAME COLUMN attended_at TO viewed_at");
+    sql.push("ALTER TABLE properties RENAME COLUMN attended_at TO viewed_at");
     cols.delete("attended_at");
     cols.add("viewed_at");
   }
@@ -229,37 +241,53 @@ export function migrateColumns(db: {
     year_built: "INTEGER",
   };
   for (const [name, type] of Object.entries(add)) {
-    if (!cols.has(name)) db.exec(`ALTER TABLE properties ADD COLUMN ${name} ${type}`);
+    if (!cols.has(name)) sql.push(`ALTER TABLE properties ADD COLUMN ${name} ${type}`);
   }
 
   // The three old inspection switches — attended_at, shortlist_tag='must-see'
   // and a per-browser localStorage set — collapse into one `viewed` enum.
   // "Been there" wins over "want to go" when a row somehow carried both.
-  // Guarded on the column's absence and wrapped in a transaction, so it runs
-  // exactly once per DB, all-or-nothing: a half-applied backfill would look
+  // Guarded on the column's absence so it runs exactly once per DB, and the
+  // caller applies it all-or-nothing: a half-applied backfill would look
   // "already migrated" on the next connect and silently lose the rest.
   if (!cols.has("viewed")) {
-    db.exec(`
-      BEGIN;
-      ALTER TABLE properties ADD COLUMN viewed TEXT;
-      UPDATE properties SET viewed = 'viewed'  WHERE viewed_at IS NOT NULL;
-      UPDATE properties SET viewed = 'to-view' WHERE viewed IS NULL AND shortlist_tag = 'must-see';
-      UPDATE properties SET shortlist_tag = NULL WHERE shortlist_tag = 'must-see';
-      COMMIT;
-    `);
+    sql.push(
+      "ALTER TABLE properties ADD COLUMN viewed TEXT",
+      "UPDATE properties SET viewed = 'viewed'  WHERE viewed_at IS NOT NULL",
+      "UPDATE properties SET viewed = 'to-view' WHERE viewed IS NULL AND shortlist_tag = 'must-see'",
+      "UPDATE properties SET shortlist_tag = NULL WHERE shortlist_tag = 'must-see'",
+    );
   }
 
-  const rateCols = new Set(
-    (db.pragma("table_info(property_ratings)") as Array<{ name: string }>).map((c) => c.name),
-  );
-  if (!rateCols.has("score")) {
-    db.exec("ALTER TABLE property_ratings ADD COLUMN score REAL");
+  if (!columnsOf(db, "property_ratings").has("score")) {
+    sql.push("ALTER TABLE property_ratings ADD COLUMN score REAL");
   }
 
-  const imageCols = new Set(
-    (db.pragma("table_info(images)") as Array<{ name: string }>).map((c) => c.name),
-  );
-  if (!imageCols.has("alt")) {
-    db.exec("ALTER TABLE images ADD COLUMN alt TEXT");
+  if (!columnsOf(db, "images").has("alt")) {
+    sql.push("ALTER TABLE images ADD COLUMN alt TEXT");
   }
+
+  return sql;
+}
+
+/**
+ * Add columns that CREATE TABLE IF NOT EXISTS can't retrofit onto an existing
+ * DB. SQLite has no `ADD COLUMN IF NOT EXISTS`, so check table_info first.
+ * Idempotent; safe to run on every connect, and on two connects at once — a
+ * Next.js build opens one per parallel worker.
+ *
+ * `.immediate()` is what makes the check-then-act safe, and a plain `BEGIN`
+ * would not: a deferred transaction takes its read snapshot *before* it takes
+ * the write lock, so both processes still read the pre-migration column set
+ * and the loser dies on `duplicate column name`. BEGIN IMMEDIATE takes the
+ * lock first, so the re-read inside it is the one that decides. The unlocked
+ * pre-check keeps the already-migrated case — nearly every call — lock-free;
+ * it can only ever be stale towards doing the work, never towards skipping it,
+ * because no step here is ever undone once committed.
+ */
+export function migrateColumns(db: MigrationDb): void {
+  if (pendingMigrations(db).length === 0) return;
+  db.transaction(() => {
+    for (const statement of pendingMigrations(db)) db.exec(statement);
+  }).immediate();
 }

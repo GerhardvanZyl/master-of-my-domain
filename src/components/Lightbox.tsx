@@ -173,7 +173,7 @@ export default function Lightbox({
           className="flex justify-center pt-3 text-white"
           onClick={(e) => e.stopPropagation()}
         >
-          <TagSelect imageId={img.id} roomType={img.roomType} />
+          <TagSelect key={img.id} imageId={img.id} roomType={img.roomType} />
         </div>
       )}
     </div>,

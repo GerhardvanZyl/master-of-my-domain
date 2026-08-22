@@ -146,3 +146,17 @@ Consequences:
   and tells you about the working state, not the committed one.
 - A clean `git status` is not evidence the DB was untouched by a command you
   just ran. Check for the sidecar files.
+
+## `package.json`'s `test` line will always exceed 120 characters
+
+It is a single JSON string value chaining every test file with `&&` — 535
+characters as of 2026-08-22, and 494 before that. There is no line-continuation
+inside a JSON string, so it cannot be wrapped, and every test added to this repo
+has extended it in the same idiom.
+
+Raised and correctly dropped by the Standards lane in run
+`20260822-1105-fix-migration-race-and-tagselect-key`, which flagged it as the
+one item where a reasonable reviewer could land the other way. Recorded so it is
+not re-argued every time a test file is added: **adding a clause to that line is
+never a line-length finding.** Splitting the runner into a script file would be
+a real change with its own justification, not a style fix.

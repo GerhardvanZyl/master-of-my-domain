@@ -153,6 +153,66 @@ function addressesByRegion(nsw: boolean): Set<string> {
   return new Set(rows.map((r) => r.address).filter((a): a is string => !!a));
 }
 
+/**
+ * Mirrors isPropertyPhoto/isVisibleImage from src/db/queries/properties.ts —
+ * duplicated rather than imported, since that module opens a real DB
+ * connection as an import side effect and this suite must never touch
+ * anything but the throwaway tmp copy.
+ */
+function isVisibleImageLike(i: {
+  width: number | null;
+  height: number | null;
+  roomType: string | null;
+  notes: string | null;
+}): boolean {
+  if (i.roomType === "exclude") return false;
+  if (i.notes === "floorplan" || i.notes === "hero") return true;
+  const a = i.width && i.height ? i.width / i.height : null;
+  if (a == null || !i.width || !i.height) return true;
+  if (Math.max(i.width, i.height) < 500) return false;
+  if (a >= 2.2 || a <= 0.45) return false;
+  return !(a > 0.95 && a < 1.05);
+}
+
+/**
+ * A property with two ADJACENT visible photos, in the same order Lightbox
+ * browses them, tagged with different rooms — the fixture for the
+ * TagSelect-remount regression: without `key={img.id}` on TagSelect
+ * (Lightbox.tsx), advancing to the next photo leaves the room dropdown
+ * showing the room of the one before it.
+ */
+function adjacentRoomChangePhoto(): { propertyId: string; index: number; roomA: string; roomB: string } {
+  const db = new Database(path.join(tmp, "app.db"), { readonly: true });
+  const propertyIds = (
+    db.prepare("SELECT DISTINCT property_id id FROM images ORDER BY property_id").all() as { id: string }[]
+  ).map((r) => r.id);
+  for (const propertyId of propertyIds) {
+    const rows = db
+      .prepare(
+        `SELECT i.width, i.height, t.room_type roomType, t.notes notes
+           FROM images i LEFT JOIN image_tags t ON t.image_id = i.id
+          WHERE i.property_id = ? ORDER BY i.ordinal`,
+      )
+      .all(propertyId) as {
+      width: number | null;
+      height: number | null;
+      roomType: string | null;
+      notes: string | null;
+    }[];
+    const visible = rows.filter(isVisibleImageLike);
+    for (let index = 0; index < visible.length - 1; index++) {
+      const a = visible[index];
+      const b = visible[index + 1];
+      if (a.roomType && b.roomType && a.roomType !== b.roomType) {
+        db.close();
+        return { propertyId, index, roomA: a.roomType, roomB: b.roomType };
+      }
+    }
+  }
+  db.close();
+  throw new Error("fixture needs a property with two adjacent visible photos tagged with different rooms");
+}
+
 // ------------------------------------------------------------------- helpers
 const sel = {
   gate: "[data-testid=profile-gate]",
@@ -1300,6 +1360,47 @@ async function main() {
     );
 
     page.off("request", onRequest);
+    await page.keyboard.press("Escape");
+    await modal.waitFor({ state: "detached" });
+  });
+
+  // Regression: TagSelect initialises its selection once via useState(roomType
+  // ?? ""). Without `key={img.id}` on the <TagSelect> in Lightbox.tsx, React
+  // reuses the same component instance across photos, so that initialiser
+  // never re-runs and the dropdown keeps showing the PREVIOUS photo's room
+  // after browsing to the next one — never guess a room, so a stale display
+  // here is worse than a stale label.
+  await t("room select shows the CURRENT photo's room after browsing to the next one", async () => {
+    const { propertyId, index, roomA, roomB } = adjacentRoomChangePhoto();
+    await page.setViewportSize(DESKTOP);
+    await page.goto(`${base}/property/${propertyId}`, { waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const opener = page.locator('button[title="Open"]').nth(index);
+    await opener.waitFor();
+    await opener.click();
+    const modal = page.locator("div.fixed.inset-0.z-\\[90\\]");
+    await modal.waitFor();
+    const counter = modal.locator("span.text-sm.text-neutral-300").first();
+    const select = modal.locator("select");
+    await select.waitFor();
+
+    const counterBefore = await counter.innerText();
+    assert.equal(
+      await select.inputValue(),
+      roomA,
+      "lightbox should open on the clicked photo, showing its room",
+    );
+
+    await page.keyboard.press("ArrowRight");
+    await page.waitForTimeout(300);
+    assert.notEqual(await counter.innerText(), counterBefore, "ArrowRight should have advanced the photo");
+    assert.equal(
+      await select.inputValue(),
+      roomB,
+      `after browsing to the next photo the room select must show ITS room (${roomB}), ` +
+        `not the previous photo's (${roomA})`,
+    );
+
     await page.keyboard.press("Escape");
     await modal.waitFor({ state: "detached" });
   });

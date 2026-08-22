@@ -240,7 +240,7 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                       className="flex justify-center pt-2"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <TagSelect imageId={img.id} roomType={img.roomType} />
+                      <TagSelect key={img.id} imageId={img.id} roomType={img.roomType} />
                     </div>
                   )}
                 </div>
