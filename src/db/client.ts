@@ -31,6 +31,14 @@ function createConnection(): Database.Database {
   db.pragma("synchronous = NORMAL");
   db.exec(DDL); // ensure schema exists on every fresh connection
   migrateColumns(db); // retrofit added columns onto older DBs
+  // ponytail: one log line, no health endpoint. The live store is a bind mount
+  // now, and a mount pointing at the wrong (or an empty) directory otherwise
+  // looks exactly like a working app that has no properties yet — this is what
+  // `docker compose logs` answers "am I on the right DB?" with.
+  // stderr, NOT stdout: the scripts/ CLIs (tag:list, meta:list, ...) emit JSON
+  // on stdout and are piped into jq/node. Docker captures both streams.
+  const { n } = db.prepare("SELECT COUNT(*) n FROM properties").get() as { n: number };
+  console.error(`[db] ${DB_PATH} — ${n} properties`);
   return db;
 }
 

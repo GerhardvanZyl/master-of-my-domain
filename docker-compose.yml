@@ -5,6 +5,13 @@ services:
     ports:
       - "3225:3225"
     volumes:
+      # The live DB + images live OUTSIDE the repo, so `git pull` / `git
+      # checkout` can never touch them — the repo's own data/ is a snapshot for
+      # the dev box, not the thing prod reads. Container path stays /app/data,
+      # so DB_PATH/IMAGES_DIR/MEDIA_DIR keep their defaults.
+      #
+      # Override the host path in .env (gitignored) if you keep it elsewhere:
+      #   LIVE_DATA=/srv/property-compare-data
       # Must be real local disk — SQLite WAL does not survive NFS/SMB.
-      - ./data:/app/data
+      - ${LIVE_DATA:-../property-compare-data}:/app/data
     restart: unless-stopped

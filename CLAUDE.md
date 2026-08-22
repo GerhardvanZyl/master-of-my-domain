@@ -45,11 +45,19 @@ you're back on the network.
 ## The live app runs on another host
 
 `http://192.168.68.125:3225` is the instance that matters — **not** this
-workstation. It runs `docker-compose.yml` with `./data` bind-mounted, and
-`data/app.db` + `data/images` are tracked in git, so one way to deploy is
-commit here → `git pull` + rebuild there.
+workstation. It runs `docker-compose.yml`, which bind-mounts
+`${LIVE_DATA:-../property-compare-data}` — a directory **outside the repo** —
+at `/app/data`. Deploy there is code only: `git pull` + rebuild. Nothing git
+does can reach the live DB or images.
 
-The other way, and the one to prefer, is **`POST /api/batch`** — the whole
+The repo's own `data/app.db` + `data/images` are still tracked, but they are a
+snapshot for this dev box, **not** what prod reads, and they run behind it
+(prod is fed by `/api/batch`). Never "deploy" by copying them over — that is
+the data loss this mount exists to prevent. The container logs the DB it opened
+and its row count on connect (`[db] /app/data/app.db — 442 properties`); check
+it after any deploy that touched the mount.
+
+Updates go over **`POST /api/batch`** — the whole
 update write path over HTTP, so a run on this machine can update the live app
 without shipping a 10MB SQLite file. Sections (all optional, all idempotent,
 applied in this order):
