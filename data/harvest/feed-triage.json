@@ -7,6 +7,12 @@
    "ptype": "New House & Land"
   },
   {
+   "listingUrl": "https://www.domain.com.au/122-ecalypt-way-torquay-vic-3228-2020950057",
+   "street": "122 Ecalypt Way",
+   "price": "$849,550",
+   "ptype": "New House & Land"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989559",
    "street": "149 Briody Grove - Briody Drive",
    "price": "$868,760",
@@ -40,6 +46,18 @@
    "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989587",
    "street": "149 Briody Grove - Briody Drive",
    "price": "$962,049",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865328",
+   "street": "145 Briody Grove - Briody Drive",
+   "price": "$851,080",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/142-briody-grove-briody-drive-torquay-vic-3228-2020865336",
+   "street": "142 Briody Grove - Briody Drive",
+   "price": "$945,155",
    "ptype": "New House & Land"
   },
   {
@@ -85,12 +103,6 @@
    "ptype": "New House & Land"
   },
   {
-   "listingUrl": "https://www.domain.com.au/122-ecalypt-way-torquay-vic-3228-2020950057",
-   "street": "122 Ecalypt Way",
-   "price": "$849,550",
-   "ptype": "New House & Land"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/574-wirilda-street-torquay-vic-3228-2020584849",
    "street": "574 Wirilda Street",
    "price": "$900,888",
@@ -106,18 +118,6 @@
    "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865312",
    "street": "145 Briody Grove - Briody Drive",
    "price": "$860,548",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865328",
-   "street": "145 Briody Grove - Briody Drive",
-   "price": "$851,080",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/142-briody-grove-briody-drive-torquay-vic-3228-2020865336",
-   "street": "142 Briody Grove - Briody Drive",
-   "price": "$945,155",
    "ptype": "New House & Land"
   },
   {
@@ -175,12 +175,6 @@
    "ptype": "House"
   },
   {
-   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184010",
-   "street": "",
-   "price": "$732,845",
-   "ptype": "House"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184038",
    "street": "",
    "price": "$720,437",
@@ -220,6 +214,12 @@
    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184007",
    "street": "",
    "price": "$715,982",
+   "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184010",
+   "street": "",
+   "price": "$732,845",
    "ptype": "House"
   }
  ],
