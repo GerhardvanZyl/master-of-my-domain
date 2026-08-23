@@ -16,3 +16,5 @@
 - [MapView pin popup](map_view_pin_popup.md) — hero/address/price popup on pin click; repo's close-affordance convention splits by overlay shape (modal vs anchored popover), and why click-outside was rejected here
 - [Map pin overlap click flakiness](map_pin_overlap_click_flakiness.md) — clicking a specific pin by DB-picked address can hang on an overlapping pin; use `el.click()` via evaluate, not locator.click()
 - [UI test stale behavior assertions](ui_test_stale_behavior_assertions.md) — a behavior-changing brief can leave a test/ui.test.ts test asserting the OLD behavior; grep the feature name there too, not just unit tests
+- [app.db restore under git lock](app_db_restore_under_git_lock.md) — `git show HEAD:data/app.db` + `cp` restores app.db without needing `.git/index.lock`, safe when a concurrent agent holds it
+- [Stale local transit not synced](stale_local_transit_not_synced.md) — _transit-estimate.ts can self-match a row against its own already-measured local value; check before pushing a "~0 m away" estimate
