@@ -31,6 +31,7 @@ const junk = (t) =>
   (t || "").trim().length < 5 ||
   (!/\$/.test(t || "") && !/contact\s*agent|auction|eoi|expression|offers?\s+(invited|above)|price\s*guide/i.test(t || ""));
 for (const r of diff.changed) if (junk(r.price_display)) add(r.listing_url, "junkprice");
+for (const r of diff.noImages) add(r.listing_url, "noimages");
 
 const list = [...targets.values()];
 fs.writeFileSync("data/harvest/_pass-targets.json", JSON.stringify(list, null, 1));
@@ -61,6 +62,7 @@ console.log(
       missing: list.filter((t) => t.why.includes("missing")).length,
       soldish: list.filter((t) => t.why.includes("soldish")).length,
       junkprice: list.filter((t) => t.why.includes("junkprice")).length,
+      noimages: list.filter((t) => t.why.includes("noimages")).length,
       chunks,
     },
     null,
