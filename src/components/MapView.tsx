@@ -148,9 +148,9 @@ export default function MapView({
   // Same rule as the grid: localStorage/server only after mount, never during render.
   const { cfg } = useVibeConfig();
 
-  // Vibe score per plotted pin, and the diameter that maps it linearly onto
-  // [PIN_MIN, PIN_MAX] across whatever range is actually present among them —
-  // see src/lib/pin-scale.ts for the pure scale function this wraps.
+  // Vibe score per plotted pin, and the diameter ranked (not value-scaled)
+  // onto [PIN_MIN, PIN_MAX] — see src/lib/pin-scale.ts for the pure scale
+  // function this wraps.
   const scoreOf = useMemo(() => new Map(pins.map((p) => [p.id, vibeScore(p, p.ratings, cfg)])), [pins, cfg]);
   const pinDiameter = useMemo(() => pinDiameterScale([...scoreOf.values()]), [scoreOf]);
 

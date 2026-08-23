@@ -1737,11 +1737,12 @@ async function main() {
   });
 
   console.log("\nproperty.com.au enrichment");
-  // Day-one state: both new columns NULL for every row (no backfill yet) — the
-  // detail page must show no "Year built" row and no property.com.au link, and
-  // no empty placeholder/stray label. This is the more important of the two
-  // cases, since it's what every row looks like on day one in prod.
-  await t("detail page shows no year-built row or property.com.au link when both are NULL", async () => {
+  // Day-one state: both new columns NULL for every row (no backfill yet). The
+  // "Year built" row still stays hidden with nothing to show, but the
+  // property.com.au row must now ALWAYS render — falling back to a Google
+  // search built from the address — since the enrichment column being empty
+  // for every prod row is exactly the case this fallback exists for.
+  await t("detail page falls back to a property.com.au search when the URL is NULL", async () => {
     const dbRW = new Database(path.join(tmp, "app.db"));
     dbRW.prepare("UPDATE properties SET property_com_au_url = NULL, year_built = NULL WHERE id = ?").run(detailId);
     dbRW.close();
@@ -1756,15 +1757,19 @@ async function main() {
       0,
       "no Year built row when yearBuilt is NULL",
     );
-    assert.equal(
-      await card.locator("dt", { hasText: "property.com.au" }).count(),
-      0,
-      "no property.com.au row when propertyComAuUrl is NULL",
-    );
+    await card.locator("dt", { hasText: "property.com.au" }).waitFor();
+    const link = card.locator("a", { hasText: "Search property.com.au" });
+    await link.waitFor();
     assert.equal(
       await page.locator("a", { hasText: "View listing" }).count(),
       0,
-      "no dangling 'View listing' link when there's nothing to link to",
+      "wording must not claim a listing was found when it's only a search",
+    );
+    const href = await link.getAttribute("href");
+    assert.ok(href?.startsWith("https://www.google.com/search?"), "falls back to a scoped google search");
+    assert.ok(
+      decodeURIComponent(href ?? "").includes("site:property.com.au"),
+      "search is scoped to the property.com.au site",
     );
   });
 

@@ -25,7 +25,7 @@ import { imageUrl } from "@/lib/images";
 import { formatPrice, fmtAud, fmtNum, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDateLong } from "@/lib/format";
 import { formatInspection } from "@/lib/inspection";
 import { commuteDestination } from "@/lib/commute";
-import { isValidPropertyComAuUrl } from "@/lib/property-com-au";
+import { isValidPropertyComAuUrl, propertyComAuSearchUrl } from "@/lib/property-com-au";
 import type { ReactNode } from "react";
 
 export const dynamic = "force-dynamic";
@@ -102,6 +102,31 @@ export default async function PropertyDetail({
         View listing ↗
       </a>,
     ]);
+  } else {
+    // No backfilled URL (true for every row on the live app today) — fall
+    // back to a Google search so the row still gives the user somewhere to
+    // click. Wording says "Search", not "View listing", so it can't be read
+    // as a confirmed link to a listing that was never found.
+    const searchUrl = propertyComAuSearchUrl(
+      property.address,
+      property.suburb,
+      property.state,
+      property.postcode,
+    );
+    if (searchUrl) {
+      listingFacts.push([
+        "property.com.au",
+        <a
+          key="property-com-au"
+          href={searchUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="text-forest hover:underline"
+        >
+          Search property.com.au ↗
+        </a>,
+      ]);
+    }
   }
 
   // Deduced-from-photos metadata (display + correction). null → "—".
