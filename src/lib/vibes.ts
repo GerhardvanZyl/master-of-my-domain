@@ -28,10 +28,12 @@ export interface VibeConfig {
   meh: number; // −10
   dislike: number; // −25
   hate: number; // −50
+  justNo: number; // −250
   looksGood: number; // +10
   looksUgly: number; // −10
   smallKitchen: number; // −10
   tinyKitchen: number; // −50
+  tooSmall: number; // −100
   perLivingArea: number; // +5 per living area
   perBedBelow4: number; // −5 per bedroom under 4
   perMasterSqmBelow18: number; // −2 per sqm the master is under 18 m²
@@ -60,10 +62,12 @@ export const DEFAULT_VIBE_CONFIG: VibeConfig = {
   meh: 10,
   dislike: 25,
   hate: 50,
+  justNo: 250,
   looksGood: 10,
   looksUgly: 10,
   smallKitchen: 10,
   tinyKitchen: 50,
+  tooSmall: 100,
   perLivingArea: 5,
   perBedBelow4: 5,
   perMasterSqmBelow18: 2,
@@ -72,9 +76,10 @@ export const DEFAULT_VIBE_CONFIG: VibeConfig = {
 
 export interface Rating {
   profile?: string | null; // whose reaction this is (labels the breakdown)
-  vibe?: string | null; // like | meh | dislike | hate
+  vibe?: string | null; // like | meh | dislike | hate | justno
   look?: string | null; // good | ugly
   kitchen?: string | null; // small | tiny
+  size?: string | null; // small — independent of look/kitchen: overall too small
 }
 
 // Fields vibeScore reads — Property has them all, but keep it structural so
@@ -177,10 +182,12 @@ export function vibeBreakdown(
     else if (r.vibe === "meh") push(`${who}meh`, -cfg.meh);
     else if (r.vibe === "dislike") push(`${who}disliked it`, -cfg.dislike);
     else if (r.vibe === "hate") push(`${who}hated it`, -cfg.hate);
+    else if (r.vibe === "justno") push(`${who}just no`, -cfg.justNo);
     if (r.look === "good") push(`${who}looks good`, cfg.looksGood);
     else if (r.look === "ugly") push(`${who}looks ugly`, -cfg.looksUgly);
     if (r.kitchen === "small") push(`${who}small kitchen`, -cfg.smallKitchen);
     else if (r.kitchen === "tiny") push(`${who}tiny kitchen`, -cfg.tinyKitchen);
+    if (r.size === "small") push(`${who}too small`, -cfg.tooSmall);
   }
   return rows;
 }

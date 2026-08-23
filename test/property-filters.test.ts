@@ -9,6 +9,7 @@ import type { PropertyListItem } from "../src/db/queries/properties";
 import {
   DEFAULT_FILTER_STATE,
   filterProperties,
+  isRatedProperty,
   parseFilterState,
   type FilterCtx,
   type FilterState,
@@ -314,6 +315,34 @@ function ctx(overrides: Partial<FilterCtx> = {}): FilterCtx {
     ids(filterProperties(inspectingProps, { ...DEFAULT_FILTER_STATE, inspectingFilter: "ex" }, ctx())),
     [notThisWeekend.id],
     "ex keeps ONLY properties NOT inspecting this weekend — the opposite of in, not a no-op",
+  );
+}
+
+// --- isRatedProperty: "too small" alone counts as rated -----------------------
+// A property whose ONLY rating is size="small" would otherwise look unrated
+// to the grid's rated filter and the map's rated chip, hiding a property the
+// user has explicitly judged.
+{
+  const sizeOnly = mkProp({
+    ratings: [{ profile: "gerhard", vibe: null, look: null, kitchen: null, size: "small", score: null }],
+  });
+  assert.equal(
+    isRatedProperty(sizeOnly, "gerhard"),
+    true,
+    "a too-small-only rating from MY profile counts as rated",
+  );
+  assert.equal(
+    isRatedProperty(sizeOnly, "johanita"),
+    true,
+    "a too-small-only rating from the OTHER profile also counts as rated",
+  );
+  const untouched = mkProp({
+    ratings: [{ profile: "gerhard", vibe: null, look: null, kitchen: null, size: null, score: null }],
+  });
+  assert.equal(
+    isRatedProperty(untouched, "gerhard"),
+    false,
+    "a rating row with every field null is still unrated",
   );
 }
 

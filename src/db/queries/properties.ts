@@ -31,7 +31,7 @@ export interface PropertyListItem extends Omit<Property, "rawJson" | "descriptio
    * would silently drop price-withheld sales.
    */
   soldDate: string | null;
-  ratings: Pick<PropertyRating, "profile" | "vibe" | "look" | "kitchen" | "score">[];
+  ratings: Pick<PropertyRating, "profile" | "vibe" | "look" | "kitchen" | "size" | "score">[];
 }
 
 /** scrape_jobs.status values that mean the listing is no longer for sale. */
@@ -267,6 +267,7 @@ export function listProperties(): PropertyListItem[] {
       vibe: propertyRatings.vibe,
       look: propertyRatings.look,
       kitchen: propertyRatings.kitchen,
+      size: propertyRatings.size,
       score: propertyRatings.score,
     })
     .from(propertyRatings)
@@ -279,6 +280,7 @@ export function listProperties(): PropertyListItem[] {
       vibe: r.vibe,
       look: r.look,
       kitchen: r.kitchen,
+      size: r.size,
       score: r.score,
     });
     ratingsByProp.set(r.propertyId, arr);
@@ -410,6 +412,7 @@ export function getPropertyRatings(propertyId: string): PropertyListItem["rating
       vibe: propertyRatings.vibe,
       look: propertyRatings.look,
       kitchen: propertyRatings.kitchen,
+      size: propertyRatings.size,
       score: propertyRatings.score,
     })
     .from(propertyRatings)
@@ -430,7 +433,14 @@ export function getRatingsByProperty(
     .all();
   for (const r of rows) {
     const arr = out.get(r.propertyId) ?? [];
-    arr.push({ profile: r.profile, vibe: r.vibe, look: r.look, kitchen: r.kitchen, score: r.score });
+    arr.push({
+      profile: r.profile,
+      vibe: r.vibe,
+      look: r.look,
+      kitchen: r.kitchen,
+      size: r.size,
+      score: r.score,
+    });
     out.set(r.propertyId, arr);
   }
   return out;

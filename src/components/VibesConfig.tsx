@@ -89,6 +89,7 @@ const GROUPS: { title: string; fields: Field[] }[] = [
       { key: "meh", label: "− meh" },
       { key: "dislike", label: "− dislike" },
       { key: "hate", label: "− hate" },
+      { key: "justNo", label: "− just no" },
     ],
   },
   {
@@ -104,6 +105,10 @@ const GROUPS: { title: string; fields: Field[] }[] = [
       { key: "smallKitchen", label: "− small kitchen" },
       { key: "tinyKitchen", label: "− tiny kitchen" },
     ],
+  },
+  {
+    title: "Size",
+    fields: [{ key: "tooSmall", label: "− too small (overall)" }],
   },
 ];
 

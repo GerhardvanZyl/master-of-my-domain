@@ -184,6 +184,43 @@ assert.ok(
   "price at ideal produces no price row, exponents notwithstanding",
 );
 
+// --- "just no" vibe and "too small" size: new -250 / -100 axes -------------
+// justno is a fifth mutually-exclusive vibe value (like/meh/dislike/hate/justno).
+assert.ok(
+  vibeBreakdown(p, [{ profile: "gerhard", vibe: "justno" }], DEFAULT_VIBE_CONFIG).some(
+    (r) => r.label === "gerhard: just no" && r.pts === -250,
+  ),
+  "justno deducts the configured default magnitude, sign applied here",
+);
+assert.equal(
+  vibeBreakdown(p, [{ vibe: "justno" }], { ...DEFAULT_VIBE_CONFIG, justNo: 999 })
+    .find((r) => r.label === "just no")!.pts,
+  -999,
+  "the magnitude is read from config, not hard-coded",
+);
+// size is an axis independent of look/kitchen: a property can be liked AND
+// too small at the same time (both rows present simultaneously, not exclusive).
+{
+  const rows = vibeBreakdown(
+    p,
+    [{ profile: "gerhard", vibe: "like", look: "good", kitchen: "small", size: "small" }],
+    DEFAULT_VIBE_CONFIG,
+  );
+  assert.ok(rows.some((r) => r.label === "gerhard: liked it" && r.pts === 25));
+  assert.ok(rows.some((r) => r.label === "gerhard: too small" && r.pts === -100));
+  assert.ok(rows.some((r) => r.label === "gerhard: small kitchen" && r.pts === -10));
+}
+assert.equal(
+  vibeBreakdown(p, [{ size: "small" }], { ...DEFAULT_VIBE_CONFIG, tooSmall: 40 })
+    .find((r) => r.label === "too small")!.pts,
+  -40,
+  "the too-small magnitude is read from config, not hard-coded",
+);
+assert.ok(
+  !vibeBreakdown(p, [{ size: null }], DEFAULT_VIBE_CONFIG).some((r) => r.label.includes("too small")),
+  "no size row when size is null",
+);
+
 // --- parseVibeConfig: one bad stored value must not NaN the whole grid -------
 // Spreading the parsed JSON used to let a string/null/NaN reach the arithmetic,
 // and NaN propagates to the score, the sort and every tile badge at once.

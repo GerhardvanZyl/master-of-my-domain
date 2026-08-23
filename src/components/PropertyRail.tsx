@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { Property } from "@/db/schema";
 import type { PropertyListItem } from "@/db/queries/properties";
 import { PROFILES, useProfile } from "@/lib/profile";
-import { vibeBreakdown } from "@/lib/vibes";
+import { vibeBreakdown, type VibeConfig } from "@/lib/vibes";
 import { useVibeConfig } from "@/lib/use-vibe-config";
 
 type Ratings = PropertyListItem["ratings"];
@@ -14,14 +14,32 @@ const REACTIONS = [
   { id: "meh", emoji: "😐", label: "Meh", colour: "#B9762A" },
   { id: "dislike", emoji: "👎", label: "Dislike", colour: "#B84A3A" },
   { id: "hate", emoji: "😤", label: "Hate", colour: "#8E2F22" },
+  // -250: five times "hate" — deliberately reads as more severe (near-black
+  // maroon, a blunt "no entry" symbol rather than another face).
+  { id: "justno", emoji: "🚫", label: "Just no", colour: "#3D0F0F" },
 ] as const;
 
+// pts is derived from cfg at render time (configKey, sign) rather than
+// hard-coded, so a retuned weight in Vibes config shows up here too.
 const QUALITY = [
-  { field: "look", value: "good", label: "Looks good", pts: "+10" },
-  { field: "look", value: "ugly", label: "Looks ugly", pts: "−10" },
-  { field: "kitchen", value: "small", label: "Small kitchen", pts: "−10" },
-  { field: "kitchen", value: "tiny", label: "Tiny kitchen", pts: "−50" },
-] as const;
+  { field: "look", value: "good", label: "Looks good", configKey: "looksGood", sign: 1 },
+  { field: "look", value: "ugly", label: "Looks ugly", configKey: "looksUgly", sign: -1 },
+  { field: "kitchen", value: "small", label: "Small kitchen", configKey: "smallKitchen", sign: -1 },
+  { field: "kitchen", value: "tiny", label: "Tiny kitchen", configKey: "tinyKitchen", sign: -1 },
+  // Independent axis from "kitchen": a property can be liked AND too small.
+  { field: "size", value: "small", label: "Too small", configKey: "tooSmall", sign: -1 },
+] as const satisfies readonly {
+  field: string;
+  value: string;
+  label: string;
+  configKey: keyof VibeConfig;
+  sign: 1 | -1;
+}[];
+
+// U+2212 MINUS SIGN, not a hyphen — matches the rest of the vibes UI.
+function qualityPts(cfg: VibeConfig, configKey: keyof VibeConfig, sign: 1 | -1): string {
+  return `${sign > 0 ? "+" : "−"}${cfg[configKey]}`;
+}
 
 const FEATURES = [
   { field: "hasEaves", label: "All-around eaves" },
@@ -95,6 +113,7 @@ export default function PropertyRail({
         vibe: null,
         look: null,
         kitchen: null,
+        size: null,
         score: null,
         ...mine,
         ...patch,
@@ -188,7 +207,10 @@ export default function PropertyRail({
                     onClick={() => rate({ [q.field]: on ? null : q.value })}
                     className={`chip ${on ? "chip-on" : "hover:border-forest"}`}
                   >
-                    {q.label} <span className="text-[11px] opacity-70">{q.pts}</span>
+                    {q.label}{" "}
+                    <span className="text-[11px] opacity-70">
+                      {qualityPts(cfg, q.configKey, q.sign)}
+                    </span>
                   </button>
                 );
               })}
@@ -329,6 +351,7 @@ export default function PropertyRail({
                 REACTIONS.find((x) => x.id === r.vibe)?.label,
                 r.look && `looks ${r.look}`,
                 r.kitchen && `${r.kitchen} kitchen`,
+                r.size === "small" && "too small",
                 r.score != null && `${r.score}/10`,
               ].filter(Boolean);
               return (

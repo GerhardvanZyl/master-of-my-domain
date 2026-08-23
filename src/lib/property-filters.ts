@@ -98,7 +98,7 @@ function isThisWeekend(iso: string | null): boolean {
 
 /**
  * "Rated" = the user has expressed ANY opinion, from EITHER profile: a
- * ratings row with a vibe/look/kitchen/score, or free-text pros/cons.
+ * ratings row with a vibe/look/kitchen/size/score, or free-text pros/cons.
  *
  * `myVibeOverride` lets a caller with an in-flight optimistic edit (the grid's
  * emoji row writes to local state before the server round-trip lands) report
@@ -114,7 +114,9 @@ export function isRatedProperty(
   const myVibe =
     myVibeOverride !== undefined ? myVibeOverride : (p.ratings.find((r) => r.profile === profile)?.vibe ?? null);
   if (myVibe) return true;
-  return p.ratings.some((r) => (r.profile !== profile && r.vibe) || r.look || r.kitchen || r.score != null);
+  return p.ratings.some(
+    (r) => (r.profile !== profile && r.vibe) || r.look || r.kitchen || r.size || r.score != null,
+  );
 }
 
 /**

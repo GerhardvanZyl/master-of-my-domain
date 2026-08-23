@@ -200,9 +200,12 @@ export const propertyRatings = sqliteTable(
       .notNull()
       .references(() => properties.id, { onDelete: "cascade" }),
     profile: text("profile").notNull(), // "gerhard" | "johanita"
-    vibe: text("vibe"), // like | meh | dislike | hate | null
+    vibe: text("vibe"), // like | meh | dislike | hate | justno | null
     look: text("look"), // good | ugly | null
     kitchen: text("kitchen"), // small | tiny | null
+    // Independent axis: overall too-small judgement, distinct from the
+    // kitchen-specific one above (a property can be liked and too small).
+    size: text("size"), // small | null
     score: real("score"), // your own 0–10 gut score
     updatedAt: text("updated_at").notNull(),
   },

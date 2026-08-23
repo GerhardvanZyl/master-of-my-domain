@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS property_ratings (
   vibe           TEXT,
   look           TEXT,
   kitchen        TEXT,
+  size           TEXT,
   score          REAL,
   updated_at     TEXT NOT NULL,
   PRIMARY KEY (property_id, profile)
@@ -261,6 +262,10 @@ function pendingMigrations(db: MigrationDb): string[] {
 
   if (!columnsOf(db, "property_ratings").has("score")) {
     sql.push("ALTER TABLE property_ratings ADD COLUMN score REAL");
+  }
+
+  if (!columnsOf(db, "property_ratings").has("size")) {
+    sql.push("ALTER TABLE property_ratings ADD COLUMN size TEXT");
   }
 
   if (!columnsOf(db, "images").has("alt")) {
