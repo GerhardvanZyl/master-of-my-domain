@@ -36,10 +36,12 @@ const FIELDS: {
   { key: "meh", label: "rating: meh", sign: "−" },
   { key: "dislike", label: "rating: dislike", sign: "−" },
   { key: "hate", label: "rating: hate", sign: "−" },
+  { key: "justNo", label: "rating: just no", sign: "−" },
   { key: "looksGood", label: "looks good", sign: "+" },
   { key: "looksUgly", label: "looks ugly", sign: "−" },
   { key: "smallKitchen", label: "small-ish kitchen", sign: "−" },
   { key: "tinyKitchen", label: "tiny kitchen", sign: "−" },
+  { key: "tooSmall", label: "too small (overall)", sign: "−" },
 ];
 
 export default function VibeSettings() {

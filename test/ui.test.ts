@@ -451,6 +451,50 @@ async function main() {
     assert.equal(page.url(), urlBefore, "selecting text must not navigate");
   });
 
+  // Regression (tech-001): the grid's setVibe sent vibe:"" to clear (VOCAB
+  // rejects that, only null clears — see test/rating-clear.test.ts for the
+  // route contract), so the PATCH 400'd and the optimistic UI looked cleared
+  // right up until the next navigation discarded it. The reload below is the
+  // whole point: without it this only re-proves the optimistic state, which
+  // was never wrong.
+  await t("clearing a grid tile's vibe survives a reload (tech-001)", async () => {
+    const card = page.locator(sel.card).first();
+    const address = await card.locator("h3").innerText();
+    const justNo = card.getByRole("button", { name: "Just no", exact: true });
+
+    // Rate it, same as an earlier visit having set it.
+    await saved(page, () => justNo.click(), /\/rating$/);
+    assert.equal(await justNo.getAttribute("aria-pressed"), "true", "rating should paint immediately");
+
+    // Click it again to clear — fire-and-forget in production (only a
+    // .catch(), no success check), so wait for the request to settle rather
+    // than asserting it succeeded: the unfixed client believes it cleared
+    // regardless of what the server said.
+    const clearReq = page.waitForResponse(
+      (r) => r.request().method() === "PATCH" && /\/rating$/.test(r.url()),
+    );
+    await justNo.click();
+    await clearReq;
+    assert.equal(
+      await justNo.getAttribute("aria-pressed"),
+      "false",
+      "optimistic UI shows cleared immediately, bug or not",
+    );
+
+    // The real assertion: a reload discards the optimistic edit and re-reads
+    // the DB. If the clear PATCH was rejected, the old rating reappears here.
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    const cardAfter = page.locator(sel.card, { hasText: address }).first();
+    const justNoAfter = cardAfter.getByRole("button", { name: "Just no", exact: true });
+    await justNoAfter.waitFor();
+    assert.equal(
+      await justNoAfter.getAttribute("aria-pressed"),
+      "false",
+      "clearing a vibe on the grid must survive a reload",
+    );
+  });
+
   console.log("\ncompare");
   await t("selecting two properties opens a compare table with a ✦ winner", async () => {
     const boxes = page.getByRole("checkbox", { name: "Compare", exact: true });
@@ -476,6 +520,19 @@ async function main() {
     await page.getByRole("button", { name: /Like/ }).click();
     await page.waitForSelector("text=gerhard: liked it");
     assert.equal(Number(await total.innerText()), before + 25, "like is worth +25");
+  });
+
+  // Regression (tests-001): each "Quality impressions" chip's number is
+  // computed from VibeConfig via qualityPts(cfg, configKey, sign) rather than
+  // hard-coded, so a configKey/sign wired to the wrong row would silently
+  // render a wrong number while the arithmetic tests (which never touch this
+  // component) stay green. getByRole's exact match on the full label — number
+  // catches that: it fails on any magnitude or sign mismatch, including the
+  // U+2212 minus character the UI uses instead of a hyphen.
+  await t("quality impression chips render their configured points (tests-001)", async () => {
+    await page.getByRole("button", { name: "Looks good +10", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Looks ugly −10", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Too small −100", exact: true }).waitFor();
   });
 
   // The rail's "Shortlist status" tag and "Your score" slider were removed by

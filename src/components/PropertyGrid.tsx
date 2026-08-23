@@ -57,6 +57,7 @@ const VIBE_OPTS = [
   { v: "meh", emoji: "😐", label: "Meh" },
   { v: "dislike", emoji: "🙁", label: "Dislike" },
   { v: "hate", emoji: "🤮", label: "Hate" },
+  { v: "justno", emoji: "🚫", label: "Just no" },
 ] as const;
 
 // Map-tile size overlay widths. Medium = the old 1/4 tile enlarged 50%.
@@ -951,7 +952,7 @@ export default function PropertyGrid({
       fetch(`/api/properties/${id}/rating`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile, vibe: next }),
+        body: JSON.stringify({ profile, vibe: next || null }),
       }).catch((e) => console.warn("rating save failed", e));
     },
     [profile],

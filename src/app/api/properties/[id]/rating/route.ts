@@ -4,12 +4,13 @@ import { propertyRatings } from "@/db/schema";
 
 // Allowed values per field; null always clears.
 const VOCAB: Record<string, string[]> = {
-  vibe: ["like", "meh", "dislike", "hate"],
+  vibe: ["like", "meh", "dislike", "hate", "justno"],
   look: ["good", "ugly"],
   kitchen: ["small", "tiny"],
+  size: ["small"],
 };
 
-// PATCH /api/properties/<id>/rating  { profile, vibe?, look?, kitchen?, score? }
+// PATCH /api/properties/<id>/rating  { profile, vibe?, look?, kitchen?, size?, score? }
 // Upserts the (property, profile) row — only the keys present are touched.
 export async function PATCH(
   req: Request,
