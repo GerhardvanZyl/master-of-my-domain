@@ -122,10 +122,27 @@ The transaction wrapper means the loser fails cleanly rather than half-applying,
 so there is no data-loss path. The symptom is a failed build or a failed
 request, and **re-running succeeds** because the winner completed the migration.
 
-Deploy consequence: the DB tracked in git is unmigrated, so the first start on
-`192.168.68.125` after a pull runs the migration. If that instance serves
-concurrent traffic at startup, it can hit the same race. Re-run and it will be
-fine.
+Deploy consequence — **corrected 2026-08-23, after `df6ab73`.** This entry
+originally said the DB tracked in git is unmigrated, so the first start on
+`192.168.68.125` after a pull runs the migration. That is no longer how prod
+works and following it would send you looking in the wrong place.
+
+`docker-compose.yml` now bind-mounts `${LIVE_DATA:-../property-compare-data}`
+— a directory **outside the repo** — at `/app/data`. Nothing `git pull` or
+`git checkout` does can reach the live DB or images. Prod's database is a
+persistent external volume and is already migrated.
+
+The race still matters, and arguably more: it fires whenever a DB that is
+behind the current schema is opened by several processes at once. That is now
+a **fresh or empty mount** on first boot, or a restore from an older copy —
+not a `git pull`. The repo's own `data/app.db` is a dev-box snapshot that runs
+behind prod, and is still unmigrated, so a local `npm run build` remains the
+easiest way to reproduce it.
+
+The container logs the DB it opened and its row count on connect
+(`[db] /app/data/app.db — 442 properties`). Check that line after any deploy
+that touched the mount — an empty or wrongly-pointed mount otherwise looks
+exactly like a working app with no properties yet.
 
 ## `git status` clean does NOT mean `data/app.db` is unmigrated
 
