@@ -39,6 +39,40 @@ export function isValidPropertyComAuUrl(v: string | null | undefined): v is stri
   return sanitizePropertyComAuUrl(v) === v && v != null;
 }
 
+/**
+ * Fallback for when there is no stored property.com.au URL (true for every
+ * row on the live app today — the enrichment column has never been
+ * backfilled): a Google search scoped to the site, built from whatever
+ * address text the property has.
+ *
+ * The inputs are untrusted, externally scraped DB text rendered straight into
+ * a live href, so every part goes through URLSearchParams rather than string
+ * concatenation — that's what makes `&`, `#`, `?`, quotes, newlines, or a
+ * `javascript:` prefix in an address land as inert characters inside the `q`
+ * parameter instead of breaking out of it or the URL. The result is always an
+ * `https://www.google.com/search?...` URL; content can change what it
+ * searches for, never where it points.
+ *
+ * Returns `undefined` (this module's established "no usable answer"
+ * sentinel — see the sanitizers above) when every field is empty/null, so a
+ * caller can omit the row rather than link to a search for nothing.
+ */
+export function propertyComAuSearchUrl(
+  address: string | null | undefined,
+  suburb: string | null | undefined,
+  state: string | null | undefined,
+  postcode: string | null | undefined,
+): string | undefined {
+  const parts = [address, suburb, state, postcode]
+    .map((p) => (p ?? "").trim())
+    .filter((p) => p.length > 0);
+  if (parts.length === 0) return undefined;
+
+  const url = new URL("https://www.google.com/search");
+  url.searchParams.set("q", `site:property.com.au ${parts.join(" ")}`);
+  return url.toString();
+}
+
 // Oldest known-standing house stock in this dataset's search area is well
 // after 1800; the +1 headroom covers off-the-plan listings advertising next
 // year's completion. Wide enough to never reject a real answer, narrow enough

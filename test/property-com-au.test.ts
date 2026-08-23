@@ -9,6 +9,7 @@ import {
   sanitizePropertyComAuUrl,
   sanitizeYearBuilt,
   isValidPropertyComAuUrl,
+  propertyComAuSearchUrl,
 } from "../src/lib/property-com-au";
 
 const REAL_URL = "https://www.property.com.au/vic/point-cook-3030/villiers-dr/20-pid-9472083/";
@@ -127,5 +128,57 @@ assert.equal(sanitizeYearBuilt(CURRENT_YEAR + 2), undefined, "currentYear+2 is o
 
 assert.equal(sanitizeYearBuilt(null), null, "explicit null is an explicit clear");
 assert.equal(sanitizeYearBuilt(undefined), undefined, "undefined means not sent");
+
+// --- propertyComAuSearchUrl (render-path fallback when there's no stored
+// property.com.au URL — true for every row on the live app today) ----------
+
+{
+  const url = propertyComAuSearchUrl("20 Villiers Dr", "Point Cook", "VIC", "3030");
+  assert.ok(url !== undefined, "a full address produces a search URL");
+  const parsed = new URL(url as string);
+  assert.equal(parsed.protocol, "https:", "always https");
+  assert.equal(parsed.hostname, "www.google.com", "always google.com — content can't steer the destination");
+  assert.equal(parsed.pathname, "/search");
+  assert.equal(
+    parsed.searchParams.get("q"),
+    "site:property.com.au 20 Villiers Dr Point Cook VIC 3030",
+    "query is the site-scoped search text, verbatim once decoded",
+  );
+}
+
+assert.equal(
+  propertyComAuSearchUrl(null, null, null, null),
+  undefined,
+  "no usable address text at all -> undefined, so the caller can omit the row",
+);
+assert.equal(
+  propertyComAuSearchUrl("", "  ", null, undefined),
+  undefined,
+  "blank/whitespace-only fields count as no usable text",
+);
+assert.equal(
+  propertyComAuSearchUrl(null, "Point Cook", null, null),
+  "https://www.google.com/search?q=site%3Aproperty.com.au+Point+Cook",
+  "a single usable field is still enough to build a search",
+);
+
+// Hostile address content must produce a harmless search, not escape the
+// google.com/search destination or break the URL.
+{
+  const hostile = propertyComAuSearchUrl(
+    '20 Villiers Dr & <script>#foo?javascript:alert(1)\nnewline"quote',
+    "Point Cook",
+    "VIC",
+    "3030",
+  );
+  const parsed = new URL(hostile as string);
+  assert.equal(parsed.protocol, "https:", "hostile address text can't change the protocol");
+  assert.equal(parsed.hostname, "www.google.com", "hostile address text can't change the destination host");
+  assert.equal(parsed.pathname, "/search", "hostile address text can't change the path");
+  assert.ok(
+    parsed.searchParams.get("q")?.includes("javascript:alert(1)"),
+    "the hostile text survives only as inert, percent-decoded query text",
+  );
+}
 
 console.log("✓ property-com-au.test: all assertions passed");

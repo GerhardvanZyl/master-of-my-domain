@@ -25,3 +25,13 @@ falls inside the cited range, not just near it. Don't accept "close enough withi
 the right function neighbourhood" — tighten to the actual span of the thing being
 described. See [[load_ts_nul_bytes]] for the one file in this repo where a plain
 `grep -n` silently returns nothing and `-a` is needed instead.
+
+Recurred in `pin-rank-scale-and-pca-search-link.md` (2026-08-23): three citations
+of a corrected `MapView.tsx` comment all read `:150-152`, off by exactly one line
+from the comment's real span (`151-153`) — consistent within the document (same
+wrong number reused, not three independent typos), so a single stale grep result
+got copy-pasted rather than re-verified per citation. Also caught a range that
+started one blank line too early (`pin-scale.test.ts:47-66` vs the real `48-66`)
+and one that ended short of the block's closing brace (`ui.test.ts:1745-1771` vs
+`1745-1774`), cutting off before the assertions the prose actually described.
+Check the *end* of a range against the closing brace/paren, not just the start.

@@ -177,3 +177,41 @@ one item where a reasonable reviewer could land the other way. Recorded so it is
 not re-argued every time a test file is added: **adding a clause to that line is
 never a line-length finding.** Splitting the runner into a script file would be
 a real change with its own justification, not a style fix.
+
+## The tree-snapshot integrity check always fails on `data/app.db`
+
+**Owning lane:** none — this is the lead's Phase 3/4 procedure.
+**Recorded:** 2026-08-23, run `20260823-1500-fix-pin-scale-and-pca-link`
+
+`dev-loop`'s integrity check compares a content digest of the working tree taken
+before reviewers spawn against one taken after they drain, to prove no reviewer
+wrote to the code it was reviewing.
+
+**It will fail every round in which any reviewer is given a validation command
+to run.** `src/db/client.ts` applies `migrateColumns()` on every connection open
+and `DB_PATH` defaults to `./data/app.db`, so `npm test` and `npm run build`
+necessarily rewrite the tracked 11.6MB database — see the first entry in this
+file. The digest cannot distinguish that from a reviewer editing source.
+
+Observed: 4 lanes, all given `npm test` / `npm run build`, digest moved
+`9a76841… -> cedc2fb…`, delta was exactly `data/app.db` and no source file.
+
+**Procedure.** Do not skip the check, and do not exclude `data/app.db` from the
+snapshot — a reviewer that corrupted the DB is worth knowing about. Instead,
+when it fails:
+
+1. `git diff --stat <before> <after>` — **name the changed files before
+   concluding anything.**
+2. If the only entry is `data/app.db`, restore it and retake the digest:
+   `rm -f data/app.db-wal data/app.db-shm && git checkout -- data/app.db`
+   The sidecars must go first, or SQLite replays the discarded writes back.
+3. If it now matches the Phase 3 value, no source file moved and the findings
+   stand. Record both digests in `triage.md`.
+4. If **any** other path appears in step 1, or the digest still differs after
+   the restore, follow the real recovery path in `tree-snapshot.md`.
+
+The trap this entry exists to prevent is step 1 being skipped: a lead who
+learns "the integrity check always fails on the DB" and stops reading the file
+list will one day wave through a round where a reviewer really did edit source.
+The failure is expected; **which files moved** is the thing that is never
+assumed.
