@@ -244,3 +244,22 @@ decision reserved for the user.
 Do not raise the duplication as a finding while that constraint holds. If the
 user later authorises a destructive write path, the invariant belongs in one
 place and the three producers collapse to candidate selection.
+## Scraper adapter tests use real captured payloads as golden fixtures
+
+Recorded: 2026-08-31 (run `2026-08-31-rea-source`, Tests lane, rejected Major).
+
+Adapter tests under `test/` assert against payloads captured from real listing
+pages (`test/fixtures/*.json`), with exact expected values. A reviewer will
+correctly observe that this couples the test to one capture and that a genuine
+markup change breaks it. That is intended and is not a finding.
+
+Rationale: the realestate.com.au adapter was completely non-functional from the
+day it was written — it read a window global the site no longer populates — and
+produced zero rows while its test passed, because that test used a hand-written
+payload shaped like nothing the site serves. For a scraper, a test that keeps
+passing when the upstream markup changes is worthless; the break *is* the
+signal that a re-capture is due.
+
+Synthetic payloads remain the right tool for logic variation (parsing branches,
+edge cases, degradation paths) and adapters carry both. Do not raise fixture
+coupling, "brittleness", or over-fitting against a golden capture again.

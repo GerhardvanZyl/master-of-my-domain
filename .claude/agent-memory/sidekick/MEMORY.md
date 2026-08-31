@@ -21,3 +21,5 @@
 - [React hydration comment markers](react_hydration_comment_markers.md) — SSR inserts `<!-- -->` between adjacent JSX children; breaks a regex written straight from JSX source, verify against a running instance
 - [scripts/ dir untested](scripts_dir_untested.md) — no test/ file imports scripts/, package.json test never references it; unconditional main() makes import-time testing unsafe without a harness
 - [Same-run baseline pitfall](same_run_baseline_pitfall.md) — an additive-response test must hardcode expected types, not diff against a same-run "before" call through the same code
+- [REA adapter test regression technique](rea_adapter_test_regression_technique.md) — hero/cover reordering needs 2+ candidates in the test or the pre-fix failure is unprovable
+- [Adapter test fixed vs relative dates](adapter_test_fixed_vs_relative_dates.md) — fixture nextInspection date stays a frozen literal; cutoff-boundary tests must use Date.now() offsets

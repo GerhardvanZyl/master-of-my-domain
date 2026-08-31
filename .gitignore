@@ -52,3 +52,6 @@ data/media/
 
 # Image cache pulled from the live app by scripts/_tag-remote.ts (regenerable)
 .remote-imgs/
+
+# dev-loop review run artifacts (findings, logs, scratch worktrees)
+.claude/review/runs/
