@@ -215,3 +215,32 @@ learns "the integrity check always fails on the DB" and stops reading the file
 list will one day wave through a round where a reviewer really did edit source.
 The failure is expected; **which files moved** is the thing that is never
 assumed.
+
+---
+
+## The "one image per property per group" invariant has no owner at the write boundary
+
+**Owning lane:** architecture (raised as `arch-002`)
+**Recorded:** 2026-08-23, run `20260823-1800-fix-tagging-round-defects`
+
+`addGroupMember` (`src/db/queries/tags.ts:203-216`) is `INSERT OR IGNORE` keyed on
+`(group_id, image_id)`. It enforces image uniqueness and nothing else. The
+per-property rule — one representative image per property per group, because the
+rooms view renders one column per property — is therefore re-implemented
+independently by every producer:
+
+- `scripts/_group-topup.ts:20-29` — SQL `NOT IN`
+- `scripts/_build-groups.ts:11-16,27-32` — an `already` set plus a `pickedProp` set
+- `scripts/_groups-from-tags.mjs` — an `already` set read over HTTP
+
+**This is examined and accepted, not an oversight.** Moving the invariant next to
+`addGroupMember` would make the only writer of `similarity_group_members`
+destructive — it would have to delete a property's other members before
+inserting — and that writer is reachable from `POST /api/batch`, which is
+**deliberately unauthenticated** on the LAN (`CLAUDE.md`: "a token here would
+lock one of two doors"). Adding a delete path there is a security-posture
+decision reserved for the user.
+
+Do not raise the duplication as a finding while that constraint holds. If the
+user later authorises a destructive write path, the invariant belongs in one
+place and the three producers collapse to candidate selection.

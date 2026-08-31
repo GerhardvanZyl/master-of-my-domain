@@ -43,11 +43,29 @@ export async function fetchFlightFlat(url) {
  * algorithm as scripts/_audit-hero-floorplan.mjs's propsOf(), generalised to
  * an arbitrary key so it works for both the page-level "properties" array and
  * the per-property "images" array.
+ *
+ * `opts.throwOnMissing` distinguishes "the parse did not produce a trustworthy
+ * array" from "anchor present, array genuinely empty" — both silently returned
+ * `[]` before, which is exactly the ambiguity scripts/_groups-from-tags.mjs's
+ * fail-closed guard needs to resolve (arch-003, round 2; tech-005/arch-005,
+ * round 3). Two distinct failure shapes count as "not trustworthy" and both
+ * throw under the option: the anchor is absent entirely (wrong key,
+ * unreachable flight prop), or the anchor is present but the bracket matcher
+ * never finds its close before `flat` ends (a response truncated mid-array).
+ * A live check confirmed `/rooms?group=<id>` serialises the `"columns":[]`
+ * anchor even for an empty group, so a caller that needs "did parsing
+ * actually work" should ask this function, not compare unrelated counts from
+ * another query layer.
  */
-export function extractArray(flat, key) {
+export function extractArray(flat, key, opts = {}) {
   const anchor = `"${key}":[`;
   const i = flat.indexOf(anchor);
-  if (i < 0) return [];
+  if (i < 0) {
+    if (opts.throwOnMissing) {
+      throw new Error(`extractArray: anchor ${JSON.stringify(anchor)} not found in flight stream`);
+    }
+    return [];
+  }
   const start = flat.indexOf("[", i);
   let d = 0,
     end = -1,
@@ -71,7 +89,14 @@ export function extractArray(flat, key) {
       }
     }
   }
-  if (end < 0) return [];
+  if (end < 0) {
+    if (opts.throwOnMissing) {
+      throw new Error(
+        `extractArray: anchor ${JSON.stringify(anchor)} found but the array never closed (truncated response)`,
+      );
+    }
+    return [];
+  }
   const arr = JSON.parse(flat.slice(start, end + 1));
   // React Flight doubles a leading "$" in string values (see
   // _audit-hero-floorplan.mjs) — undo it on every top-level string field.

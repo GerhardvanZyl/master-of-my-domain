@@ -18,3 +18,6 @@
 - [UI test stale behavior assertions](ui_test_stale_behavior_assertions.md) — a behavior-changing brief can leave a test/ui.test.ts test asserting the OLD behavior; grep the feature name there too, not just unit tests
 - [app.db restore under git lock](app_db_restore_under_git_lock.md) — `git show HEAD:data/app.db` + `cp` restores app.db without needing `.git/index.lock`, safe when a concurrent agent holds it
 - [Stale local transit not synced](stale_local_transit_not_synced.md) — _transit-estimate.ts can self-match a row against its own already-measured local value; check before pushing a "~0 m away" estimate
+- [React hydration comment markers](react_hydration_comment_markers.md) — SSR inserts `<!-- -->` between adjacent JSX children; breaks a regex written straight from JSX source, verify against a running instance
+- [scripts/ dir untested](scripts_dir_untested.md) — no test/ file imports scripts/, package.json test never references it; unconditional main() makes import-time testing unsafe without a harness
+- [Same-run baseline pitfall](same_run_baseline_pitfall.md) — an additive-response test must hardcode expected types, not diff against a same-run "before" call through the same code

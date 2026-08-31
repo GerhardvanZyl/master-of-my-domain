@@ -263,6 +263,126 @@ async function main() {
     "a price change produces exactly one new observation",
   );
 
+  // --- GET /api/batch: untaggedImages (additive coverage key, change 3) ---
+  const getCoverage = async (): Promise<Json> => {
+    const { GET } = await import("../src/app/api/batch/route");
+    return (await GET()).json() as Promise<Json>;
+  };
+  interface UntaggedImagesSection {
+    images: { imageId: string; propertyId: string; address: string | null; ordinal: number; localPath: string }[];
+    note: string;
+  }
+
+  // Expected shape of every pre-existing key, hardcoded rather than diffed
+  // against a same-run "before" snapshot: a same-run baseline would be
+  // produced by the SAME (possibly regressed) code, so a uniform type change
+  // would pass both sides of that comparison.
+  const baseline = await getCoverage();
+  // Subset of PRE_EXISTING_KEYS this test section never itself changes.
+  // Checked against GROUND_TRUTH below (a direct SQL count, NOT another call
+  // through GET) rather than a same-run baseline -- verified by mutation: a
+  // propertyComAuUrl/yearBuilt swap in the route corrupts BOTH the baseline
+  // call and every later call identically, so baseline-vs-later-call would
+  // never observe a difference and the swap would go undetected. Ground
+  // truth is computed independently of the code under test, so it can't be
+  // corrupted the same way. totalImages/tagged/untagged/byRoom/groups are
+  // excluded: inserting the untagged images below legitimately moves them.
+  const VALUE_STABLE_KEYS = ["ok", "properties", "propertyComAuUrl", "yearBuilt"] as const;
+  const GROUND_TRUTH: Record<(typeof VALUE_STABLE_KEYS)[number], () => unknown> = {
+    ok: () => true,
+    properties: () => count("SELECT COUNT(*) c FROM properties"),
+    propertyComAuUrl: () => count("SELECT COUNT(*) c FROM properties WHERE property_com_au_url IS NOT NULL"),
+    yearBuilt: () => count("SELECT COUNT(*) c FROM properties WHERE year_built IS NOT NULL"),
+  };
+  for (const k of VALUE_STABLE_KEYS) {
+    assert.equal(baseline[k], GROUND_TRUTH[k](), `${k}'s value matches the DB directly, not just its type`);
+  }
+  const EXPECTED_TYPES: Record<string, "boolean" | "number" | "object"> = {
+    ok: "boolean",
+    properties: "number",
+    propertyComAuUrl: "number",
+    yearBuilt: "number",
+    totalImages: "number",
+    tagged: "number",
+    untagged: "number",
+    byRoom: "object",
+    groups: "object", // array is typeof "object"; Array.isArray checked separately below
+  };
+  const PRE_EXISTING_KEYS = Object.keys(EXPECTED_TYPES) as (keyof typeof EXPECTED_TYPES)[];
+  for (const k of PRE_EXISTING_KEYS) {
+    assert.ok(k in baseline, `pre-existing key ${k} still present`);
+    assert.equal(typeof baseline[k], EXPECTED_TYPES[k], `pre-existing key ${k} has its documented type`);
+  }
+  assert.ok(Array.isArray(baseline.groups), "groups is still an array");
+
+  const propB = sqlite.prepare("SELECT id FROM properties WHERE listing_url = ?").get(URL_B) as { id: string };
+  const nowU = new Date().toISOString();
+  const insertImage = (id: string, propertyId: string, ordinal: number) =>
+    sqlite
+      .prepare(
+        "INSERT INTO images (id, property_id, source_url, local_path, ordinal, created_at) VALUES (?,?,?,?,?,?)",
+      )
+      .run(id, propertyId, `https://rimh2/x/${id}.jpg`, `images/x/${id}.jpg`, ordinal, nowU);
+
+  // Two ordinary untagged images — no image_tags row at all.
+  insertImage("img_untagged_1", propB.id, 1);
+  insertImage("img_untagged_2", propB.id, 2);
+
+  const covSmall = await getCoverage();
+  for (const k of PRE_EXISTING_KEYS) {
+    assert.equal(
+      typeof covSmall[k],
+      EXPECTED_TYPES[k],
+      `pre-existing key ${k} keeps its documented type (additive, not replaced)`,
+    );
+  }
+  for (const k of VALUE_STABLE_KEYS) {
+    assert.equal(covSmall[k], GROUND_TRUTH[k](), `${k}'s value is unaffected by inserting untagged images`);
+  }
+  const untaggedSmall = sec<UntaggedImagesSection>(covSmall, "untaggedImages");
+  assert.ok(Array.isArray(untaggedSmall.images), "untaggedImages.images is an array");
+  assert.equal(typeof untaggedSmall.note, "string", "untaggedImages.note is a string");
+  assert.equal(untaggedSmall.images.length, 2, "both untagged images returned");
+  assert.deepEqual(
+    untaggedSmall.images.map((im) => im.imageId).sort(),
+    ["img_untagged_1", "img_untagged_2"],
+    "the two new tagless images are exactly the ones listed",
+  );
+  for (const im of untaggedSmall.images) {
+    assert.ok(
+      !("absPath" in im),
+      "absPath must never be exposed over HTTP -- leaks the container's DATA_DIR path to a remote caller",
+    );
+  }
+
+  // Definitional mismatch (hard constraint 3): an image_tags row that EXISTS
+  // but carries a null room_type (what scripts/hero-set.ts:42's hero-only
+  // insert produces) is counted by tagStatus().untagged (room_type IS NULL)
+  // but is NOT "no tag row at all", so listUntaggedImages must not surface
+  // it. This demonstrates the two counts really can diverge, and that `note`
+  // is there to make the gap visible rather than silently under-reporting.
+  insertImage("img_hero_only", propB.id, 3);
+  sqlite
+    .prepare("INSERT INTO image_tags (image_id, notes, tagged_by, tagged_at) VALUES (?, 'hero', 'claude-code', ?)")
+    .run("img_hero_only", nowU);
+
+  const covMismatch = await getCoverage();
+  const untaggedMismatch = sec<UntaggedImagesSection>(covMismatch, "untaggedImages");
+  assert.ok(
+    !untaggedMismatch.images.some((im) => im.imageId === "img_hero_only"),
+    "a row that HAS an image_tags row (even with room_type NULL) is not 'no tag row at all' -- excluded from the list",
+  );
+  assert.equal(
+    untaggedMismatch.images.length,
+    2,
+    "listUntaggedImages is unaffected by the hero-only row: it counts by 'no tag row', not by room_type IS NULL",
+  );
+  assert.ok(
+    (sec<number>(covMismatch, "untagged")) > untaggedMismatch.images.length,
+    "tagStatus().untagged now DIVERGES from untaggedImages.images.length -- exactly the gap `note` exists to explain",
+  );
+  assert.match(untaggedMismatch.note, /untagged/i, "note explains the divergence rather than staying silent about it");
+
   sqlite.close();
   try {
     fs.rmSync(tmp, { recursive: true, force: true });
