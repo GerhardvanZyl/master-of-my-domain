@@ -197,13 +197,23 @@ photos *including its mistakes*, so any threshold between 0.70 and 0.95 gives a
 byte-identical result. Don't tune one and don't benchmark to pick one. Agreement
 with hand tags is ~93%; accept that and correct the rest in the app.
 
-Non-hero tags go out with `ifAbsent: true`, so re-running the pass can never
-clobber a hand correction — a top-up that re-classifies everything is harmless
-and reports `written: 0, skipped: <n>`.
+Non-hero tags go out with `ifAbsent: true` — with one exception: the floorplan
+mark (below) may overwrite an already-tagged image, but only when its existing
+tag is machine-written (no tag row, or `local-vlm`/`migration`/`rule`); a
+hand-curated tag (`claude-code`, `domain-cover`, `user`, ...) is never
+clobbered. A re-run now **skips** any image that already carries a room type
+(other than the last-position/hero exemption above), so it no longer
+reclassifies everything — expect `written`/`skipped` to reflect how many
+images were actually new or eligible for re-examination, not the whole photo
+count.
 
 `notes='floorplan'` beats `pickFloorplan`'s shape heuristic, which misses
 floorplans rendered at 4:3, 1.29, 1.47 and even 3:2. `_tag-remote.ts` applies it
-automatically to a last-position photo the model called "other".
+automatically to a last-position photo the model called "other" — including an
+already-tagged one, since that's the only slot the mark can ever land on; it
+preserves that image's existing room type rather than overwriting it with the
+fresh (coarser) verdict. For floorplans on images `_tag-remote.ts` never
+revisits, `scripts/_recover-floorplans.ts` is the dedicated recovery pass.
 
 Then top up the six comparison groups — one representative image per property
 per group, because the app renders one column per property:
@@ -230,8 +240,9 @@ because the ordering constraint is the part that bites.
 `setImageTagIfAbsent` (`ON CONFLICT DO NOTHING`), so it would skip that row and
 leave the cover photo permanently untagged. Tag first, then set heroes — which
 is why `_tag-remote.ts` classifies the cover photo like any other and merely
-overwrites its `notes` with `hero` (`ifAbsent: false` for that one row, `true`
-for every other, so a hand correction is never clobbered).
+overwrites its `notes` with `hero` (`ifAbsent: false` for that one row — see
+step 4 for the full `ifAbsent` rule, including the floorplan mark's own
+conditional overwrite).
 
 Match the full basename, falling back to the `<listingId>_<photoIndex>_` prefix
 (relisted properties' covers carry a different listingId than our external_id).

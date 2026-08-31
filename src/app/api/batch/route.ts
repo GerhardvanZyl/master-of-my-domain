@@ -11,6 +11,7 @@ import {
   addGroupMember,
   isRoomType,
   tagStatus,
+  listUntaggedImages,
 } from "@/db/queries/tags";
 import { markSold, markWithdrawn, recordPriceObservations } from "@/db/queries/status";
 
@@ -202,11 +203,31 @@ export async function GET() {
     .from(properties)
     .where(isNotNull(properties.yearBuilt))
     .all().length;
+
+  // No route under /api enumerates raw image rows, which makes the `untagged`
+  // count below undiscoverable — there's no way to go from "19 untagged" to
+  // which 19. listUntaggedImages fills that gap. absPath is stripped: it
+  // resolves against the container's DATA_DIR and leaks that path to a
+  // caller for no benefit (it's only useful to the local Read tool).
+  const untaggedImages = listUntaggedImages().map(({ absPath: _absPath, ...rest }) => rest);
+
   return NextResponse.json({
     ok: true,
     properties: counts,
     propertyComAuUrl,
     yearBuilt,
     ...tagStatus(),
+    // `tagStatus().untagged` above counts by room_type IS NULL, which also
+    // matches an image_tags row that exists but has a null room_type (e.g.
+    // the hero-only insert at scripts/hero-set.ts:42). listUntaggedImages
+    // filters on "no image_tags row at all", so this list can be SHORTER
+    // than `untagged` — `note` makes that gap visible instead of letting a
+    // caller assume this is the full set.
+    untaggedImages: {
+      images: untaggedImages,
+      note:
+        "May be shorter than `untagged` above: `untagged` also counts image_tags rows with a null room_type " +
+        "(e.g. a hero-only row), which carry no entry here because they aren't tagless.",
+    },
   });
 }
