@@ -23,3 +23,6 @@
 - [Same-run baseline pitfall](same_run_baseline_pitfall.md) — an additive-response test must hardcode expected types, not diff against a same-run "before" call through the same code
 - [REA adapter test regression technique](rea_adapter_test_regression_technique.md) — hero/cover reordering needs 2+ candidates in the test or the pre-fix failure is unprovable
 - [Adapter test fixed vs relative dates](adapter_test_fixed_vs_relative_dates.md) — fixture nextInspection date stays a frozen literal; cutoff-boundary tests must use Date.now() offsets
+- [Nominatim confidence gate verified](nominatim_confidence_gate_verified.md) — live-checked: house-level hits carry place_rank 30 + type "house" + addresstype "place" together, not as alternatives
+- [Transient vs permanent cache miss](transient_vs_permanent_cache_miss.md) — curl-retry failure must never share a cache shape with a genuine miss in a consult-before-request cache; geocode-missing.ts's fix pattern
+- [Plain-assert test first-failure-only](plain_assert_test_first_failure_only.md) — test/*.test.ts scripts abort at the first assert; isolate assertions in a scratch file to verify each new one fails pre-fix
