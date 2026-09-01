@@ -48,6 +48,14 @@
       if (i.alt) imgAlts[i.src] = i.alt;
     }
     const og = document.querySelector('meta[property="og:title"]');
+    const ogDescEl = document.querySelector('meta[property="og:description"]');
+    const ogImageEl = document.querySelector('meta[property="og:image"]');
+    // Same read + cap as extract.ts's readRawFromPage — kept in parity so the
+    // extension and Playwright CLI paths normalize identically.
+    const bodyText = (document.body ? document.body.innerText : "").slice(0, 8000);
+    const ariaLabels = [...document.querySelectorAll("[aria-label]")]
+      .map((e) => e.getAttribute("aria-label") || "")
+      .filter(Boolean);
     return {
       url: location.href,
       nextData,
@@ -57,6 +65,10 @@
       imgAlts,
       title: document.title,
       ogTitle: og ? og.getAttribute("content") : undefined,
+      ogDescription: ogDescEl ? ogDescEl.getAttribute("content") : undefined,
+      ogImage: ogImageEl ? ogImageEl.getAttribute("content") : undefined,
+      bodyText,
+      ariaLabels,
     };
   }
 

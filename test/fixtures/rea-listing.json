@@ -1,0 +1,130 @@
+{
+ "url": "https://www.realestate.com.au/property-house-vic-point+cook-152196328",
+ "jsonLd": [
+  {
+   "@context": "https://schema.org",
+   "@type": "Residence",
+   "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Point Cook",
+    "addressRegion": "VIC",
+    "postalCode": "3030",
+    "streetAddress": "46 Astoria Drive",
+    "addressCountry": "AU"
+   },
+   "name": "46 Astoria Drive"
+  },
+  {
+   "@context": "https://schema.org",
+   "@type": "Event",
+   "name": "Inspection: 46 Astoria Drive, Point Cook, VIC 3030",
+   "startDate": "2026-09-05T12:00:00+10:00",
+   "endDate": "2026-09-05T12:30:00+10:00",
+   "eventStatus": "https://schema.org/EventScheduled",
+   "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode",
+   "location": {
+    "@type": "Place",
+    "name": "46 Astoria Drive, Point Cook, VIC 3030",
+    "address": {
+     "@type": "PostalAddress",
+     "streetAddress": "46 Astoria Drive",
+     "addressLocality": "Point Cook",
+     "addressRegion": "VIC",
+     "postalCode": "3030",
+     "addressCountry": "AU"
+    }
+   },
+   "image": [
+    "https://i2.au.reastatic.net/800x600/7adb91e2241e229e7cab6676b0b7a0568592eaae40e0f04b412919938e0acfe9/image.png"
+   ],
+   "description": "This is a scheduled inspection to view the 6 bedroom house at 46 Astoria Drive, Point Cook, VIC 3030.",
+   "organizer": {
+    "@type": "Organization",
+    "name": "Harcourts Settle",
+    "url": "https://www.realestate.com.au/agency/harcourts-settle-GBAMTC"
+   },
+   "url": "https://www.realestate.com.au/property-house-vic-point+cook-152196328"
+  },
+  {
+   "@context": "https://schema.org",
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Buy",
+     "item": "https://www.realestate.com.au/buy/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "VIC",
+     "item": "https://www.realestate.com.au/buy/in-vic/list-1"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Point Cook",
+     "item": "https://www.realestate.com.au/buy/in-point+cook,+vic+3030/list-1"
+    },
+    {
+     "@type": "ListItem",
+     "position": 4,
+     "name": "House",
+     "item": "https://www.realestate.com.au/buy/property-house-in-point+cook,+vic+3030/list-1"
+    },
+    {
+     "@type": "ListItem",
+     "position": 5,
+     "name": "46 Astoria Drive",
+     "item": "https://www.realestate.com.au/property-house-vic-point+cook-152196328"
+    }
+   ]
+  }
+ ],
+ "globals": {
+  "resi-property_listing-experience-web": {}
+ },
+ "imgUrls": [
+  "https://i2.au.reastatic.net/340x64/1b00d61af1d87e42019c606c158f86e8fd8389e9b5ae8e15a96ae6a1248be300/logo.jpg",
+  "https://i2.au.reastatic.net/800x600/7adb91e2241e229e7cab6676b0b7a0568592eaae40e0f04b412919938e0acfe9/image.png",
+  "https://argonaut.au.reastatic.net/resi-property/prod/listing-experience-web/placeholder-d012bfd7d088c7ee475b.svg",
+  "https://argonaut.au.reastatic.net/resi-property/prod/listing-experience-web/DoraExplorer-fbce6a0e2b0f515e4425.svg",
+  "https://i2.au.reastatic.net/200x200-crop,gravity=north/e9e22b5e9c53b8952e6459071297fdc581edaaeb32351989907d97456d2d98f8/main.jpg",
+  "https://i2.au.reastatic.net/310x175/a60d4a866a2be374c96cf41c25ed56bbd97f94c1778eb78a0e45eddaad7602ff/image.jpg",
+  "https://i2.au.reastatic.net/310x175/c2301f2304d48334206948ffad872b44dea34ec147a43a93acebd0b597a490b8/image.jpg",
+  "https://i2.au.reastatic.net/310x175/90a2e5551c787a602db971fc7ddb9a7e8feb64c281c321de065c01544765a9ae/image.jpg"
+ ],
+ "imgAlts": {},
+ "title": "46 Astoria Drive, Point Cook, Vic 3030 - House for Sale - realestate.com.au",
+ "ogTitle": "46 Astoria Drive, Point Cook, Vic 3030",
+ "ogDescription": "Presenting this generously sized double-storey family home, perfectly positioned in the highly sought-after Upper Point Cook precinct. Offering an exceptional combination of space, functionality and convenience, this impressive residence is ideal for growing families, multi-generational households or savvy investors seeking a quality property in a desirable lifestyle location.<br/><br/>Boasting si",
+ "bodyText": "Menu\nBuy\nVIC\nPoint Cook\nHouse\n46 Astoria Drive\n46 Astoria Drive, Point Cook, Vic 3030\nShare\nSave\n\n6\n\n3\n\n2\n\n•\n\nHouse\n\n$820,000 - $902,000\nPrice guide details\n\nInspection Sat 5 Sep 12:00 pm View all\n\nAdded 2 hours ago\n+9\n\nThis property is in budget\n\nMonthly repayments\n\n$3,431\n\nCalculate\n\nYour travel time\n\nProperty highlights\nAI-generated from property description. Highlights may differ from the actual property. Verify highlights against the property description and in person.\nModern open-plan kitchen\n\nStainless-steel appliances with integrated meals and living area\n\nYear-round climate control\n\nDucted heating and evaporative cooling throughout the home\n\nPrime lifestyle location\n\nMinutes to Point Cook Town Centre, freeway access, and schools\n\nWas this helpful?\nSpacious Family Home in Upper Point Cook\n46 ASTORIA DRIVE, POINT COOK • DATE PUBLISHED: 31 AUG 2026\n\nPresenting this generously sized",
+ "ariaLabels": [
+  "Collections",
+  "Notifications",
+  "My account",
+  ", opens in a new tab",
+  "breadcrumb",
+  "Share listing",
+  "Save property",
+  "House  with 6 bedrooms  3 bathrooms 2 car spaces",
+  "6 bedrooms",
+  "3 bathrooms",
+  "2 car spaces",
+  "Preview property images, 46 Astoria Drive, Point Cook, Vic 3030",
+  "10 photos available",
+  "floorplans available",
+  "external link videos available",
+  "Preview property floorplan",
+  "See property video",
+  "Preview property image 2 of 10",
+  "Expand to an interactive map",
+  "More information",
+  "Mark as helpful",
+  "Mark as not helpful",
+  "floorplan",
+  "video",
+  "videos available"
+ ]
+}

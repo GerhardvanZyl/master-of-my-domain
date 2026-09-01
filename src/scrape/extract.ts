@@ -121,10 +121,13 @@ export async function readRawFromPage(
   url: string,
 ): Promise<RawPageData> {
   const title = (await page.title().catch(() => "")) || "";
+  // Single body.innerText read, capped at ~8000 chars: wall detection only
+  // needs the first few hundred, but REA's price/inspection text sits further
+  // down, so widen the one read and reuse it rather than reading the body twice.
   const bodyText = await page
-    .$eval("body", (el) => (el as HTMLElement).innerText.slice(0, 400))
+    .$eval("body", (el) => (el as HTMLElement).innerText.slice(0, 8000))
     .catch(() => "");
-  if (WALL_RE.test(`${title}\n${bodyText}`)) {
+  if (WALL_RE.test(`${title}\n${bodyText.slice(0, 400)}`)) {
     throw new ScrapeError(
       `Blocked by anti-bot/consent wall (title: "${title}")`,
       true,
@@ -156,6 +159,17 @@ export async function readRawFromPage(
   const ogTitle = await page
     .$eval('meta[property="og:title"]', (el) => el.getAttribute("content"))
     .catch(() => null);
+  const ogDescription = await page
+    .$eval('meta[property="og:description"]', (el) => el.getAttribute("content"))
+    .catch(() => null);
+  const ogImage = await page
+    .$eval('meta[property="og:image"]', (el) => el.getAttribute("content"))
+    .catch(() => null);
+  const ariaLabels = await page
+    .$$eval("[aria-label]", (els) =>
+      els.map((e) => e.getAttribute("aria-label") ?? "").filter(Boolean),
+    )
+    .catch(() => [] as string[]);
   return {
     url,
     nextData: nextData ?? undefined,
@@ -165,5 +179,9 @@ export async function readRawFromPage(
     imgAlts,
     title,
     ogTitle: ogTitle ?? undefined,
+    ogDescription: ogDescription ?? undefined,
+    ogImage: ogImage ?? undefined,
+    bodyText,
+    ariaLabels,
   };
 }

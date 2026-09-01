@@ -52,4 +52,12 @@ export interface RawPageData {
   imgAlts?: Record<string, string>;
   title?: string;
   ogTitle?: string;
+  /** og:description meta content, if present. */
+  ogDescription?: string;
+  /** og:image meta content, if present. */
+  ogImage?: string;
+  /** Leading slice of body.innerText — same read used for wall detection. */
+  bodyText?: string;
+  /** Every element's aria-label attribute, in document order. */
+  ariaLabels?: string[];
 }
