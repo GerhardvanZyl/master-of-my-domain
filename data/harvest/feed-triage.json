@@ -1,6 +1,12 @@
 {
  "hnl": [
   {
+   "listingUrl": "https://www.domain.com.au/144-briody-grove-briody-drive-torquay-vic-3228-2021093970",
+   "street": "144 Briody Grove - Briody Drive",
+   "price": "$862,080",
+   "ptype": "New House & Land"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/144-briody-grove-briody-drive-torquay-vic-3228-2021080202",
    "street": "144 Briody Grove - Briody Drive",
    "price": "$881,880",
@@ -46,12 +52,6 @@
    "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989587",
    "street": "149 Briody Grove - Briody Drive",
    "price": "$962,049",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865328",
-   "street": "145 Briody Grove - Briody Drive",
-   "price": "$851,080",
    "ptype": "New House & Land"
   },
   {
@@ -121,6 +121,12 @@
    "ptype": "New House & Land"
   },
   {
+   "listingUrl": "https://www.domain.com.au/145-briody-grove-briody-drive-torquay-vic-3228-2020865328",
+   "street": "145 Briody Grove - Briody Drive",
+   "price": "$851,080",
+   "ptype": "New House & Land"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/568-rosella-road-torquay-vic-3228-2020584815",
    "street": "568 Rosella Road",
    "price": "$897,550",
@@ -175,12 +181,6 @@
    "ptype": "House"
   },
   {
-   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184038",
-   "street": "",
-   "price": "$720,437",
-   "ptype": "House"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184052",
    "street": "",
    "price": "$726,845",
@@ -221,9 +221,27 @@
    "street": "",
    "price": "$732,845",
    "ptype": "House"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2019184038",
+   "street": "",
+   "price": "$720,437",
+   "ptype": "House"
   }
  ],
  "soldish": [
+  {
+   "listingUrl": "https://www.domain.com.au/37-oceanwave-parade-point-cook-vic-3030-2021055143",
+   "street": "37 Oceanwave Parade",
+   "price": "SOLD at Auction!",
+   "tag": "Under offer"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/50-manna-gum-drive-torquay-vic-3228-2019207575",
+   "street": "50 Manna Gum Drive",
+   "price": "Offers Closing 21/9/26 @ 5pm (If not Sold Prior)",
+   "tag": ""
+  },
   {
    "listingUrl": "https://www.domain.com.au/47-yacht-road-point-cook-vic-3030-2019501372",
    "street": "47 Yacht Road",
