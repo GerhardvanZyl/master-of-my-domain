@@ -125,17 +125,25 @@ function parseSummaryAria(ariaLabels: string[]): {
   };
 }
 
-const NON_PRICE_DISPLAY_RE = /Contact Agent|Auction|Offers|Price on [Aa]pplication/;
+const NON_PRICE_DISPLAY_RE =
+  /Contact Agent|Auction|Offers|Price on [Aa]pplication|Under offer/i;
 
 /**
- * First $-anchored run in bodyText is the price display. Repayment-calculator
- * figures ("Monthly repayments $3,431") appear LATER in the text, so
- * first-match — not any-match — is what keeps this correct.
+ * REA prints its own budget calculator futher down every listing page ("Your
+ * monthly budget / Repayments $4,056 / Expenses $5,000"). On a listing that
+ * DOES advertise a price, first-match is enough — the asking price appears
+ * above it. On a listing that does not ("Under offer", "Contact Agent"), the
+ * calculator's monthly figure becomes the first $-run on the page, and
+ * first-match alone stores $4,056 as the asking price. So cut the calculator
+ * section off before looking at all, and let the no-price fallback fire.
  */
+const CALCULATOR_RE = /Your monthly budget|Repayment calculator|Estimated property price/i;
+
 function priceFromBodyText(bodyText: string): string | null {
-  const priceMatch = bodyText.match(/\$[\d,]+(?:\.\d+)?(?:\s*-\s*\$[\d,]+(?:\.\d+)?)?/);
+  const beforeCalculator = bodyText.split(CALCULATOR_RE)[0];
+  const priceMatch = beforeCalculator.match(/\$[\d,]+(?:\.\d+)?(?:\s*-\s*\$[\d,]+(?:\.\d+)?)?/);
   if (priceMatch) return priceMatch[0];
-  const fallback = bodyText.match(NON_PRICE_DISPLAY_RE);
+  const fallback = beforeCalculator.match(NON_PRICE_DISPLAY_RE);
   return fallback ? fallback[0] : null;
 }
 

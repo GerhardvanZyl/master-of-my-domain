@@ -207,6 +207,39 @@ async function main() {
     }
   }
 
+  // --- REA: the price is never the budget calculator's monthly figure ---
+  {
+    // 27 Williams Landing Boulevard, captured 2026-09-02: an "Under offer"
+    // listing that advertises no price, so the first $-run on the whole page
+    // belongs to REA's own repayment calculator. Taking it stored $4,056 as the
+    // asking price on a $800k house.
+    const underOffer = {
+      ...reaAriaPayload(["House with 492m² land size with 4 bedrooms 2 bathrooms 2 car spaces"]),
+      bodyText:
+        "Under offer\n4 2 2 492m² House\nUnder offer\nPrice guide details\n" +
+        "Your monthly budget\nRepayments\n$4,056\nExpenses\n$5,000\nRemaining\n-$56\n",
+    };
+    const { property } = ReaAdapter.normalize(underOffer);
+    assert.equal(
+      property.priceDisplay,
+      "Under offer",
+      "no-price listing falls back to its status, not the calculator's $4,056",
+    );
+    assert.equal(property.priceNumeric, null, "no-price listing has no numeric price");
+  }
+  {
+    // The calculator must not swallow a price that IS advertised — it sits
+    // above the calculator, so first-match within the head still wins.
+    const priced = {
+      ...reaAriaPayload(["House with 4 bedrooms 2 bathrooms 2 car spaces"]),
+      bodyText:
+        "$870,000 - $950,000\n4 2 2 House\n" +
+        "Your monthly budget\nRepayments\n$4,056\n",
+    };
+    const { property } = ReaAdapter.normalize(priced);
+    assert.equal(property.priceDisplay, "$870,000 - $950,000", "advertised price still wins");
+  }
+
   // --- REA: composite aria-label parsing ---
   {
     // No land size, no "with study" interjection.

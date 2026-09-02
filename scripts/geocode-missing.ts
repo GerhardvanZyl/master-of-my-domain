@@ -81,9 +81,21 @@ export function buildQueryAddress(row: Pick<RawRow, "address" | "suburb" | "stat
   const address = row.address?.trim();
   const suburb = row.suburb?.trim();
   if (!address || !suburb) return null;
-  const parts = [address, suburb, row.state?.trim(), row.postcode?.trim(), "Australia"].filter(
-    (p): p is string => !!p,
-  );
+  // Domain stores a street-only address, REA stores the composed
+  // "<street>, <locality>, <region> <postcode>". Appending the parts a row
+  // already carries produced "8 Moorhen Boulevard, Williams Landing, VIC 3027,
+  // Williams Landing, VIC, 3027, Australia" — a doubled string Nominatim
+  // rejects on confidence, and every one of those rejections is cached. So skip
+  // any component the address already spells out.
+  const has = (part?: string | null) =>
+    !!part && new RegExp(`\\b${part.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i").test(address);
+  const parts = [
+    address,
+    has(suburb) ? null : suburb,
+    has(row.state) ? null : row.state?.trim(),
+    has(row.postcode) ? null : row.postcode?.trim(),
+    "Australia",
+  ].filter((p): p is string => !!p);
   return parts.join(", ");
 }
 

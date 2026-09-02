@@ -10,6 +10,39 @@
 // Requires a fresh data/harvest/_snapshot.json (scripts/_snapshot-live.mjs).
 import fs from "node:fs";
 
+/**
+ * Does this Domain price string mean the property actually sold?
+ * Exported shape kept trivial so the self-check below can exercise it.
+ */
+export const isSoldPrice = (price) => /^\s*sold\b/i.test(price || "");
+
+// node scripts/_pass-apply-live.mjs --selftest
+if (process.argv[2] === "--selftest") {
+  const cases = [
+    ["SOLD - $920,000", true],
+    ["SOLD - Price Withheld", true],
+    ["Sold", true],
+    ["sold - $731,000", true],
+    ["Offers Closing 21/9/26 @ 5pm (If not Sold Prior)", false], // the live Torquay listing
+    ["Auction Sat 20/9 (Unless Sold Prior)", false],
+    ["$850,000 - $900,000", false],
+    ["Under Offer", false],
+    ["Contact Agent", false],
+    ["", false],
+  ];
+  let bad = 0;
+  for (const [input, want] of cases) {
+    const got = isSoldPrice(input);
+    if (got !== want) {
+      bad++;
+      console.error(`FAIL ${JSON.stringify(input)} -> ${got}, want ${want}`);
+    }
+  }
+  console.log(bad ? `selftest FAILED (${bad})` : `selftest ok (${cases.length} cases)`);
+  process.exit(bad ? 1 : 0);
+}
+
+
 const name = process.argv[2];
 if (!name) {
   console.error("usage: node scripts/_pass-apply-live.mjs <harvest-name>   # e.g. pass-1");
@@ -50,8 +83,16 @@ for (const [key, v] of Object.entries(raw)) {
 
   // Sold ONLY when the price text says so. "Under contract"/"Under offer" is not
   // a settled sale and marking it sold hides a listing that is still live.
+  //
+  // ANCHORED AT THE START, deliberately. A bare /\bsold\b/ also fires on the
+  // auction idiom "Offers Closing 21/9/26 @ 5pm (If not Sold Prior)" — a LIVE
+  // listing — and marking that sold delists a property still for sale. Every
+  // real sold price Domain serves leads with the word: "SOLD - $920,000",
+  // "SOLD - Price Withheld", or plain "Sold" (47 Yacht Rd, status underOffer).
+  // Failing closed here is the safe direction: a missed sale is caught next
+  // round, a false sale hides a live listing until someone notices.
   const price = v.price || "";
-  if (/\bsold\b/i.test(price)) {
+  if (isSoldPrice(price)) {
     const m = /\$\s*(\d[\d,]*(?:\.\d+)?)\s*([km])?/i.exec(price);
     let n = null;
     if (m) {

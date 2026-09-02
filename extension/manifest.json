@@ -3,7 +3,7 @@
   "name": "Master of my Domain — Capture",
   "version": "1.0.0",
   "description": "Captures Domain/REA listing data from the page you're viewing and sends it to the local Property Compare app.",
-  "host_permissions": ["http://localhost:3225/*"],
+  "host_permissions": ["http://192.168.68.125:3225/*"],
   "background": { "service_worker": "background.js" },
   "content_scripts": [
     {

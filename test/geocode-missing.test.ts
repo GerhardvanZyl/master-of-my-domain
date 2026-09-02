@@ -159,6 +159,21 @@ assert.equal(
   "builds a full query string from address/suburb/state/postcode",
 );
 
+// REA composes "<street>, <locality>, <region> <postcode>" into `address`, so
+// appending suburb/state/postcode again produced a doubled query that Nominatim
+// rejected on confidence — and the rejection was then cached as a permanent miss.
+const composedAddressRow = {
+  address: "8 Moorhen Boulevard, Williams Landing, VIC 3027",
+  suburb: "Williams Landing",
+  state: "VIC",
+  postcode: "3027",
+};
+assert.equal(
+  buildQueryAddress(composedAddressRow),
+  "8 Moorhen Boulevard, Williams Landing, VIC 3027, Australia",
+  "components the address already spells out are not appended a second time",
+);
+
 const noAddressRow = { address: null, suburb: "Point Cook", state: "VIC", postcode: "3030" };
 assert.equal(buildQueryAddress(noAddressRow), null, "a row with no street address is skipped, not geocoded");
 
