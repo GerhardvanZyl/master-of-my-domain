@@ -66,6 +66,38 @@ async function main() {
     assert.equal(img!.roomType, "kitchen", "roomType must be carried through from the DB row, unmodified");
     assert.equal(img!.notes, null, "notes must be carried through from the DB row, unmodified");
     assert.equal(img!.taggedBy, "claude-code", "taggedBy must be carried through from the DB row, unmodified");
+    const { shouldClassifyRea } = await import("../scripts/_tag-remote-rea");
+
+    // --- REA pass: what it will and will not overwrite ---
+    // The only judgement in _tag-remote-rea.ts. Getting it wrong either
+    // re-classifies 900 already-tagged photos for nothing, or silently
+    // overwrites a correction someone made by hand.
+    assert.equal(
+      shouldClassifyRea({ roomType: null, taggedBy: null }),
+      true,
+      "an untagged REA image is classified",
+    );
+    assert.equal(
+      shouldClassifyRea({ roomType: "kitchen", taggedBy: "local-vlm" }),
+      true,
+      "a model tag may be re-classified",
+    );
+    assert.equal(
+      shouldClassifyRea({ roomType: "kitchen", taggedBy: "rule" }),
+      true,
+      "a deterministic rule tag may be re-classified",
+    );
+    assert.equal(
+      shouldClassifyRea({ roomType: "kitchen", taggedBy: "claude-code" }),
+      false,
+      "a hand correction is left alone",
+    );
+    assert.equal(
+      shouldClassifyRea({ roomType: "kitchen", taggedBy: "user" }),
+      false,
+      "the user's own tag is left alone",
+    );
+
     console.log("✓ tag-remote-detect.test: all assertions passed");
   } finally {
     globalThis.fetch = realFetch;
