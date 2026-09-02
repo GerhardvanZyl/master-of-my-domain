@@ -73,29 +73,39 @@ async function main() {
     // re-classifies 900 already-tagged photos for nothing, or silently
     // overwrites a correction someone made by hand.
     assert.equal(
-      shouldClassifyRea({ roomType: null, taggedBy: null }),
+      shouldClassifyRea({ roomType: null, taggedBy: null, notes: null }),
       true,
       "an untagged REA image is classified",
     );
     assert.equal(
-      shouldClassifyRea({ roomType: "kitchen", taggedBy: "local-vlm" }),
-      true,
-      "a model tag may be re-classified",
-    );
-    assert.equal(
-      shouldClassifyRea({ roomType: "kitchen", taggedBy: "rule" }),
-      true,
-      "a deterministic rule tag may be re-classified",
-    );
-    assert.equal(
-      shouldClassifyRea({ roomType: "kitchen", taggedBy: "claude-code" }),
+      shouldClassifyRea({ roomType: "kitchen", taggedBy: "local-vlm", notes: null }),
       false,
-      "a hand correction is left alone",
+      "a model tag is left alone by default — a sweep is a gap-fill, not a re-run",
     );
     assert.equal(
-      shouldClassifyRea({ roomType: "kitchen", taggedBy: "user" }),
+      shouldClassifyRea({ roomType: "kitchen", taggedBy: "rule", notes: null }, true),
+      true,
+      "REDO_MACHINE_TAGS re-classifies a machine tag",
+    );
+    assert.equal(
+      shouldClassifyRea({ roomType: "kitchen", taggedBy: "claude-code", notes: null }, true),
+      false,
+      "a hand correction is left alone even under REDO_MACHINE_TAGS",
+    );
+    assert.equal(
+      shouldClassifyRea({ roomType: "kitchen", taggedBy: "user", notes: null }),
       false,
       "the user's own tag is left alone",
+    );
+    assert.equal(
+      shouldClassifyRea({ roomType: "exterior", taggedBy: "local-vlm", notes: "hero" }),
+      false,
+      "a hero is never re-classified — that would rewrite notes and lose the cover",
+    );
+    assert.equal(
+      shouldClassifyRea({ roomType: "other", taggedBy: "local-vlm", notes: "floorplan" }),
+      false,
+      "a floorplan marker is never re-classified",
     );
 
     console.log("✓ tag-remote-detect.test: all assertions passed");
