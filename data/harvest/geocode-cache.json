@@ -248,5 +248,71 @@
     "hit": true,
     "lat": -37.8619288,
     "lng": 144.7540061
+  },
+  "19 electra drive,, williams landing, vic 3027, australia": {
+    "fetchedAt": "2026-09-03T10:51:50.473Z",
+    "hit": true,
+    "lat": -37.8648661,
+    "lng": 144.7525356
+  },
+  "17 trenchard road, williams landing, vic 3027, australia": {
+    "fetchedAt": "2026-09-03T10:51:52.661Z",
+    "hit": true,
+    "lat": -37.8559604,
+    "lng": 144.7524274
+  },
+  "1 leven way, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-03T10:51:54.865Z",
+    "hit": true,
+    "lat": -37.8774739,
+    "lng": 144.7234317
+  },
+  "22 landing place, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-03T10:51:56.430Z",
+    "hit": true,
+    "lat": -37.9060358,
+    "lng": 144.7246333
+  },
+  "10 hiddick road, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-03T10:51:58.631Z",
+    "hit": true,
+    "lat": -37.9089152,
+    "lng": 144.7675942
+  },
+  "7 fairbridge road, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-03T10:52:00.423Z",
+    "hit": true,
+    "lat": -37.8893535,
+    "lng": 144.7253207
+  },
+  "11 dodson drive, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-03T10:52:01.963Z",
+    "hit": true,
+    "lat": -37.9093102,
+    "lng": 144.7707021
+  },
+  "300 boardwalk boulevard, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-03T10:52:04.355Z",
+    "hit": true,
+    "lat": -37.9037598,
+    "lng": 144.7268324
+  },
+  "11 bennerson street, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-03T10:52:06.575Z",
+    "hit": true,
+    "lat": -37.8862165,
+    "lng": 144.7162927
+  },
+  "15 astoria drive, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-03T10:52:08.955Z",
+    "hit": true,
+    "lat": -37.8866956,
+    "lng": 144.7130208
+  },
+  "13 statesman way, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-03T10:52:10.745Z",
+    "hit": true,
+    "lat": -37.9107597,
+    "lng": 144.7788594
   }
 }
