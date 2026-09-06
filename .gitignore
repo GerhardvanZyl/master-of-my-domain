@@ -55,3 +55,6 @@ data/media/
 
 # dev-loop review run artifacts (findings, logs, scratch worktrees)
 .claude/review/runs/
+
+# graphify knowledge-graph output (regenerable: /graphify)
+graphify-out/
