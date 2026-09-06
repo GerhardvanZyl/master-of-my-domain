@@ -13,6 +13,7 @@ import { DEFAULT_VIBE_CONFIG, loadVibeConfig, vibeScore } from "@/lib/vibes";
 import { useVibeConfig } from "@/lib/use-vibe-config";
 import { SHORTLIST_TAGS, useProfile } from "@/lib/profile";
 import { useDebounced } from "@/lib/useDebounced";
+import { queue, supersede } from "@/lib/outbox";
 import {
   NEW_FOR_MS,
   PRICE_MAX,
@@ -933,11 +934,27 @@ export default function PropertyGrid({
   const setViewedState = useCallback((id: string, current: string | null, value: string) => {
     const next = current === value ? null : value;
     setViewedEdits((prev) => ({ ...prev, [id]: next }));
+    const body = { viewed: next };
     fetch(`/api/properties/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ viewed: next }),
-    }).catch((e) => console.warn("viewed save failed", e));
+      body: JSON.stringify(body),
+    })
+      .then((res) => {
+        // A direct write just confirmed this value — drop any already-queued
+        // job it makes stale, so a later flush can't replay a pre-this-write
+        // value back over it. Still fire-and-forget: nothing here awaits it.
+        if (res.ok) supersede("property", id, body);
+      })
+      .catch(async (e) => {
+        // Unreachable server — park it for SyncStatus to replay. The optimistic
+        // edit above is already the truth; this just makes sure it isn't lost.
+        try {
+          await queue({ kind: "property", propertyId: id, body });
+        } catch (qe) {
+          console.warn("viewed save failed", e, qe);
+        }
+      });
   }, []);
 
   // Rate a property's "vibe" for the active profile straight from its tile.
@@ -949,11 +966,26 @@ export default function PropertyGrid({
       if (!profile) return;
       const next = current === v ? "" : v;
       setVibeEdits((prev) => ({ ...prev, [id]: next }));
+      const body = { profile, vibe: next || null };
       fetch(`/api/properties/${id}/rating`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile, vibe: next || null }),
-      }).catch((e) => console.warn("rating save failed", e));
+        body: JSON.stringify(body),
+      })
+        .then((res) => {
+          // See setViewedState above — drop any queued job this write just
+          // made stale. Still fire-and-forget.
+          if (res.ok) supersede("rating", id, body);
+        })
+        .catch(async (e) => {
+          // Unreachable server — park it for SyncStatus to replay, same as
+          // setViewedState above.
+          try {
+            await queue({ kind: "rating", propertyId: id, body });
+          } catch (qe) {
+            console.warn("rating save failed", e, qe);
+          }
+        });
     },
     [profile],
   );

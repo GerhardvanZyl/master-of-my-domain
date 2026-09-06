@@ -6,7 +6,7 @@ import { allJobs, flush, OUTBOX_EVENT } from "@/lib/outbox";
 
 /**
  * Header pill for offline capture: shows when the server is unreachable and how
- * many notes/photos are still waiting to sync. Tapping it retries now.
+ * many notes/photos/ratings are still waiting to sync. Tapping it retries now.
  *
  * This is also the thing that drives the outbox — it flushes on mount and
  * whenever the browser reports it's back online. Rendered on every page, so
@@ -68,8 +68,8 @@ export default function SyncStatus() {
       disabled={syncing}
       title={
         online
-          ? "Notes and photos saved on this device — tap to sync now"
-          : "No connection. Notes and photos are saved on this device and sync automatically."
+          ? "Notes, photos and ratings saved on this device — tap to sync now"
+          : "No connection. Notes, photos and ratings are saved on this device and sync automatically."
       }
       className={`chip shrink-0 whitespace-nowrap ${
         pending > 0 ? "border-amber bg-amber text-linen" : "border-line bg-white text-mute"

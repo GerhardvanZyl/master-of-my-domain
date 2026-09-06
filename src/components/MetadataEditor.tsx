@@ -47,6 +47,7 @@ export default function MetadataEditor({
   const [v, setV] = useState<MetadataValues>(initial);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const num = (key: keyof MetadataValues) =>
     (val: string) =>
@@ -58,16 +59,30 @@ export default function MetadataEditor({
   async function save() {
     setSaving(true);
     setSaved(false);
-    await fetch(`/api/properties/${propertyId}/metadata`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      // Send everything; state mirrors current values, so untouched fields
-      // re-write themselves. null → "" so the API's coerce() clears to NULL.
-      body: JSON.stringify(
-        Object.fromEntries(Object.entries(v).map(([k, val]) => [k, val ?? ""])),
-      ),
-    });
+    setFailed(false);
+    let res: Response;
+    try {
+      res = await fetch(`/api/properties/${propertyId}/metadata`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        // Send everything; state mirrors current values, so untouched fields
+        // re-write themselves. null → "" so the API's coerce() clears to NULL.
+        body: JSON.stringify(
+          Object.fromEntries(Object.entries(v).map(([k, val]) => [k, val ?? ""])),
+        ),
+      });
+    } catch {
+      // No outbox here — this is a desktop correction form, not inspection
+      // capture. Just stop it claiming success when the write didn't happen.
+      setSaving(false);
+      setFailed(true);
+      return;
+    }
     setSaving(false);
+    if (!res.ok) {
+      setFailed(true);
+      return;
+    }
     setSaved(true);
     router.refresh();
   }
@@ -131,6 +146,9 @@ export default function MetadataEditor({
         </button>
         {saved && !saving && (
           <span className="text-xs text-green-600">Saved ✓</span>
+        )}
+        {failed && !saving && (
+          <span className="text-xs text-red-600">Save failed</span>
         )}
       </div>
     </details>

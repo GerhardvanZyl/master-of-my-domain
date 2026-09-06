@@ -1,6 +1,7 @@
 /**
- * Offline outbox: notes and photos captured with no connection are parked in
- * IndexedDB and replayed against the API once the server is reachable again.
+ * Offline outbox: notes, photos, ratings and property edits made with no
+ * connection are parked in IndexedDB and replayed against the API once the
+ * server is reachable again.
  *
  * ponytail: raw IndexedDB, one auto-increment store, no `idb` dependency and no
  * Background Sync API — Background Sync doesn't exist on iOS Safari, which is
@@ -12,7 +13,9 @@
 
 export type Job =
   | { kind: "notes"; propertyId: string; text: string }
-  | { kind: "media"; propertyId: string; name: string; type: string; blob: Blob };
+  | { kind: "media"; propertyId: string; name: string; type: string; blob: Blob }
+  | { kind: "rating"; propertyId: string; body: Record<string, unknown> }
+  | { kind: "property"; propertyId: string; body: Record<string, unknown> };
 
 /** A job as stored, with the key IndexedDB assigned it. */
 export type StoredJob = Job & { id: number; queuedAt: string };
@@ -34,6 +37,18 @@ export function jobRequest(job: Job): { url: string; init: RequestInit } {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ domainNotes: job.text }),
+      },
+    };
+  }
+  if (job.kind === "rating" || job.kind === "property") {
+    // URL is built here from propertyId + kind, never stored in the job — a
+    // stored URL would let a queued job replay against an arbitrary endpoint.
+    return {
+      url: job.kind === "rating" ? `/api/properties/${id}/rating` : `/api/properties/${id}`,
+      init: {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(job.body),
       },
     };
   }
@@ -117,6 +132,51 @@ export async function queue(job: Job): Promise<void> {
 
 async function remove(id: number): Promise<void> {
   await tx("readwrite", (s) => s.delete(id));
+}
+
+/**
+ * True if a queued `job` is made stale by a just-succeeded write of `body` for
+ * the same `kind`/`propertyId` — pure and exported so the matching rule is
+ * unit-testable without IndexedDB.
+ *
+ * Key-scoped, not kind-scoped: a queued job only drops if it shares at least
+ * one VALUE key with the successful write (e.g. both touch `kitchen`) — a
+ * queued `look` edit must survive a successful `kitchen` write. `profile` is
+ * an identity field, not a value one, so it's excluded from that key overlap
+ * on both sides, but for `rating` jobs it still gates matching on its own: a
+ * queued job for one profile must never be dropped by another profile's
+ * write, since the profile is switchable in the header on the same device.
+ */
+export function isSuperseded(
+  job: { kind: string; propertyId: string; body?: Record<string, unknown> },
+  kind: "rating" | "property",
+  propertyId: string,
+  body: Record<string, unknown>,
+): boolean {
+  if (job.kind !== kind || job.propertyId !== propertyId || !job.body) return false;
+  if (kind === "rating" && job.body.profile !== body.profile) return false;
+  return Object.keys(job.body).some((k) => k !== "profile" && k in body);
+}
+
+/**
+ * Drop already-queued `rating`/`property` jobs that a just-succeeded direct
+ * write has made stale (see `isSuperseded`), so a stale queued job can't
+ * later replay over a newer, server-confirmed value. Best-effort, like
+ * `allJobs()`: a supersede that can't run (IndexedDB failure) must not break
+ * the write path it hangs off.
+ */
+export async function supersede(
+  kind: "rating" | "property",
+  propertyId: string,
+  body: Record<string, unknown>,
+): Promise<void> {
+  try {
+    const stale = (await allJobs()).filter((j) => isSuperseded(j, kind, propertyId, body));
+    for (const job of stale) await remove(job.id);
+    if (stale.length > 0) announce();
+  } catch {
+    // best-effort — see allJobs()'s comment above.
+  }
 }
 
 /** Photos still waiting to upload for one property, oldest first. */
