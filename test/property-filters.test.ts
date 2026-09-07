@@ -76,6 +76,8 @@ function mkProp(overrides: Partial<PropertyListItem> = {}): PropertyListItem {
     viewed: null,
     pros: null,
     cons: null,
+    watchlisted: null,
+    domainShortlisted: null,
     propertyComAuUrl: null,
     yearBuilt: null,
     scrapedAt: "2026-01-01T00:00:00.000Z",
@@ -103,6 +105,7 @@ function ctx(overrides: Partial<FilterCtx> = {}): FilterCtx {
     shortlistOf: (p) => p.shortlistTag,
     viewedOf: (p) => p.viewed,
     isRated: () => false,
+    watchedOf: (p) => p.watchlisted === 1,
     ...overrides,
   };
 }
@@ -316,6 +319,36 @@ function ctx(overrides: Partial<FilterCtx> = {}): FilterCtx {
     [notThisWeekend.id],
     "ex keeps ONLY properties NOT inspecting this weekend — the opposite of in, not a no-op",
   );
+}
+
+// --- watchFilter tri-state: off / in / ex -------------------------------------
+{
+  const watched = mkProp({ watchlisted: 1 });
+  const unwatched = mkProp({ watchlisted: null });
+  const props = [watched, unwatched];
+  assert.deepEqual(
+    ids(filterProperties(props, { ...DEFAULT_FILTER_STATE, watchFilter: "off" }, ctx())),
+    ids(props),
+    "off keeps everything regardless of watchlist state",
+  );
+  assert.deepEqual(
+    ids(filterProperties(props, { ...DEFAULT_FILTER_STATE, watchFilter: "in" }, ctx())),
+    [watched.id],
+    "in keeps ONLY watchlisted properties",
+  );
+  assert.deepEqual(
+    ids(filterProperties(props, { ...DEFAULT_FILTER_STATE, watchFilter: "ex" }, ctx())),
+    [unwatched.id],
+    "ex excludes watchlisted properties -- the opposite of in, not a no-op",
+  );
+}
+
+// --- parseFilterState: watchFilter absent from a saved blob falls back to
+// "off", not undefined -- an older saved filter blob predates this key. ------
+{
+  assert.equal(parseFilterState({}).watchFilter, "off", "watchFilter absent from the blob -> off");
+  assert.equal(parseFilterState(null).watchFilter, "off", "null blob -> off");
+  assert.notEqual(parseFilterState({}).watchFilter, undefined, "never undefined");
 }
 
 // --- isRatedProperty: "too small" alone counts as rated -----------------------

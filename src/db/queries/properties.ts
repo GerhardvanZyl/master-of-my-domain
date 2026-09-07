@@ -2,7 +2,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "../client";
-import { properties, images, imageTags, scrapeJobs, priceHistory, propertyRatings } from "../schema";
+import {
+  properties,
+  images,
+  imageTags,
+  scrapeJobs,
+  priceHistory,
+  propertyRatings,
+  propertyChanges,
+} from "../schema";
 import type { Property, PriceHistory, PropertyRating } from "../schema";
 import { IMAGES_DIR } from "@/lib/env";
 import { priorityScore } from "@/lib/priority";
@@ -14,7 +22,7 @@ import { priorityScore } from "@/lib/priority";
  * were 234KB of the 709KB payload and nothing on the grid reads them. The
  * detail/compare pages fetch the full row via getProperty/getPropertiesByIds.
  */
-export interface PropertyListItem extends Omit<Property, "rawJson" | "description"> {
+export interface PropertyListItem extends Omit<Property, "rawJson" | "description" | "altListingUrl"> {
   imageCount: number;
   thumbPath: string | null;
   /** Listing no longer appears in Domain search results (sold/withdrawn). */
@@ -36,6 +44,35 @@ export interface PropertyListItem extends Omit<Property, "rawJson" | "descriptio
 
 /** scrape_jobs.status values that mean the listing is no longer for sale. */
 const DELISTED_STATUSES = ["delisted", "sold", "withdrawn"];
+
+/** Every listing URL one property is known under. See saleStatusOf. */
+export interface ListingUrls {
+  listingUrl: string;
+  altListingUrl: string | null;
+}
+
+/**
+ * THE definition of "no longer for sale", so the grid, the map, the detail page
+ * and the change log cannot disagree. A property is delisted only when EVERY
+ * listing URL it is known under is: a house withdrawn from Domain but still
+ * live on realestate.com.au is still for sale. The status reported is the
+ * canonical listing's — the alt only ever decides whether there is one.
+ *
+ * `sold` is terminal regardless of which URL carries it: a house cannot be
+ * sold on one site and meaningfully still for sale on the other, so a live alt
+ * (or a live canonical) can never override a `sold` seen anywhere.
+ *
+ * `statusOf` supplies the per-URL scrape_jobs status so the same rule serves
+ * both a single lookup and the whole-grid pass, which reads its statuses in one
+ * query rather than two per row.
+ */
+function saleStatusOf(p: ListingUrls, statusOf: (url: string) => string | null): string | null {
+  const status = statusOf(p.listingUrl);
+  const altStatus = p.altListingUrl ? statusOf(p.altListingUrl) : null;
+  if (status === "sold" || altStatus === "sold") return "sold";
+  if (status === null) return null;
+  return p.altListingUrl && altStatus === null ? null : status;
+}
 
 function aspect(width: number | null, height: number | null): number | null {
   return width && height ? width / height : null;
@@ -296,6 +333,7 @@ export function listProperties(): PropertyListItem[] {
       .all()
       .map((r) => [r.url, r.status] as const),
   );
+  const statusFromMap = (url: string): string | null => delistedStatus.get(url) ?? null;
 
   // Last sale/listing event that carries a real dollar amount. The grid falls
   // back to this when Domain has replaced the guide with a bare status.
@@ -335,12 +373,12 @@ export function listProperties(): PropertyListItem[] {
   }
 
   return props
-    .map(({ rawJson: _raw, description: _desc, ...p }) => ({
+    .map(({ rawJson: _raw, description: _desc, altListingUrl, ...p }) => ({
       ...p,
       imageCount: counts.get(p.id) ?? 0,
       thumbPath: thumbOf(p.id),
-      delisted: delistedStatus.has(p.listingUrl),
-      saleStatus: delistedStatus.get(p.listingUrl) ?? null,
+      delisted: saleStatusOf({ listingUrl: p.listingUrl, altListingUrl }, statusFromMap) !== null,
+      saleStatus: saleStatusOf({ listingUrl: p.listingUrl, altListingUrl }, statusFromMap),
       lastPricedEvent: lastPriced.get(p.id) ?? null,
       soldDate: soldDateByProp.get(p.id) ?? null,
       ratings: ratingsByProp.get(p.id) ?? [],
@@ -362,8 +400,8 @@ export function propertyExists(id: string): boolean {
   return db.select({ id: properties.id }).from(properties).where(eq(properties.id, id)).get() != null;
 }
 
-/** Removal status for a listing URL: "sold" | "withdrawn" | "delisted" | null. */
-export function getSaleStatus(listingUrl: string): string | null {
+/** Removal status of ONE listing URL: "sold" | "withdrawn" | "delisted" | null. */
+function urlStatus(listingUrl: string): string | null {
   const row = db
     .select({ status: scrapeJobs.status })
     .from(scrapeJobs)
@@ -377,9 +415,14 @@ export function getSaleStatus(listingUrl: string): string | null {
   return row?.status ?? null;
 }
 
-/** True if this listing URL has been flagged sold/withdrawn (scrape_jobs). */
-export function isDelisted(listingUrl: string): boolean {
-  return getSaleStatus(listingUrl) !== null;
+/** Removal status of a PROPERTY: "sold" | "withdrawn" | "delisted" | null. */
+export function getSaleStatus(p: ListingUrls): string | null {
+  return saleStatusOf(p, urlStatus);
+}
+
+/** True if every listing URL this property is known under is sold/withdrawn. */
+export function isDelisted(p: ListingUrls): boolean {
+  return getSaleStatus(p) !== null;
 }
 
 export function getPriceHistory(propertyId: string): PriceHistory[] {
@@ -512,6 +555,80 @@ export function getPropertyImages(propertyId: string): ImageWithTag[] {
     // while still rescuing curated picks (see isVisibleImage). Tagging
     // scripts talk to the DB directly and still see everything.
     .filter(isVisibleImage);
+}
+
+export interface PropertyChangeItem {
+  id: string;
+  propertyId: string;
+  field: string;
+  before: string | null;
+  after: string | null;
+  createdAt: string;
+  address: string | null;
+  priceDisplay: string | null;
+  thumbPath: string | null;
+}
+
+/**
+ * Newest-first change feed for the /history page, joined to the property's
+ * address, current price and hero thumbnail. Reuses pickHero — the same
+ * source of truth the grid thumbnail uses — rather than a second pick here.
+ * raw_json/description are never selected (see the PropertyListItem doc
+ * comment above for why that matters for a page rendered as an RSC payload).
+ */
+export function listPropertyChanges(opts: {
+  limit: number;
+  offset?: number;
+  watchedOnly?: boolean;
+}): PropertyChangeItem[] {
+  const { limit, offset = 0, watchedOnly = false } = opts;
+  const rows = db
+    .select({
+      id: propertyChanges.id,
+      propertyId: propertyChanges.propertyId,
+      field: propertyChanges.field,
+      before: propertyChanges.before,
+      after: propertyChanges.after,
+      createdAt: propertyChanges.createdAt,
+      address: properties.address,
+      priceDisplay: properties.priceDisplay,
+    })
+    .from(propertyChanges)
+    .innerJoin(properties, eq(properties.id, propertyChanges.propertyId))
+    .where(watchedOnly ? eq(properties.watchlisted, 1) : undefined)
+    .orderBy(desc(propertyChanges.createdAt))
+    .limit(limit)
+    .offset(offset)
+    .all();
+
+  const propIds = [...new Set(rows.map((r) => r.propertyId))];
+  const imgs = propIds.length
+    ? db
+        .select({
+          propertyId: images.propertyId,
+          localPath: images.localPath,
+          sourceUrl: images.sourceUrl,
+          ordinal: images.ordinal,
+          width: images.width,
+          height: images.height,
+          alt: images.alt,
+          notes: imageTags.notes,
+          roomType: imageTags.roomType,
+        })
+        .from(images)
+        .leftJoin(imageTags, eq(imageTags.imageId, images.id))
+        .where(inArray(images.propertyId, propIds))
+        .orderBy(images.ordinal)
+        .all()
+    : [];
+  const byProp = new Map<string, (typeof imgs)[number][]>();
+  for (const i of imgs) {
+    if (i.roomType === "exclude") continue;
+    (byProp.get(i.propertyId) ?? byProp.set(i.propertyId, []).get(i.propertyId)!).push(i);
+  }
+  const thumbOf = (id: string): string | null => pickHero(byProp.get(id) ?? [])?.localPath ?? null;
+
+  return rows.map((r) => ({ ...r, thumbPath: thumbOf(r.propertyId) }));
 }
 
 export function deleteProperty(id: string): void {

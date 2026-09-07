@@ -118,10 +118,15 @@ async function main() {
   );
   // The canonical listing_url/source_site must survive the merge.
   const merged = sqlite
-    .prepare("SELECT listing_url, source_site FROM properties WHERE id = ?")
+    .prepare("SELECT listing_url, source_site, alt_listing_url FROM properties WHERE id = ?")
     .get(twinId) as Record<string, unknown>;
   assert.equal(merged.listing_url, raw.url, "merge keeps the original listing_url");
   assert.equal(merged.source_site, "domain", "merge keeps the original source_site");
+  assert.equal(
+    merged.alt_listing_url,
+    "https://www.realestate.com.au/property-house-nsw-testville-1234",
+    "a cross-source merge records the other site's URL, so a status set on it can be seen",
+  );
 
   // A genuinely different house on the same street must NOT merge.
   const otherId = upsertProperty({
@@ -145,14 +150,22 @@ async function main() {
       address: "12 Test St",
       suburb: "Testville",
       beds: 5,
+      landSizeSqm: 450,
     },
   ]);
   const after = (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c;
   assert.equal(after, before, "a relisted URL for a known address does not add a row");
   const reloaded = sqlite
-    .prepare("SELECT beds, listing_url FROM properties WHERE id = ?")
+    .prepare("SELECT beds, land_size_sqm, listing_url FROM properties WHERE id = ?")
     .get(twinId) as Record<string, unknown>;
-  assert.equal(reloaded.beds, 5, "the load updated the existing row");
+  // Same site, different URL: a RELISTING, and genuinely new information about
+  // the same house — so it overwrites (twinMerge, scrape/persist.ts). Gap-fill
+  // is for the CROSS-source merge above, where the two sources describe one
+  // live listing and an overwrite makes the row oscillate; a relisting has no
+  // second live listing to flip it back, and freezing it would leave the row
+  // reading as current at the withdrawn listing's price.
+  assert.equal(reloaded.land_size_sqm, 450, "the load filled a field the row had no value for");
+  assert.equal(reloaded.beds, 5, "a same-site relisting updates a value the row already had");
   assert.equal(reloaded.listing_url, raw.url, "the load kept the canonical listing_url");
 
   // …and a genuinely new address still inserts.

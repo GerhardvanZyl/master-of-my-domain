@@ -62,8 +62,11 @@ CREATE TABLE IF NOT EXISTS properties (
   viewed                      TEXT,
   pros                        TEXT,
   cons                        TEXT,
+  watchlisted                 INTEGER,
+  domain_shortlisted          INTEGER,
   property_com_au_url         TEXT,
   year_built                  INTEGER,
+  alt_listing_url             TEXT,
   raw_json       TEXT,
   scraped_at     TEXT NOT NULL,
   created_at     TEXT NOT NULL,
@@ -145,6 +148,15 @@ CREATE TABLE IF NOT EXISTS shares (
   UNIQUE(property_id, to_profile)
 );
 
+CREATE TABLE IF NOT EXISTS property_changes (
+  id             TEXT PRIMARY KEY,
+  property_id    TEXT NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  field          TEXT NOT NULL,
+  before         TEXT,
+  after          TEXT,
+  created_at     TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS settings (
   key            TEXT PRIMARY KEY,
   json           TEXT NOT NULL,
@@ -168,6 +180,7 @@ CREATE INDEX IF NOT EXISTS idx_group_members_group ON similarity_group_members(g
 CREATE INDEX IF NOT EXISTS idx_group_members_image ON similarity_group_members(image_id);
 CREATE INDEX IF NOT EXISTS idx_price_history_property ON price_history(property_id);
 CREATE INDEX IF NOT EXISTS idx_shares_to_read ON shares(to_profile, read_at);
+CREATE INDEX IF NOT EXISTS idx_property_changes_created ON property_changes(created_at);
 -- scrape_jobs is keyed by url in practice: every property page render looks up
 -- its sale status by listing_url, and ingest upserts one row per url.
 CREATE INDEX IF NOT EXISTS idx_scrape_jobs_url ON scrape_jobs(url);
@@ -240,6 +253,9 @@ function pendingMigrations(db: MigrationDb): string[] {
     cons: "TEXT",
     property_com_au_url: "TEXT",
     year_built: "INTEGER",
+    watchlisted: "INTEGER",
+    domain_shortlisted: "INTEGER",
+    alt_listing_url: "TEXT",
   };
   for (const [name, type] of Object.entries(add)) {
     if (!cols.has(name)) sql.push(`ALTER TABLE properties ADD COLUMN ${name} ${type}`);

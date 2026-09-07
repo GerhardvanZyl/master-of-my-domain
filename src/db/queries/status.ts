@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { sqlite } from "../client";
+import { snapshotProperty, recordPropertyChanges } from "./changes";
 
 /**
  * Sale-status and price-observation writes, shared by the CLIs (`mark-sold`,
@@ -11,12 +12,20 @@ import { sqlite } from "../client";
  * "not live", so these rows drive the grid + detail badges.
  */
 
+/**
+ * The property a sold/withdrawn mark refers to, and the URL the status must be
+ * recorded against — which is the caller's URL, not the row's, when the two
+ * differ. A dual-listed house keeps its Domain listing_url and carries the
+ * realestate.com.au one in alt_listing_url; a status set on that URL has to
+ * land on that URL, or "delisted only when every listing is" (getSaleStatus,
+ * queries/properties.ts) could never be satisfied for a dual-listed house.
+ */
 function findProperty(ref: { listingUrl?: string; externalId?: string }) {
   if (ref.listingUrl) {
     const r = sqlite
-      .prepare("SELECT id, listing_url u FROM properties WHERE listing_url = ?")
-      .get(ref.listingUrl) as { id: string; u: string } | undefined;
-    if (r) return r;
+      .prepare("SELECT id, listing_url u FROM properties WHERE listing_url = ? OR alt_listing_url = ?")
+      .get(ref.listingUrl, ref.listingUrl) as { id: string; u: string } | undefined;
+    if (r) return { id: r.id, u: ref.listingUrl };
   }
   if (ref.externalId) {
     return sqlite
@@ -29,6 +38,7 @@ function findProperty(ref: { listingUrl?: string; externalId?: string }) {
 /** Replace any prior sold/withdrawn/delisted job row for this url with one. */
 function setJobStatus(url: string, propertyId: string, status: string) {
   const now = new Date().toISOString();
+  const before = snapshotProperty(propertyId);
   sqlite
     .prepare(
       "DELETE FROM scrape_jobs WHERE url = ? AND status IN ('delisted','sold','withdrawn')",
@@ -39,6 +49,7 @@ function setJobStatus(url: string, propertyId: string, status: string) {
       "INSERT INTO scrape_jobs (id, url, status, property_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
     )
     .run(randomUUID(), url, status, propertyId, now, now);
+  recordPropertyChanges(propertyId, before);
 }
 
 /**

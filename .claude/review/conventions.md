@@ -263,3 +263,108 @@ signal that a re-capture is due.
 Synthetic payloads remain the right tool for logic variation (parsing branches,
 edge cases, degradation paths) and adapters carry both. Do not raise fixture
 coupling, "brittleness", or over-fitting against a golden capture again.
+
+---
+
+## `npm run build` crashing in `WasmHash._updateWithBuffer` is a stale `.next`, not your code
+
+**Owning lane:** none — this is a validation-command failure any lane or sidekick can hit.
+**Recorded:** 2026-09-07, run `20260906-2312-feat-watchlist-history-attention`
+
+Symptom, after several builds have run in the same worktree (which a dev-loop round
+does constantly — most reviewers and every sidekick are given `npm run build`):
+
+```
+TypeError: Cannot read properties of undefined (reading 'length')
+    at WasmHash._updateWithBuffer (node_modules/next/dist/compiled/webpack/bundle5.js:29:...)
+    at WasmHash.update (...)
+```
+
+It dumps ~2MB of minified `bundle5.js` to stdout first, so `tail` shows bundle
+source and the actual error is the last three lines. Grepping the output for
+"error" matches the minified bundle and tells you nothing.
+
+**Fix: `rm -rf .next && npm run build`.** It succeeds.
+
+Observed twice in one run: a build passed early, a sidekick reported it failing and
+reasonably concluded a Node v23 / webpack-wasm incompatibility, and the lead
+reproduced the failure and then the fix. **It is not a Node version problem and not
+a code problem** — treat a report of it as a cache to clear, not as a blocker, and
+do not let a sidekick conclude the definition of done is unmeetable because of it.
+
+---
+
+## Change logging and the twin merge: what a second listing may do to a row
+
+**Owning lane:** technical (also reachable from requirements)
+**Recorded:** 2026-09-07, run `20260906-2312-feat-watchlist-history-attention`
+
+`findTwinByAddress` merges two listings of the same house onto one row. Once
+`property_changes` existed, that merge became visible, and it took three rounds to
+settle. The rules now in force, so they are not re-derived or re-argued:
+
+1. **Same-source merge (a relisting under a new URL): full overwrite, changes
+   logged.** A relisting is genuinely new information about the house.
+2. **Cross-source merge while the canonical listing is live: gap-fill only.** The
+   twin may populate a column that is NULL; it may never overwrite one the
+   canonical listing owns. Without this the row never converges — the twin writes
+   its wording, the canonical listing writes its own back next round, and each
+   sync logs a phantom change *per divergent field*, forever.
+3. **Cross-source merge once the canonical listing is delisted/sold/withdrawn:
+   overwrite allowed.** Nothing loads the canonical URL any more, so there is no
+   oscillation to prevent, and freezing the row would show stale data the
+   surviving listing could correct. **This is the user's own call**, made 2026-09-07
+   when the tradeoff was put to them.
+4. **A property is delisted only when EVERY listing it is known by is delisted**
+   — `listing_url` and `alt_listing_url`. "Active on one source means active in
+   this app" is the user's wording.
+
+The twin-merge branch does not write change rows for the gap-fill case: filling a
+column the row never had a value for is not a change to anything.
+
+### Known limitation, measured, deliberately not fixed
+
+The **ingest** path (`upsertProperty`, so `/api/ingest` and `npm run scrape`) still
+leaks phantom rows for a cross-source twin whose sources observe different fields:
+~1 row per divergent field per round. Measured 2/round for a REA-canonical row
+whose Domain twin supplies `agent_name` and `agency_name`.
+
+The cause is not in the write path and cannot be fixed there: `NormalizedProperty`
+carries explicit `null` for every field an adapter failed to find
+(`src/scrape/adapters/rea.ts` assigns `?? null` across the board), so the by-URL
+branch cannot tell "not observed" from "observed as absent". Closing it needs
+either a change to by-URL write semantics or a wider `NormalizedProperty` that
+carries absence. Both are larger than the feature that surfaced it.
+
+The equivalent leak on the **bulk load** path was closed at the caller instead —
+`scripts/_feed-load.ts` now sends `undefined` rather than `null` for unobserved
+fields, which `loadProperties`'s existing `if (v !== undefined)` loop already
+treats as "not sent". **That is the pattern for any new harvest script: send
+`undefined` for a field you did not observe, never `null`.**
+
+---
+
+## An REA-first dual-listed row shows no attention icon
+
+**Owning lane:** requirements (raised as `req-004`)
+**Recorded:** 2026-09-07, run `20260906-2312-feat-watchlist-history-attention`
+
+The attention icon is gated on `p.sourceSite === "domain"`, so it never shows for a
+row whose `source_site` is `rea`. A twin merge deliberately never adopts the
+newcomer's `source_site`, so a house **first** sighted on realestate.com.au keeps
+`source_site = 'rea'` permanently even after it is also listed on Domain — and such
+a property is genuinely Domain-shortlistable but is silently excluded.
+
+**Examined and accepted.** The gate exists because without it every REA-only
+listing showed a permanent amber warning telling the user to add it to a Domain
+shortlist it cannot be on — an instruction they cannot act on, which trains them to
+ignore the icon. The icon is a nudge, not a correctness feature; one missed nudge on
+a rare row is a fair price for removing a permanent unactionable warning on every
+REA row.
+
+Fixing it properly needs the row to know it *has* a domain.com.au URL. With
+`alt_listing_url` now stored, that is newly possible — but it was not in scope for
+the run that added it. If it is ever revisited, the test is "does this row have a
+domain.com.au URL in either slot", not "what does `source_site` say". Do not widen
+`setDomainShortlist`'s clear pass to all sources; that just restores the false
+positive.
