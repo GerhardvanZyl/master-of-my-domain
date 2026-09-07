@@ -70,6 +70,7 @@ applied in this order):
 | `groups` | `group:ensure` + `group:add` | reused by label, membership deduped |
 | `sold` / `withdrawn` | `npm run mark-sold` | replaces prior status + `Sold` row in place |
 | `priceObserve` | `npm run price:observe` | |
+| `shortlist` | `npm run shortlist:set` | full replace: `1` for given URLs, `0` for every other Domain listing |
 
 Bad rows are collected into `errors` and reported with `ok: false` rather than
 failing the request, so one dud can't discard the other 300 — **check `errors`,

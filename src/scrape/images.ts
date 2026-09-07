@@ -7,6 +7,7 @@ import { db } from "@/db/client";
 import { images } from "@/db/schema";
 import { IMAGES_DIR } from "@/lib/env";
 import { newId } from "@/lib/id";
+import { snapshotProperty, recordPropertyChanges } from "@/db/queries/changes";
 import type { NormalizedImage } from "./types";
 
 export interface ImageSyncResult {
@@ -64,6 +65,7 @@ export async function syncImages(
   listingUrl: string,
 ): Promise<ImageSyncResult> {
   const result: ImageSyncResult = { added: 0, kept: 0, skippedDup: 0, failed: 0 };
+  const before = snapshotProperty(propertyId);
 
   const existing = db
     .select()
@@ -143,5 +145,6 @@ export async function syncImages(
     result.added++;
   }
 
+  recordPropertyChanges(propertyId, before);
   return result;
 }

@@ -263,6 +263,47 @@ async function main() {
     "a price change produces exactly one new observation",
   );
 
+  // --- shortlist: full replace, idempotent, unknown URLs surfaced in the
+  // section's own result (like `tags`' written/skipped), not `errors` --
+  // setDomainShortlist never throws for an unmatched URL. ---
+  const rShort1 = await post({ shortlist: { listingUrls: [URL_A] } });
+  assert.equal(rShort1.status, 200, "shortlist section does not 500");
+  assert.equal(rShort1.json.ok, true, "a clean shortlist run reports ok");
+  assert.equal(sec<{ shortlisted: number }>(rShort1.json, "shortlist").shortlisted, 1, "URL_A shortlisted");
+  assert.equal(
+    sec<{ cleared: number }>(rShort1.json, "shortlist").cleared,
+    1,
+    "the other domain property (URL_B) is cleared",
+  );
+  assert.deepEqual(sec<{ unknown: string[] }>(rShort1.json, "shortlist").unknown, [], "no unknowns in a clean run");
+  assert.equal(
+    (sqlite.prepare("SELECT domain_shortlisted d FROM properties WHERE listing_url = ?").get(URL_A) as { d: number })
+      .d,
+    1,
+    "domain_shortlisted actually set on URL_A",
+  );
+
+  // idempotent: re-sending the same list changes nothing further.
+  const rShort2 = await post({ shortlist: { listingUrls: [URL_A] } });
+  assert.equal(sec<{ shortlisted: number }>(rShort2.json, "shortlist").shortlisted, 1, "re-send: still 1 shortlisted");
+  assert.equal(
+    (sqlite.prepare("SELECT domain_shortlisted d FROM properties WHERE listing_url = ?").get(URL_A) as { d: number })
+      .d,
+    1,
+    "re-send: state is unchanged, still shortlisted",
+  );
+
+  // an unknown URL is reported in the section's own result, not `errors`, and
+  // does not throw or 500 the request.
+  const rShort3 = await post({ shortlist: { listingUrls: [URL_A, "https://www.domain.com.au/nope-shortlist-1"] } });
+  assert.equal(rShort3.status, 200, "an unknown URL in the shortlist does not 500");
+  assert.deepEqual(
+    sec<{ unknown: string[] }>(rShort3.json, "shortlist").unknown,
+    ["https://www.domain.com.au/nope-shortlist-1"],
+    "the unmatched URL is reported under shortlist.unknown",
+  );
+  assert.equal(sec<unknown[]>(rShort3.json, "errors").length, 0, "an unknown shortlist URL is not an `errors` row");
+
   // --- GET /api/batch: untaggedImages (additive coverage key, change 3) ---
   const getCoverage = async (): Promise<Json> => {
     const { GET } = await import("../src/app/api/batch/route");

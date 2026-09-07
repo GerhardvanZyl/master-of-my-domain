@@ -138,6 +138,7 @@ export default function MapView({
       shortlistOf: (p: PropertyListItem) => p.shortlistTag,
       viewedOf: (p: PropertyListItem) => p.viewed,
       isRated: (p: PropertyListItem) => isRatedProperty(p, profile),
+      watchedOf: (p: PropertyListItem) => p.watchlisted === 1,
     };
     return filterProperties(pinsWithCoords, filters, ctx);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- pinsWithCoords is

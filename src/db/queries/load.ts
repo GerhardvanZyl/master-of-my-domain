@@ -2,8 +2,9 @@ import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { db } from "../client";
 import { properties, priceHistory } from "../schema";
-import { findTwinByAddress } from "@/scrape/persist";
+import { findTwinByAddress, twinMerge } from "@/scrape/persist";
 import { sanitizePropertyComAuUrl, sanitizeYearBuilt } from "@/lib/property-com-au";
+import { snapshotProperty, recordPropertyChanges } from "./changes";
 
 /**
  * Shape accepted by the bulk loader — `npm run load`, the harvest scripts, and
@@ -106,6 +107,7 @@ export function loadProperties(items: LoadItem[]) {
     const twinId = byUrl ? null : findTwinByAddress(it);
     const existing = byUrl ?? (twinId ? { id: twinId } : undefined);
     const id = existing?.id ?? randomUUID();
+    const before = snapshotProperty(id);
 
     // Only touch columns the item actually carries, so a partial load (e.g.
     // price-history-only) doesn't null out core fields on an existing row.
@@ -177,8 +179,15 @@ export function loadProperties(items: LoadItem[]) {
     // price-history-only load which would otherwise clobber the raw snapshot.
     if (it.address !== undefined) set.rawJson = JSON.stringify(it);
 
+    // A CROSS-source twin match fills gaps only and reports nothing; a
+    // same-source one is a relisting and overwrites -- see twinMerge
+    // (scrape/persist.ts), which owns both rules and the reasons for them.
+    const merge = twinId ? twinMerge(twinId, it, set) : null;
     if (existing) {
-      db.update(properties).set(set).where(eq(properties.id, id)).run();
+      db.update(properties)
+        .set(merge ? merge.set : set)
+        .where(eq(properties.id, id))
+        .run();
       updated++;
     } else {
       db.insert(properties)
@@ -194,6 +203,7 @@ export function loadProperties(items: LoadItem[]) {
         .run();
       inserted++;
     }
+    if (!merge || merge.log) recordPropertyChanges(id, before);
 
     // Append-only: never delete existing price rows. Insert only observations
     // not already recorded (dedup on date+event+display), so loads can only ever

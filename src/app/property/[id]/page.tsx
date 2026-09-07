@@ -20,6 +20,7 @@ import PropertyPager from "@/components/PropertyPager";
 import MediaUploader from "@/components/MediaUploader";
 import MetadataEditor from "@/components/MetadataEditor";
 import ShareButton from "@/components/ShareButton";
+import WatchToggle from "@/components/WatchToggle";
 import { listMedia } from "@/lib/media";
 import { imageUrl } from "@/lib/images";
 import { formatPrice, fmtAud, fmtNum, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDateLong } from "@/lib/format";
@@ -166,7 +167,7 @@ export default async function PropertyDetail({
   const heroIndex = hero ? images.indexOf(hero) : 0;
   const showcaseIndices = showcase.map((s) => images.indexOf(s));
   const floorplan = pickFloorplan(images);
-  const saleStatus = getSaleStatus(property.listingUrl);
+  const saleStatus = getSaleStatus(property);
   const delisted = saleStatus !== null;
   // getPriceHistory returns oldest-first; the property's own historical sale
   // timeline (previous owners, e.g. "Sold - PRIVATE TREATY") also matches
@@ -260,6 +261,7 @@ export default async function PropertyDetail({
           ← All properties
         </Link>
         <div className="flex items-center gap-2.5">
+          <WatchToggle propertyId={property.id} initial={property.watchlisted === 1} />
           <ShareButton propertyId={property.id} />
           <PropertyPager currentId={property.id} />
         </div>

@@ -10,6 +10,7 @@ const LINKS = [
   ["/rooms", "Rooms"],
   ["/map", "Map"],
   ["/inbox", "Inbox"],
+  ["/history", "History"],
   ["/config", "Vibes config"],
 ] as const;
 

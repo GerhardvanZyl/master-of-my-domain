@@ -2,6 +2,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { properties } from "@/db/schema";
 import { newId } from "@/lib/id";
+import { snapshotProperty, recordPropertyChanges } from "@/db/queries/changes";
+import { isDelisted } from "@/db/queries/properties";
 import type { NormalizedProperty } from "./types";
 
 /**
@@ -68,6 +70,66 @@ export function findTwinByAddress(p: {
   return twin?.id ?? null;
 }
 
+// When we last looked at a listing and how that went is not property data, so a
+// twin merge always writes it — which also keeps its UPDATE non-empty.
+const MERGE_BOOKKEEPING = new Set(["scrapedAt", "updatedAt", "scrapeStatus", "scrapeError"]);
+
+/** How a twin match must be written, and whether the caller logs it. */
+export interface TwinMerge {
+  set: Record<string, unknown>;
+  log: boolean;
+}
+
+/**
+ * Decides how a twin match writes onto the canonical row. Two matches reach
+ * here and they are opposites:
+ *
+ * CROSS-source (the other site, same live listing) fills GAPS only, and logs
+ * nothing. Overwriting cannot converge: the secondary source rewrites a shared
+ * field in its own wording every sync, the canonical listing then loads by URL,
+ * finds a value it did not write and records a change back to its own wording —
+ * one phantom property_changes row per property per round, forever. Accepted
+ * cost: a change visible ONLY through the secondary listing is not applied; the
+ * canonical listing loads in the same round through the by-URL branch.
+ *
+ * SAME-source (a relisting under a new URL) OVERWRITES, and logs. Gap-filling
+ * one freezes the row at the withdrawn listing's price, inspection and agent
+ * forever — the old URL never returns in the feed, so nothing else can correct
+ * it, while scraped_at keeps refreshing and the row reads as current. Accepted
+ * cost: two SIMULTANEOUSLY live listings on one site for one house resume
+ * oscillating. That is rarer than a relisting, and it does not silently show a
+ * stale price.
+ *
+ * Cross-source stops gap-filling once the canonical listing is delisted: it is
+ * no longer loaded by URL, so there is nothing left to flip a value back, and
+ * freezing would keep stale data the surviving listing could correct.
+ *
+ * The canonical listing_url and source_site are never written by either.
+ */
+export function twinMerge(
+  canonicalId: string,
+  incoming: { listingUrl: string; sourceSite?: string | null },
+  set: Record<string, unknown>,
+): TwinMerge {
+  const current = db.select().from(properties).where(eq(properties.id, canonicalId)).get();
+  if (!current) return { set, log: true };
+  if (incoming.sourceSite == null || incoming.sourceSite === current.sourceSite) {
+    return { set, log: true };
+  }
+
+  // How the app learns the house may still be live on the other site even once
+  // this listing goes (getSaleStatus, db/queries/properties.ts). Written on
+  // every cross-source merge, not gap-filled, so it follows the twin when the
+  // other site relists — a frozen alt URL nothing marks would read as live
+  // forever. ponytail: one alt per row; two sources is the ceiling.
+  const alt = current.listingUrl === incoming.listingUrl ? {} : { altListingUrl: incoming.listingUrl };
+  if (isDelisted(current)) return { set: { ...set, ...alt }, log: true };
+
+  const cols = current as unknown as Record<string, unknown>;
+  const gaps = Object.entries(set).filter(([k]) => MERGE_BOOKKEEPING.has(k) || cols[k] == null);
+  return { set: { ...Object.fromEntries(gaps), ...alt }, log: false };
+}
+
 /**
  * Upsert a property keyed by listing_url. Returns the property id.
  * On re-scrape the existing row is updated in place (id + created_at preserved),
@@ -120,27 +182,36 @@ export function upsertProperty(
   };
 
   if (existing) {
+    const before = snapshotProperty(existing.id);
     db.update(properties).set(row).where(eq(properties.id, existing.id)).run();
+    recordPropertyChanges(existing.id, before);
     return existing.id;
   }
 
   // Same house from the other site? Attach to it rather than making a twin.
   const twinId = findTwinByAddress(p);
   if (twinId) {
-    // Only overwrite with values the newcomer actually has; never clobber the
-    // canonical listing_url / source_site.
+    // `v != null` is "the newcomer has a value"; twinMerge decides whether it
+    // may overwrite one the canonical row already has, and whether the write is
+    // news worth logging. Identity columns are never merged at all.
     const merged = Object.fromEntries(
       Object.entries(row).filter(
         ([k, v]) =>
           v != null && k !== "listingUrl" && k !== "sourceSite" && k !== "externalId",
       ),
     );
-    db.update(properties).set(merged).where(eq(properties.id, twinId)).run();
+    const before = snapshotProperty(twinId);
+    const merge = twinMerge(twinId, p, merged);
+    db.update(properties).set(merge.set).where(eq(properties.id, twinId)).run();
+    if (merge.log) recordPropertyChanges(twinId, before);
     return twinId;
   }
   const id = newId("prop");
   db.insert(properties)
     .values({ id, createdAt: now, ...row })
     .run();
+  // A fresh id can't exist yet, so its "before" is statically null -- no need
+  // to spend a snapshotProperty() read confirming what we already know.
+  recordPropertyChanges(id, null);
   return id;
 }

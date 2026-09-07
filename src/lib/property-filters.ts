@@ -29,6 +29,8 @@ export interface FilterState {
   viewedFilter: string;
   ratedFilter: string;
   newFilter: string;
+  /** "off" | "in" (only watchlisted) | "ex" (hide watchlisted) — a tri-chip like ratedFilter. */
+  watchFilter: string;
 }
 
 // Slider top = "no cap". Kept here (not just in PropertyGrid) because
@@ -50,6 +52,7 @@ export const DEFAULT_FILTER_STATE: FilterState = {
   viewedFilter: "off",
   ratedFilter: "off",
   newFilter: "off",
+  watchFilter: "off",
 };
 
 // "New" badge / filter window.
@@ -154,6 +157,7 @@ export function parseFilterState(raw: unknown): FilterState {
         : asViewedFilter(s.viewedFilter),
     ratedFilter: asTri(s.ratedFilter),
     newFilter: /^[1-4]w$/.test(String(s.newFilter)) ? (s.newFilter as string) : "off",
+    watchFilter: asTri(s.watchFilter),
   };
 }
 
@@ -193,6 +197,7 @@ export interface FilterCtx {
   shortlistOf: (p: PropertyListItem) => string | null;
   viewedOf: (p: PropertyListItem) => string | null;
   isRated: (p: PropertyListItem) => boolean;
+  watchedOf: (p: PropertyListItem) => boolean;
 }
 
 /**
@@ -224,6 +229,7 @@ export function filterProperties(
     if (!triKeep(state.inspectingFilter, isThisWeekend(p.nextInspection))) return false;
     if (state.viewedFilter !== "off" && (ctx.viewedOf(p) ?? "none") !== state.viewedFilter) return false;
     if (!triKeep(state.ratedFilter, ctx.isRated(p))) return false;
+    if (!triKeep(state.watchFilter, ctx.watchedOf(p))) return false;
     if (state.newFilter !== "off") {
       const age = Date.now() - new Date(p.createdAt).getTime();
       if (age >= NEW_FOR_MS * parseInt(state.newFilter, 10)) return false;

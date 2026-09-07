@@ -52,14 +52,19 @@ const items = feed.map((f) => ({
   postcode: f.pc ?? undefined,
   priceDisplay: f.price ?? undefined,
   priceNumeric: parsePrice(f.price),
-  beds: f.beds ?? null,
-  baths: f.baths ?? null,
-  parking: f.cars ?? null,
-  landSizeSqm: f.land || null,
+  // undefined, not null: loadProperties treats a key it wasn't sent as "not
+  // observed" and leaves the column alone, while an explicit null OVERWRITES.
+  // The feed not carrying a land size doesn't mean the house has none — and
+  // five of these seven are change-tracked, so a null the twin listing had
+  // filled logged a phantom property_changes row per field per round.
+  beds: f.beds ?? undefined,
+  baths: f.baths ?? undefined,
+  parking: f.cars ?? undefined,
+  landSizeSqm: f.land || undefined,
   propertyType: f.ptype ?? undefined,
-  latitude: f.lat ?? null,
-  longitude: f.lng ?? null,
-  nextInspection: f.insp ?? null,
+  latitude: f.lat ?? undefined,
+  longitude: f.lng ?? undefined,
+  nextInspection: f.insp ?? undefined,
 }));
 
 fs.writeFileSync(SP + "/loaditems.json", JSON.stringify(items, null, 1));
