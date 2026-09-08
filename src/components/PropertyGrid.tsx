@@ -212,12 +212,17 @@ interface TileProps {
   /** "viewed" | "to-view" | null, overlaid with any unsaved local edit. */
   viewed: string | null;
   shortlist: string | null;
+  /** Overlaid with any unsaved local edit, same idiom as `viewed`. */
+  watched: boolean;
+  /** (viewed === "to-view" || top-30 vibe score) && Domain-sourced && not on the Domain shortlist. */
+  attention: boolean;
   /** Passed down from the grid's top-level `useProfile()` so ~290 tiles don't
    *  each mount their own hook just for ShareButton — see ShareButton.tsx. */
   profile: string | null;
   onToggle: (id: string) => void;
   onVibe: (id: string, current: string | null, v: string) => void;
   onViewed: (id: string, current: string | null, value: string) => void;
+  onWatch: (id: string, current: boolean) => void;
 }
 
 /**
@@ -234,12 +239,15 @@ const PropertyCard = memo(function PropertyCard({
   canVibe,
   viewed,
   shortlist,
+  watched,
+  attention,
   profile,
   compact,
   mapSize,
   onToggle,
   onVibe,
   onViewed,
+  onWatch,
 }: TileProps & { compact: boolean; mapSize: string }) {
   const nav = useCardNav(`/property/${p.id}`);
   const tag = SHORTLIST_TAGS.find((t) => t.id === shortlist);
@@ -299,6 +307,14 @@ const PropertyCard = memo(function PropertyCard({
                 New
               </span>
             )}
+            {attention && (
+              <span
+                title="Not in your Domain shortlist — add it there"
+                className="rounded-md bg-amber px-2 py-1 text-[10.5px] font-bold text-white"
+              >
+                ⚠
+              </span>
+            )}
           </div>
           <span className="absolute right-2.5 top-2.5 rounded-md bg-[rgba(28,28,25,.72)] px-2 py-1 text-[10.5px] font-semibold text-white">
             {p.imageCount} photos
@@ -341,21 +357,34 @@ const PropertyCard = memo(function PropertyCard({
             rather than a toggle button — it is a multi-select, and
             `label`/`input` are already in INTERACTIVE_SEL so the card-nav click
             handler leaves it alone. */}
-        <label
-          title={!isSel && selectFull ? "Max 4 — remove one to add another" : "Add to compare"}
-          className={`float-right ml-2 mt-1 flex items-center gap-1.5 text-xs font-bold ${
-            !isSel && selectFull ? "cursor-not-allowed text-mute" : "cursor-pointer text-forest"
-          }`}
-        >
-          Compare
-          <input
-            type="checkbox"
-            checked={isSel}
-            disabled={!isSel && selectFull}
-            onChange={() => onToggle(p.id)}
-            className="h-4 w-4 accent-forest"
-          />
-        </label>
+        <div className="float-right ml-2 mt-1 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onWatch(p.id, watched)}
+            aria-pressed={watched}
+            title={watched ? "Remove from watchlist" : "Add to watchlist"}
+            className={`text-lg leading-none transition ${
+              watched ? "text-amber" : "text-mute hover:text-amber"
+            }`}
+          >
+            {watched ? "★" : "☆"}
+          </button>
+          <label
+            title={!isSel && selectFull ? "Max 4 — remove one to add another" : "Add to compare"}
+            className={`flex items-center gap-1.5 text-xs font-bold ${
+              !isSel && selectFull ? "cursor-not-allowed text-mute" : "cursor-pointer text-forest"
+            }`}
+          >
+            Compare
+            <input
+              type="checkbox"
+              checked={isSel}
+              disabled={!isSel && selectFull}
+              onChange={() => onToggle(p.id)}
+              className="h-4 w-4 accent-forest"
+            />
+          </label>
+        </div>
         <h3 className="mb-1 font-serif text-[21px] leading-tight">
           <Link
             href={`/property/${p.id}`}
@@ -490,6 +519,11 @@ const PropertyCard = memo(function PropertyCard({
  * `showCompare` defaults on for the grid's own list layout; /inbox passes
  * `false` because it has no compare tray to add to — a wired-up-to-nothing
  * "Compare" button there would be a visible dead control.
+ *
+ * `attention`/`watched`/`onWatch` are optional (default off) for the same
+ * reason `showCompare` is a flag rather than a required prop: /inbox shows
+ * properties shared by another profile, and doesn't currently wire a watch
+ * handler through — same opt-out shape as `showCompare`, not a new mechanism.
  */
 export const PropertyRow = memo(function PropertyRow({
   p,
@@ -499,8 +533,14 @@ export const PropertyRow = memo(function PropertyRow({
   onToggle,
   profile,
   showCompare = true,
+  attention = false,
+  watched = false,
+  onWatch,
 }: Pick<TileProps, "p" | "score" | "isSel" | "selectFull" | "onToggle" | "profile"> & {
   showCompare?: boolean;
+  attention?: boolean;
+  watched?: boolean;
+  onWatch?: (id: string, current: boolean) => void;
 }) {
   const nav = useCardNav(`/property/${p.id}`);
   const tag = SHORTLIST_TAGS.find((t) => t.id === p.shortlistTag);
@@ -558,6 +598,14 @@ export const PropertyRow = memo(function PropertyRow({
               New
             </span>
           )}
+          {attention && (
+            <span
+              title="Not in your Domain shortlist — add it there"
+              className="shrink-0 rounded bg-amber px-1.5 py-0.5 text-[10px] font-bold text-white"
+            >
+              ⚠
+            </span>
+          )}
         </span>
         <span className="flex items-center gap-2 text-xs text-mute">
           {p.suburb ?? "—"}
@@ -584,6 +632,19 @@ export const PropertyRow = memo(function PropertyRow({
           <span title="Estimated from the nearest tracked property">*</span>
         )}
       </span>
+      {onWatch && (
+        <button
+          type="button"
+          onClick={() => onWatch(p.id, watched)}
+          aria-pressed={watched}
+          title={watched ? "Remove from watchlist" : "Add to watchlist"}
+          className={`shrink-0 text-base leading-none transition ${
+            watched ? "text-amber" : "text-mute hover:text-amber"
+          }`}
+        >
+          {watched ? "★" : "☆"}
+        </button>
+      )}
       <ShareButton propertyId={p.id} iconOnly profile={profile} />
       {showCompare && (
         <button
@@ -617,6 +678,8 @@ export default function PropertyGrid({
   // Local inspection-state writes, id -> "viewed" | "to-view" | null. Same
   // optimistic pattern. One map, because it is one mutually exclusive state.
   const [viewedEdits, setViewedEdits] = useState<Record<string, string | null>>({});
+  // Local watchlist writes, id -> 0|1. Same optimistic pattern as viewedEdits.
+  const [watchEdits, setWatchEdits] = useState<Record<string, number>>({});
   // Transient "cap reached" message shown in the compare tray for ~3s.
   const [capMsg, setCapMsg] = useState<string | null>(null);
   const capMsgTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -641,6 +704,7 @@ export default function PropertyGrid({
   // "off" | "viewed" | "to-view" | "none" — see ViewedChip / VIEWED_FILTERS.
   const [viewedFilter, setViewedFilter] = useState("off");
   const [ratedFilter, setRatedFilter] = useState("off");
+  const [watchFilter, setWatchFilter] = useState("off");
   // "off" | "1w".."4w" — created within the last N weeks (NEW_FOR_MS-based).
   const [newFilter, setNewFilter] = useState("off");
   // Task 15: pin the filter bar to the top, collapse it to chips on scroll.
@@ -697,6 +761,7 @@ export default function PropertyGrid({
     setViewedFilter(f.viewedFilter);
     setRatedFilter(f.ratedFilter);
     setNewFilter(f.newFilter);
+    setWatchFilter(f.watchFilter);
     setPinned(!!s.pinned);
     // Read the cache imperatively, NOT savedCfg: this effect runs once on
     // mount (loaded.current gates it), while savedCfg is still the default —
@@ -714,14 +779,22 @@ export default function PropertyGrid({
       try {
         localStorage.setItem(
           fkey,
-          JSON.stringify({ sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, viewedFilter, ratedFilter, newFilter, pinned }),
+          JSON.stringify({
+            sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout,
+            tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, viewedFilter,
+            ratedFilter, newFilter, watchFilter, pinned,
+          }),
         );
       } catch (e) {
         console.warn("filter save failed", e); // quota/private mode — don't fail silently
       }
     }, 400);
     return () => clearTimeout(t);
-  }, [fkey, sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, viewedFilter, ratedFilter, newFilter, pinned]);
+  }, [
+    fkey, sort, suburb, minBeds, minBaths, minParking, maxPrice, idealPrice, q, mapSize, layout,
+    tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, viewedFilter,
+    ratedFilter, newFilter, watchFilter, pinned,
+  ]);
 
   // Compare selection persists per region, independent of the profile filter
   // bucket above — you might switch profiles mid-compare.
@@ -847,6 +920,38 @@ export default function PropertyGrid({
     [viewedEdits],
   );
 
+  // The watchlist state shown on a tile: local edit if there is one, else the
+  // server's. Same overlay idiom as viewedOf.
+  const watchedOf = useCallback(
+    (p: PropertyListItem) => (p.id in watchEdits ? watchEdits[p.id] === 1 : p.watchlisted === 1),
+    [watchEdits],
+  );
+
+  // Rank by the same scoreOf map the grid sorts by (server ratings, no local
+  // edits) — computed ONCE over the full list so typing in the search box
+  // can't change who counts as top-30, and over non-delisted properties only
+  // (a sold listing doesn't need chasing).
+  const top30Ids = useMemo(() => {
+    const ranked = properties
+      .filter((p) => !p.delisted)
+      .sort((a, b) => (scoreOf.get(b.id) ?? 0) - (scoreOf.get(a.id) ?? 0))
+      .slice(0, 30);
+    return new Set(ranked.map((p) => p.id));
+  }, [properties, scoreOf]);
+
+  // (viewed === "to-view" || top-30 vibe score) && not on the Domain
+  // shortlist. Scoped to Domain-sourced rows: domain_shortlisted can never be
+  // 1 for a `source_site='rea'` row (there is no REA shortlist mirror), so
+  // without this scoping every REA property would show a permanent,
+  // unactionable warning to add it to a shortlist it can't be on. Shared by
+  // both layouts so a list-view user gets requirement 3 too — it used to be
+  // computed only inline in the gallery/compact branch below.
+  const attentionOf = useCallback(
+    (p: PropertyListItem) =>
+      (viewedOf(p) === "to-view" || top30Ids.has(p.id)) && p.sourceSite === "domain" && p.domainShortlisted !== 1,
+    [viewedOf, top30Ids],
+  );
+
   // The shortlist tag shown on a tile. Read-only here now: the grid's only
   // shortlist writer was the "must-see" button, which is `viewed` these days.
   const shortlistOf = useCallback((p: PropertyListItem) => p.shortlistTag, []);
@@ -879,8 +984,9 @@ export default function PropertyGrid({
         viewedFilter,
         ratedFilter,
         newFilter,
+        watchFilter,
       },
-      { shortlistOf, viewedOf, isRated },
+      { shortlistOf, viewedOf, isRated, watchedOf },
     );
     if (sort === "vibes") {
       list = [...list].sort((a, b) => (scoreOf.get(b.id) ?? 0) - (scoreOf.get(a.id) ?? 0));
@@ -891,7 +997,11 @@ export default function PropertyGrid({
       if (cfg?.num) list = [...list].sort(byNum(cfg.num, cfg.dir));
     }
     return list;
-  }, [properties, suburb, minBeds, minBaths, minParking, dMaxPrice, dQ, sort, scoreOf, tagFilter, hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, shortlistOf, myScore, viewedFilter, viewedOf, ratedFilter, isRated, newFilter]);
+  }, [
+    properties, suburb, minBeds, minBaths, minParking, dMaxPrice, dQ, sort, scoreOf, tagFilter,
+    hideAuction, hideUnderOffer, hideDelisted, inspectingFilter, shortlistOf, myScore, viewedFilter,
+    viewedOf, ratedFilter, isRated, newFilter, watchFilter, watchedOf,
+  ]);
 
   // Hand the current on-screen order to the detail page's prev/next pager, so
   // stepping through listings follows the filter+sort you're actually looking
@@ -938,6 +1048,18 @@ export default function PropertyGrid({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ viewed: next }),
     }).catch((e) => console.warn("viewed save failed", e));
+  }, []);
+
+  // Toggle a tile's watchlist state. Optimistic and fire-and-forget, same as
+  // setViewedState above — no router.refresh().
+  const setWatched = useCallback((id: string, current: boolean) => {
+    const next = current ? 0 : 1;
+    setWatchEdits((prev) => ({ ...prev, [id]: next }));
+    fetch(`/api/properties/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ watchlisted: next }),
+    }).catch((e) => console.warn("watchlisted save failed", e));
   }, []);
 
   // Rate a property's "vibe" for the active profile straight from its tile.
@@ -987,6 +1109,7 @@ export default function PropertyGrid({
     viewedFilter !== "off" &&
       (viewedFilter === "viewed" ? "viewed" : viewedFilter === "to-view" ? "to view" : "not viewed"),
     ratedFilter !== "off" && (ratedFilter === "in" ? "rated" : "unrated"),
+    watchFilter !== "off" && (watchFilter === "in" ? "watchlisted" : "not watchlisted"),
     newFilter !== "off" &&
       (newFilter === "1w" ? "new this week" : `new these ${parseInt(newFilter, 10)} weeks`),
     q.trim() && `“${q.trim()}”`,
@@ -1010,6 +1133,7 @@ export default function PropertyGrid({
     setRatedFilter("off");
     setNewFilter("off");
     setInspectingFilter("off");
+    setWatchFilter("off");
   };
 
   const pinBtn = (
@@ -1214,6 +1338,7 @@ export default function PropertyGrid({
           />
           <ViewedChip value={viewedFilter} onChange={setViewedFilter} />
           <TriChip value={ratedFilter} onChange={setRatedFilter} label="Rated" exLabel="Unrated" />
+          <TriChip value={watchFilter} onChange={setWatchFilter} label="Watchlisted" exLabel="Not watchlisted" />
           {/* New is include-only, so it just cycles 1→4 weeks and back off. */}
           <button
             type="button"
@@ -1273,6 +1398,9 @@ export default function PropertyGrid({
               selectFull={selectFull}
               onToggle={toggle}
               profile={profile}
+              attention={attentionOf(p)}
+              watched={watchedOf(p)}
+              onWatch={setWatched}
             />
           ))}
         </div>
@@ -1282,25 +1410,33 @@ export default function PropertyGrid({
             layout === "compact" ? "lg:grid-cols-4" : "lg:grid-cols-3"
           }`}
         >
-          {view.map((p) => (
-            <PropertyCard
-              key={p.id}
-              p={p}
-              score={scoreShown(p)}
-              isSel={selected.has(p.id)}
-              selectFull={selectFull}
-              compact={layout === "compact"}
-              mapSize={mapSize}
-              canVibe={!!profile}
-              profile={profile}
-              myVibe={vibeOf(p)}
-              viewed={viewedOf(p)}
-              shortlist={shortlistOf(p)}
-              onToggle={toggle}
-              onVibe={setVibe}
-              onViewed={setViewedState}
-            />
-          ))}
+          {view.map((p) => {
+            const viewedVal = viewedOf(p);
+            const watchedVal = watchedOf(p);
+            const attention = attentionOf(p);
+            return (
+              <PropertyCard
+                key={p.id}
+                p={p}
+                score={scoreShown(p)}
+                isSel={selected.has(p.id)}
+                selectFull={selectFull}
+                compact={layout === "compact"}
+                mapSize={mapSize}
+                canVibe={!!profile}
+                profile={profile}
+                myVibe={vibeOf(p)}
+                viewed={viewedVal}
+                shortlist={shortlistOf(p)}
+                watched={watchedVal}
+                attention={attention}
+                onToggle={toggle}
+                onVibe={setVibe}
+                onViewed={setViewedState}
+                onWatch={setWatched}
+              />
+            );
+          })}
         </div>
       )}
 

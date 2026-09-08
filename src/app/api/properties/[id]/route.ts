@@ -4,7 +4,9 @@ import { db } from "@/db/client";
 import { properties } from "@/db/schema";
 
 // Fields the detail rail may edit. Anything else in the body is ignored.
-const TRI = ["hasEaves", "pergolaCovered", "hasLawn"] as const; // 1 | 0 | null
+// watchlisted/domainShortlisted are user toggles, not tracked-field changes —
+// they're deliberately not wired into db/queries/changes.ts (see its doc).
+const TRI = ["hasEaves", "pergolaCovered", "hasLawn", "watchlisted", "domainShortlisted"] as const; // 1|0|null
 const TEXTS = ["pros", "cons"] as const; // newline-separated lists
 const SHORTLIST = ["maybe", "rejected"]; // "must-see" became viewed = "to-view"
 const VIEWED = ["viewed", "to-view"]; // + null = neither. The only inspection state.

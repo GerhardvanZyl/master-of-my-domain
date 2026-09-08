@@ -14,6 +14,7 @@ import {
   listUntaggedImages,
 } from "@/db/queries/tags";
 import { markSold, markWithdrawn, recordPriceObservations } from "@/db/queries/status";
+import { setDomainShortlist } from "@/db/queries/shortlist";
 
 export const runtime = "nodejs";
 
@@ -33,6 +34,9 @@ export const runtime = "nodejs";
  *   sold          -> npm run mark-sold
  *   withdrawn     -> scrape_jobs status='withdrawn'
  *   priceObserve  -> npm run price:observe
+ *   shortlist     -> npm run shortlist:set (full replace: 1 for the given URLs,
+ *                    0 for every other Domain-sourced property; apply AFTER
+ *                    properties — a URL must exist before it can be shortlisted)
  *
  * Every section is optional and every section is idempotent, so a failed run is
  * simply re-sent. Sections apply in the order above: properties must exist
@@ -63,6 +67,7 @@ interface BatchBody {
   sold?: { listingUrl?: string; externalId?: string; price?: number | null; date?: string }[];
   withdrawn?: { listingUrl?: string; externalId?: string }[];
   priceObserve?: boolean;
+  shortlist?: { listingUrls: string[] };
 }
 
 export async function POST(req: Request) {
@@ -182,6 +187,15 @@ export async function POST(req: Request) {
 
   if (body.priceObserve) {
     result.priceObserve = recordPriceObservations();
+  }
+
+  // Applied after `properties` above: a URL must exist to be shortlisted.
+  if (body.shortlist?.listingUrls?.length) {
+    try {
+      result.shortlist = setDomainShortlist(body.shortlist.listingUrls);
+    } catch (e) {
+      fail("shortlist", "?", e);
+    }
   }
 
   return NextResponse.json({ ok: errors.length === 0, ...result, errors });

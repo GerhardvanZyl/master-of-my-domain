@@ -25,7 +25,7 @@
         <mxCell id="N5" value="&lt;b&gt;POST /api/ingest&lt;/b&gt;&lt;br&gt;accepts the page's embedded data&lt;br&gt;&lt;i&gt;no auth — LAN only&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="60" y="160" width="240" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="N6" value="&lt;b&gt;POST /api/batch&lt;/b&gt;&lt;br&gt;properties · images · tags · groups · sold · price&lt;br&gt;&lt;i&gt;how this box updates the live host&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="N6" value="&lt;b&gt;POST /api/batch&lt;/b&gt;&lt;br&gt;properties · images · tags · groups · sold · price · shortlist&lt;br&gt;&lt;i&gt;how this box updates the live host&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="660" y="160" width="240" height="70" as="geometry" />
         </mxCell>
         <mxCell id="N7" value="&lt;b&gt;Server pages (RSC)&lt;/b&gt;&lt;br&gt;src/app/**/page.tsx&lt;br&gt;&lt;i&gt;rendered per request&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="1">
@@ -43,7 +43,7 @@
           <mxGeometry x="960" y="410" width="240" height="70" as="geometry" />
         </mxCell>
 
-        <mxCell id="N11" value="&lt;b&gt;src/db/queries&lt;/b&gt;&amp;nbsp;&amp;nbsp;properties · load · status · tags · rooms · metadata · shares · settings · jobs&lt;br&gt;&lt;i&gt;one write surface — the batch endpoint and the CLI helpers call the same functions, so they cannot drift&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
+        <mxCell id="N11" value="&lt;b&gt;src/db/queries&lt;/b&gt;&amp;nbsp;&amp;nbsp;properties · load · status · tags · rooms · metadata · shares · settings · jobs · changes · shortlist&lt;br&gt;&lt;i&gt;one write surface — the batch endpoint and the CLI helpers call the same functions, so they cannot drift&lt;/i&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=11;" vertex="1" parent="1">
           <mxGeometry x="560" y="530" width="640" height="70" as="geometry" />
         </mxCell>
 
@@ -82,6 +82,9 @@
         <mxCell id="E14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.632;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#333333;endArrow=block;" edge="1" parent="1" source="N12" target="N14"><mxGeometry relative="1" as="geometry" /></mxCell>
         <mxCell id="E15" value="downloads photos" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#333333;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;verticalAlign=middle;horizontal=0;" edge="1" parent="1" source="N8" target="N13">
           <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="30" y="320" /><mxPoint x="30" y="790" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="E16" value="records property_changes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0.078;entryY=0;entryDx=0;entryDy=0;strokeColor=#333333;endArrow=block;fontSize=10;labelBackgroundColor=#ffffff;" edge="1" parent="1" source="N8" target="N11">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
 
       </root>

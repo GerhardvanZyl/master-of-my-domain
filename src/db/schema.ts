@@ -106,11 +106,24 @@ export const properties = sqliteTable("properties", {
   viewed: text("viewed"),
   pros: text("pros"),
   cons: text("cons"),
+  // Shared (not per profile) watchlist toggle — same tri-state idiom as
+  // has_eaves/pergola_covered above: 1/0/null, null reading as "not watched".
+  watchlisted: integer("watchlisted"),
+  // "On the shortlist FEATURE on domain.com.au", written only by
+  // setDomainShortlist (db/queries/shortlist.ts) — unrelated to shortlist_tag,
+  // this app's own maybe/rejected triage column, which stays exactly as is.
+  domainShortlisted: integer("domain_shortlisted"),
   // property.com.au enrichment. Both null for every row on day one — populated
   // by a future update-properties sync round, not by this change. Validated on
   // write in db/queries/load.ts (loadProperties) before ever reaching a column.
   propertyComAuUrl: text("property_com_au_url"),
   yearBuilt: integer("year_built"),
+  // The OTHER site's URL for this same house, recorded by a cross-source twin
+  // merge (scrape/persist.ts). listing_url stays canonical — this is only how
+  // the app learns that a listing withdrawn from Domain may still be live on
+  // realestate.com.au (see getSaleStatus, db/queries/properties.ts).
+  // ponytail: one alt URL per row. Two sources is the ceiling this app reads.
+  altListingUrl: text("alt_listing_url"),
   rawJson: text("raw_json"),
   scrapedAt: text("scraped_at").notNull(),
   createdAt: text("created_at").notNull(),
@@ -266,6 +279,30 @@ export const settings = sqliteTable("settings", {
   updatedAt: text("updated_at").notNull(),
 });
 
+/**
+ * Append-only change log — one row per differing tracked field, written by
+ * src/db/queries/changes.ts (the only module that knows what "tracked" means).
+ * Starts from now: no backfill, so the /history page is legitimately empty
+ * until the next sync. `field` is the snake_case column it mirrors, or one of
+ * the non-column pseudo-fields "sale_status" | "photos" | "listing". `before`
+ * null means "was absent" — including the synthetic listing/null/"new" row a
+ * brand-new property gets instead of a row per field.
+ */
+export const propertyChanges = sqliteTable(
+  "property_changes",
+  {
+    id: text("id").primaryKey(),
+    propertyId: text("property_id")
+      .notNull()
+      .references(() => properties.id, { onDelete: "cascade" }),
+    field: text("field").notNull(),
+    before: text("before"),
+    after: text("after"),
+    createdAt: text("created_at").notNull(),
+  },
+  (t) => [index("idx_property_changes_created").on(t.createdAt)],
+);
+
 export const scrapeJobs = sqliteTable("scrape_jobs", {
   id: text("id").primaryKey(),
   url: text("url").notNull(),
@@ -288,3 +325,4 @@ export type NewPriceHistory = typeof priceHistory.$inferInsert;
 export type Share = typeof shares.$inferSelect;
 export type NewShare = typeof shares.$inferInsert;
 export type Setting = typeof settings.$inferSelect;
+export type PropertyChange = typeof propertyChanges.$inferSelect;
