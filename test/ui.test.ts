@@ -293,6 +293,52 @@ async function saved(
   assert.ok(r && r.ok(), "PATCH should succeed");
 }
 
+type StoredOutboxJob = { id: number; kind: string; propertyId: string; body?: Record<string, unknown> };
+
+/** Read every job currently parked in the browser's offline outbox, straight
+ *  out of IndexedDB — used to assert queueing actually happened rather than
+ *  inferring it from UI state alone. */
+async function readOutboxJobs(page: Page): Promise<StoredOutboxJob[]> {
+  return page.evaluate(
+    () =>
+      new Promise((resolve, reject) => {
+        const req = indexedDB.open("pc-outbox", 1);
+        req.onsuccess = () => {
+          const db = req.result;
+          const getAll = db.transaction("queue", "readonly").objectStore("queue").getAll();
+          getAll.onsuccess = () => resolve(getAll.result);
+          getAll.onerror = () => reject(getAll.error);
+        };
+        req.onerror = () => reject(req.error);
+      }),
+  );
+}
+
+/** Best-effort wipe of the outbox DB between test cases, so a job left parked
+ *  by one offline case can't be replayed by a later case's SyncStatus mount
+ *  and mutate property_ratings mid-suite. outbox.ts never explicitly closes
+ *  the IndexedDB connections it opens, so a delete can sit "blocked" until
+ *  those connections are GC'd — bounded with a timeout rather than letting
+ *  that hang the suite; the deletion still completes in the background. */
+async function clearOutbox(page: Page): Promise<void> {
+  await page.evaluate(
+    // No named intermediate `const` holding the shared handler here — esbuild's
+    // keepNames wraps a named const arrow in a `__name(fn, "name")` call, and
+    // that helper is defined at the compiled file's top level, not inside this
+    // closure, so Playwright shipping just this function's source text to the
+    // browser threw "__name is not defined". Four separate anonymous arrows
+    // instead of one shared named one sidesteps it.
+    () =>
+      new Promise<void>((resolve) => {
+        const req = indexedDB.deleteDatabase("pc-outbox");
+        req.onsuccess = () => resolve();
+        req.onerror = () => resolve();
+        req.onblocked = () => resolve();
+        setTimeout(() => resolve(), 500);
+      }),
+  );
+}
+
 async function chooseProfile(page: Page, name = "Gerhard") {
   await page.waitForSelector(sel.gate);
   // Scope to the gate — the header has same-named chips sitting behind it.
@@ -517,7 +563,9 @@ async function main() {
     await hydrated(page);
     const total = page.locator("text=✨ VIBES SCORE").locator("..").locator("span").last();
     const before = Number(await total.innerText());
-    await page.getByRole("button", { name: /Like/ }).click();
+    // saved(): leaving this write in flight lets it resolve inside the next
+    // test's waitForResponse window and make a stale read look like a bug.
+    await saved(page, () => page.getByRole("button", { name: /Like/ }).click(), /\/rating$/);
     await page.waitForSelector("text=gerhard: liked it");
     assert.equal(Number(await total.innerText()), before + 25, "like is worth +25");
   });
@@ -533,6 +581,165 @@ async function main() {
     await page.getByRole("button", { name: "Looks good +10", exact: true }).waitFor();
     await page.getByRole("button", { name: "Looks ugly −10", exact: true }).waitFor();
     await page.getByRole("button", { name: "Too small −100", exact: true }).waitFor();
+  });
+
+  // The chips render their points (above) but nothing proved a click on one
+  // reaches the DB. Each chip is asserted against property_ratings directly,
+  // then the whole set is re-read after a reload — an optimistic-only paint
+  // (or a rejected PATCH) fails at one of those two points, not both.
+  await t("quality impressions persist to the DB and survive a reload", async () => {
+    const readRating = () => {
+      const db = new Database(path.join(tmp, "app.db"), { readonly: true });
+      const r = db
+        .prepare(
+          "SELECT vibe, look, kitchen, size FROM property_ratings WHERE property_id=? AND profile='gerhard'",
+        )
+        .get(fixture.props[0].id) as Record<string, string | null> | undefined;
+      db.close();
+      return r;
+    };
+    const chips: [RegExp, string, string][] = [
+      [/^Looks good/, "look", "good"],
+      [/^Looks ugly/, "look", "ugly"],
+      [/^Small kitchen/, "kitchen", "small"],
+      [/^Tiny kitchen/, "kitchen", "tiny"],
+      [/^Too small/, "size", "small"],
+    ];
+    for (const [name, col, value] of chips) {
+      await saved(page, () => page.getByRole("button", { name }).click(), /\/rating$/);
+      assert.equal(
+        readRating()?.[col],
+        value,
+        `${col} = ${value} did not reach the DB; row=${JSON.stringify(readRating())}`,
+      );
+    }
+
+    // Last write per column wins: look=ugly, kitchen=tiny, size=small.
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    for (const [name] of [chips[1], chips[3], chips[4]]) {
+      const btn = page.getByRole("button", { name });
+      await btn.waitFor();
+      assert.equal(
+        await btn.getAttribute("aria-pressed"),
+        "true",
+        `chip ${name} lost its state after a reload`,
+      );
+    }
+    // …and clicking a lit chip clears that column rather than leaving it set.
+    await saved(page, () => page.getByRole("button", { name: /^Too small/ }).click(), /\/rating$/);
+    assert.equal(readRating()?.size, null, "clicking a lit chip must clear it in the DB");
+  });
+
+  // Regression for the offline-loss bug: a rating write made with no
+  // connection must be queued, not silently dropped, and must land once the
+  // outbox flushes.
+  await t("a quality chip clicked offline queues and flushes instead of being lost", async () => {
+    const readSize = () => {
+      const db = new Database(path.join(tmp, "app.db"), { readonly: true });
+      const r = db
+        .prepare("SELECT size FROM property_ratings WHERE property_id=? AND profile='gerhard'")
+        .get(fixture.props[0].id) as { size: string | null } | undefined;
+      db.close();
+      return r?.size ?? null;
+    };
+    const sizeBtn = page.getByRole("button", { name: /^Too small/ });
+    // Seed the precondition here rather than inherit it from whatever the
+    // previous case's last line left behind — if that case failed early, the
+    // "should be clear" assumption would silently not hold.
+    if (readSize() !== null) {
+      await saved(page, () => sizeBtn.click(), /\/rating$/);
+    }
+    assert.equal(readSize(), null, "size should be clear before this case runs");
+
+    try {
+      await ctx.setOffline(true);
+      await sizeBtn.click();
+      await page.waitForSelector("[data-testid=rail-offline-banner]");
+      // Pin the "queued, not dropped" half of the claim directly — readSize()
+      // staying null here is equally true whether the fix exists or not,
+      // since the context is offline either way and the write can't reach
+      // the server regardless.
+      const queued = await readOutboxJobs(page);
+      assert.equal(
+        queued.filter((j) => j.kind === "rating" && j.propertyId === fixture.props[0].id).length,
+        1,
+        "offline click must queue exactly one rating job",
+      );
+
+      // SyncStatus is the sanctioned flush trigger: it flushes on the `online`
+      // event, which Chromium dispatches for real off ctx.setOffline(false) —
+      // so that toggle IS the action here. It must be wrapped by saved()
+      // rather than awaited on its own: the auto-flush can complete (and hide
+      // the pill) before a separately-registered waitForResponse starts
+      // listening.
+      await saved(page, () => ctx.setOffline(false), /\/rating$/);
+      assert.equal(readSize(), "small", "queued rating must land once back online");
+    } finally {
+      // Never leave the browser offline for the rest of the suite if an
+      // assertion above throws — t() swallows the failure and keeps going,
+      // so every later case would otherwise silently run offline too.
+      await ctx.setOffline(false);
+    }
+
+    await clearOutbox(page);
+  });
+
+  // Regression for the Critical: a queued job must not resurrect a stale
+  // value over a newer write that already succeeded server-side. Unlike the
+  // case above, this simulates "server unreachable while the browser still
+  // believes it's online" — the actual failure mode — via page.route()
+  // aborting just the rating endpoint, not ctx.setOffline(): navigator.onLine
+  // stays true and no `online` event fires, so nothing auto-flushes.
+  await t("a queued rating is superseded, not replayed, by a later successful write", async () => {
+    const readKitchen = () => {
+      const db = new Database(path.join(tmp, "app.db"), { readonly: true });
+      const r = db
+        .prepare("SELECT kitchen FROM property_ratings WHERE property_id=? AND profile='gerhard'")
+        .get(fixture.props[0].id) as { kitchen: string | null } | undefined;
+      db.close();
+      return r?.kitchen ?? null;
+    };
+    const tinyBtn = page.getByRole("button", { name: /^Tiny kitchen/ });
+    // Seed the precondition here too, for the same reason as above.
+    if (readKitchen() !== null) {
+      await saved(page, () => tinyBtn.click(), /\/rating$/);
+    }
+    assert.equal(readKitchen(), null, "kitchen should be clear before this case runs");
+
+    try {
+      await page.route(/\/rating$/, (route) => route.abort());
+      await tinyBtn.click(); // fetch throws (aborted) → queued as job A
+      await page.waitForSelector("[data-testid=rail-offline-banner]");
+      const queued = await readOutboxJobs(page);
+      assert.equal(
+        queued.filter((j) => j.kind === "rating" && j.propertyId === fixture.props[0].id).length,
+        1,
+        "the aborted click must queue exactly one rating job",
+      );
+    } finally {
+      await page.unroute(/\/rating$/);
+    }
+
+    // Server is reachable again, but nothing told the browser that — no
+    // `online` event, no auto-flush. Job A ({kitchen: "tiny"}) is still
+    // parked. Click the same chip again; it clears back to null and this
+    // write succeeds for real.
+    await saved(page, () => tinyBtn.click(), /\/rating$/);
+    assert.equal(readKitchen(), null, "the second, server-confirmed click must clear kitchen");
+
+    // Force a flush the way a real reopen of the app would — SyncStatus
+    // flushes on mount. Without the supersede fix, job A replays here and
+    // resurrects kitchen="tiny".
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await hydrated(page);
+    assert.equal(
+      readKitchen(),
+      null,
+      "the stale queued job must have been superseded, not replayed, on flush",
+    );
+
+    await clearOutbox(page);
   });
 
   // The rail's "Shortlist status" tag and "Your score" slider were removed by

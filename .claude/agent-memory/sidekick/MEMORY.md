@@ -26,3 +26,4 @@
 - [Nominatim confidence gate verified](nominatim_confidence_gate_verified.md) — live-checked: house-level hits carry place_rank 30 + type "house" + addresstype "place" together, not as alternatives
 - [Transient vs permanent cache miss](transient_vs_permanent_cache_miss.md) — curl-retry failure must never share a cache shape with a genuine miss in a consult-before-request cache; geocode-missing.ts's fix pattern
 - [Plain-assert test first-failure-only](plain_assert_test_first_failure_only.md) — test/*.test.ts scripts abort at the first assert; isolate assertions in a scratch file to verify each new one fails pre-fix
+- [ctx.setOffline auto-flush race](ctx_setoffline_autoflush_race.md) — Chromium fires a real 'online' event on setOffline(false); SyncStatus auto-flushes on it, so make the toggle itself the saved() action, don't click the pill after

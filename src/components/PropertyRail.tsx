@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Property } from "@/db/schema";
 import type { PropertyListItem } from "@/db/queries/properties";
 import { PROFILES, useProfile } from "@/lib/profile";
 import { vibeBreakdown, type VibeConfig } from "@/lib/vibes";
 import { useVibeConfig } from "@/lib/use-vibe-config";
+import { allJobs, OUTBOX_EVENT, queue, supersede } from "@/lib/outbox";
 
 type Ratings = PropertyListItem["ratings"];
 
@@ -72,12 +73,33 @@ export default function PropertyRail({
   const { cfg } = useVibeConfig();
   const [proDraft, setProDraft] = useState("");
   const [conDraft, setConDraft] = useState("");
-  const [err, setErr] = useState<string | null>(null);
+  // One mutually-exclusive status rather than independent err/offline
+  // booleans, the way NotesEditor.tsx does it — two independent flags let a
+  // later failed write leave the "saved offline" banner showing above a "save
+  // failed" one even though the offline edit had already synced, or leave it
+  // showing forever after the outbox drained with no further rail write to
+  // clear it.
+  const [status, setStatus] = useState<"idle" | "queued" | "error">("idle");
+  const [errMsg, setErrMsg] = useState<string | null>(null);
 
   // ponytail: no router.refresh() / prop-sync effect after a write. Nothing but
   // this rail edits these fields, so the optimistic state IS the truth until
   // the next navigation — syncing from props just let a slow in-flight refresh
   // clobber a newer local edit.
+
+  // Drop back to "idle" once the outbox actually drains this property's
+  // queued jobs — otherwise the amber banner outlives the thing it's
+  // reporting on (SyncStatus can flush long after this rail last rendered).
+  useEffect(() => {
+    async function checkDrained() {
+      const stillQueued = (await allJobs()).some(
+        (j) => (j.kind === "rating" || j.kind === "property") && j.propertyId === prop.id,
+      );
+      if (!stillQueued) setStatus((s) => (s === "queued" ? "idle" : s));
+    }
+    window.addEventListener(OUTBOX_EVENT, checkDrained);
+    return () => window.removeEventListener(OUTBOX_EVENT, checkDrained);
+  }, [prop.id]);
 
   const mine = ratings.find((r) => r.profile === profile);
   const pros = (prop.pros ?? "").split("\n").filter(Boolean);
@@ -89,18 +111,46 @@ export default function PropertyRail({
   );
   const total = Math.round(breakdown.reduce((a, r) => a + r.pts, 0) * 10) / 10;
 
-  async function send(url: string, body: unknown) {
-    setErr(null);
-    const res = await fetch(url, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (!res.ok) {
-      setErr(`Save failed (${res.status})`);
-      return false;
+  /**
+   * `kind` picks the endpoint (and the outbox job kind if the write can't
+   * reach the server) — callers say what they're writing rather than send()
+   * sniffing a URL string, so a queued job can never carry an arbitrary path.
+   */
+  async function send(kind: "rating" | "property", body: Record<string, unknown>): Promise<void> {
+    setStatus("idle");
+    const url = kind === "rating" ? `/api/properties/${prop.id}/rating` : `/api/properties/${prop.id}`;
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      // Unreachable server — park it and let SyncStatus replay it later. Only a
+      // thrown fetch means offline: an HTTP error status is the server
+      // answering, and queueing that would just get the job dropped later with
+      // nothing shown (same reasoning as MediaUploader.tsx). Keep the
+      // optimistic state as-is rather than reverting it.
+      try {
+        await queue({ kind, propertyId: prop.id, body });
+        setStatus("queued");
+      } catch {
+        setErrMsg("Save failed — couldn't queue it offline either");
+        setStatus("error");
+      }
+      return;
     }
-    return true;
+    if (!res.ok) {
+      setErrMsg(`Save failed (${res.status})`);
+      setStatus("error");
+      return;
+    }
+    // A direct write just confirmed this value server-side — drop any
+    // already-queued job it makes stale, so a later flush can't replay a
+    // pre-this-write value back over it (the Critical this rail exists to fix).
+    await supersede(kind, prop.id, body);
+    setStatus("idle");
   }
 
   /** Optimistic per-profile rating update. Clicking the active value clears it. */
@@ -120,19 +170,29 @@ export default function PropertyRail({
       } as Ratings[number]);
       return next;
     });
-    await send(`/api/properties/${prop.id}/rating`, { profile, ...patch });
+    await send("rating", { profile, ...patch });
   }
 
   async function patchProperty(patch: Partial<Property>) {
     setProp((p) => ({ ...p, ...patch }));
-    await send(`/api/properties/${prop.id}`, patch);
+    await send("property", patch as Record<string, unknown>);
   }
 
   return (
     <>
-      {err && (
+      {status === "error" && (
         <div className="rounded-xl border border-[#e0b4ac] bg-[#fbeeeb] p-2.5 text-xs text-[#B84A3A]">
-          {err}
+          {errMsg}
+        </div>
+      )}
+      {/* Amber, not red — offline is not a failure. The optimistic state above
+          already shows the edit; this just says it hasn't reached the server yet. */}
+      {status === "queued" && (
+        <div
+          data-testid="rail-offline-banner"
+          className="rounded-xl border border-amber bg-[#fbf1e4] p-2.5 text-xs text-amber"
+        >
+          saved offline — syncs later
         </div>
       )}
 
@@ -205,6 +265,7 @@ export default function PropertyRail({
                   <button
                     key={`${q.field}-${q.value}`}
                     onClick={() => rate({ [q.field]: on ? null : q.value })}
+                    aria-pressed={on}
                     className={`chip ${on ? "chip-on" : "hover:border-forest"}`}
                   >
                     {q.label}{" "}
