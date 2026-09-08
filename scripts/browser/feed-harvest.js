@@ -99,7 +99,14 @@
     err = String(e);
   }
 
-  const enc = encodeURIComponent(JSON.stringify({ pages, err, rows }));
-  location.href = "http://127.0.0.1:3300/#MOMD=" + enc;
-  return { pages, listings: rows.length, err, encodedKB: Math.round(enc.length / 1024) };
+  // Gzip + the receiver's self-posting landing page, rather than a raw #MOMD=
+  // payload plus a follow-up bridge-post call. Two reasons: the raw fragment is
+  // large enough to be echoed into tool output (~45K tokens once), and the
+  // landing page strips the fragment itself so no second call is needed.
+  const json = JSON.stringify({ pages, err, rows });
+  const gz = new Response(new Blob([json]).stream().pipeThrough(new CompressionStream("gzip")));
+  const bytes = new Uint8Array(await gz.arrayBuffer());
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  location.href = "http://127.0.0.1:3300/#name=feed-gz&d=" + encodeURIComponent(btoa(bin));
 })();

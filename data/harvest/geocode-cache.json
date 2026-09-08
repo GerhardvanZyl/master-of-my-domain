@@ -314,5 +314,87 @@
     "hit": true,
     "lat": -37.9107597,
     "lng": 144.7788594
+  },
+  "28 lincolnheath boulevard, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:42:37.469Z",
+    "hit": true,
+    "lat": -37.9020429,
+    "lng": 144.7500909
+  },
+  "2a rayville court, torquay, vic 3228, australia": {
+    "fetchedAt": "2026-09-06T11:42:40.204Z",
+    "hit": true,
+    "lat": -38.3174381,
+    "lng": 144.3270072
+  },
+  "7 forum way, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:42:42.805Z",
+    "hit": true,
+    "lat": -37.915614,
+    "lng": 144.7846044
+  },
+  "2/84 the esplanade, torquay, vic 3228, australia": {
+    "fetchedAt": "2026-09-06T11:42:45.635Z",
+    "hit": false
+  },
+  "19 the breezewater, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:42:48.323Z",
+    "hit": true,
+    "lat": -37.8862997,
+    "lng": 144.7707644
+  },
+  "41 caledonian way, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:42:50.882Z",
+    "hit": true,
+    "lat": -37.8821925,
+    "lng": 144.7503908
+  },
+  "27 beatrix street, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:42:53.485Z",
+    "hit": true,
+    "lat": -37.9029465,
+    "lng": 144.760359
+  },
+  "102 shane avenue, seabrook, vic 3028, australia": {
+    "fetchedAt": "2026-09-06T11:42:56.488Z",
+    "hit": true,
+    "lat": -37.8802643,
+    "lng": 144.7531373
+  },
+  "39 columbus st, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:42:58.937Z",
+    "hit": true,
+    "lat": -37.8958951,
+    "lng": 144.7113605
+  },
+  "35 kirkstone road, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:43:01.625Z",
+    "hit": true,
+    "lat": -37.8933339,
+    "lng": 144.7508017
+  },
+  "13 anchorage street, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:43:04.440Z",
+    "hit": true,
+    "lat": -37.8812788,
+    "lng": 144.7433194
+  },
+  "62 foxwood drive, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:43:06.827Z",
+    "hit": true,
+    "lat": -37.8814191,
+    "lng": 144.7442146
+  },
+  "20 park lane, torquay, vic 3228, australia": {
+    "fetchedAt": "2026-09-06T11:43:09.462Z",
+    "hit": true,
+    "lat": -38.3381478,
+    "lng": 144.3228194
+  },
+  "246 sanctuary lakes south boulevard, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-06T11:43:12.524Z",
+    "hit": true,
+    "lat": -37.9043358,
+    "lng": 144.7756482
   }
 }

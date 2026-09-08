@@ -33,10 +33,30 @@ The user has asked for each of these explicitly and emphatically:
   and let the user click Connect. Never pick a browser yourself. Then *prove*
   it is local: point it at the loopback-only receiver and confirm the file
   appears (see step 0). `isLocal` is not trustworthy.
-- **Domain JS approval is per-call and cannot be made persistent.** Every
-  `javascript_tool` call on domain.com.au pops a prompt the user must click, and
-  an unattended one returns "Permission denied by user". So: design each call as
-  ONE long unattended loop, and **tell the user before you fire it**.
+- **YOU GET ONE CONFIRMATION PER SYNC, AND IT MUST FETCH EVERYTHING.**
+  That is the user's standing rule, not a guideline. That single call has to
+  come home with **all of it — properties, full galleries, floorplans, prices,
+  sold/withdrawn status, inspection dates**. A round that gets the feed on the
+  one click and then needs a second one "just for the listing pass" has failed;
+  so has one that returns listings without their floorplans. Structure the call
+  as feed → diff → per-listing pass in a single unattended loop, and if the diff
+  needs the live app's state, compute it in node BEFORE asking, then inline the
+  target list.
+  Do not spend the click on a probe, a locality check, or a first chunk of
+  something. Ask for it EARLY, not after a long stretch of preparation, and say
+  plainly that it is the one.
+- **Small `javascript_tool` calls do NOT prompt at all; large ones are
+  auto-denied with no prompt shown.** Measured 2026-09-07: ~1–2KB runs silently,
+  a 15KB paste came back "Permission denied by user" with the user seeing
+  nothing. So a 15KB script is not "one approval", it is a guaranteed failure.
+  Keep the ONE call as small as it can be while still complete — strip the
+  comment header, minify, and inline only the target list you actually need.
+- **Do not assemble a script from string chunks and `eval` it, and do not
+  base64 the body.** Both read as obfuscation and the auto-mode classifier
+  blocks them (correctly). Same for a receiver route that redirects to an
+  external URL — that reads as an open redirect. Send plain readable JS.
+- Every `javascript_tool` call on domain.com.au is judged on its own; approval
+  never persists. Design the call as ONE long unattended loop.
 - **Node and Playwright cannot read Domain** — plain `fetch` gets a 403 Akamai
   wall, `npm run scrape` hits the anti-bot wall. The extension driving the
   user's own Chrome is the only path. Don't burn time re-testing those.
@@ -153,8 +173,14 @@ says SOLD, and unusable price text.
 ```bash
 node scripts/_pass-apply-live.mjs pass-1          # -> _gallery-*.json, _status-*.json
 node scripts/batch-push.mjs --base=http://192.168.68.125:3225 \
-  --file=data/harvest/_gallery-pass-1.json        # images section — SLOW, chunk it
+  --file=<{images: [...gallery]}> --chunk=3        # images section — SLOW, chunk it
 ```
+
+**`_pass-apply-live.mjs` writes `_gallery-<name>.json` as a BARE ARRAY, not a
+batch payload.** Pushing that file directly matches no section, and `/api/batch`
+answers `{"ok":true,"errors":0}` having stored nothing — the push looks perfect
+and `image_count` stays 0. Wrap it first: `{images: [...that array]}`. Always
+confirm a gallery push by re-reading `image_count`, never by its exit status.
 
 Dedupe on **basename**, not `source_url`: Domain re-signs every URL per capture,
 so `syncImages` cannot tell a re-harvest from a new photo and will store the
