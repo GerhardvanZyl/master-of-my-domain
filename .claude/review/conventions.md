@@ -368,3 +368,27 @@ the run that added it. If it is ever revisited, the test is "does this row have 
 domain.com.au URL in either slot", not "what does `source_site` say". Do not widen
 `setDomainShortlist`'s clear pass to all sources; that just restores the false
 positive.
+
+---
+
+## `MEDIA_DIR` is never removed by an automated delete path
+
+**Owning lane:** technical (reachable from minimalism and security)
+**Recorded:** 2026-09-08, run `20260908-1235-feat-batch-delete`
+
+`data/media/<propertyId>/` holds the user's own inspection photos and videos, shot
+on their phone at an open house. It is filesystem-only — `src/lib/media.ts` lists
+the directory, there is no table and therefore no FK cascade — so a code path that
+deletes a property does **not** remove it, and a reviewer will correctly notice the
+orphan.
+
+**That orphan is deliberate.** Everything else a property delete destroys is
+re-fetchable from Domain; this content is not, and it is the only irreplaceable
+data in the application. An automated destructive path acquiring the power to erase
+it as a side effect is a decision for the user to make explicitly, not one to take
+inside a review round.
+
+**Do not raise "the media directory is left behind" as a defect** in a delete path.
+Raise it only if the user has asked for media to be cleaned up, or if the orphaned
+directories are shown to be causing a concrete problem — and then as a feature, with
+the user's say-so, not as a fix.

@@ -15,6 +15,7 @@ import {
 } from "@/db/queries/tags";
 import { markSold, markWithdrawn, recordPriceObservations } from "@/db/queries/status";
 import { setDomainShortlist } from "@/db/queries/shortlist";
+import { deletePropertiesByRef } from "@/db/queries/delete";
 
 export const runtime = "nodejs";
 
@@ -24,9 +25,36 @@ export const runtime = "nodejs";
  * The update job runs on a workstation but the live app lives on another host
  * (192.168.68.125:3225), and every other write path here is a local CLI against
  * data/app.db. Without this, updating the live instance means shipping a 10MB
- * SQLite file and its images through git. Each section mirrors exactly one CLI,
- * so a remote run leaves the same rows as a local one:
+ * SQLite file and its images through git. Each section's write logic lives in
+ * src/db/queries/* so a CLI and this endpoint cannot drift; most sections
+ * mirror exactly one CLI, `delete` has no local counterpart:
  *
+ *   delete        -> no CLI mirrors this. Local writes to data/app.db are
+ *                    banned by standing rule, so HTTP is the only path that
+ *                    matters; scripts/_hnl-remove.mjs is an ad-hoc local
+ *                    script that deletes by heuristic address match, not a
+ *                    sanctioned CLI, and isn't reused here. Applies FIRST,
+ *                    below, so a payload reads "remove these, then load
+ *                    those" and can't delete a row it just added. ponytail: a
+ *                    listingUrls ref matches listing_url ONLY, deliberately
+ *                    unlike sold/withdrawn/priceObserve, which also resolve
+ *                    alt_listing_url via findProperty -- see delete.ts for why
+ *                    a destructive delete can't safely follow that alias. A
+ *                    caller holding only an REA (alt) URL should pass the
+ *                    property id, or its canonical listing_url, instead. An
+ *                    unmatched ref is NOT a plain no-op: an ids ref still
+ *                    clears a stale IMAGES_DIR/<id> left from a prior removal
+ *                    failure, and re-sending as an id is the ONLY way to retry
+ *                    that failure -- a listingUrls re-send returns a clean
+ *                    notFound once the row (and thus the URL->id mapping) is
+ *                    gone, leaving the orphan permanent.
+ *                    ponytail: removes the property's IMAGES_DIR directory
+ *                    but deliberately NEVER touches data/media/<id>/ — the
+ *                    user's own inspection photos/videos, the one thing here
+ *                    that isn't re-fetchable from Domain. See conventions.md
+ *                    "MEDIA_DIR is never removed by an automated delete
+ *                    path"; cleaning it up needs the user's explicit say-so
+ *                    as a separate feature, not a side effect of this one.
  *   properties    -> npm run load          (upsert by listing_url, partial)
  *   images        -> npm run load:images   (server downloads; SLOW — chunk it)
  *   tags          -> npm run tag:set       (notes carries hero/floorplan/master)
@@ -60,6 +88,7 @@ interface TagInput {
 }
 
 interface BatchBody {
+  delete?: { listingUrls?: string[]; ids?: string[] };
   properties?: LoadItem[];
   images?: { listingUrl: string; imageUrls: string[] }[];
   tags?: TagInput[];
@@ -80,6 +109,25 @@ export async function POST(req: Request) {
   const errors: { section: string; ref: string; error: string }[] = [];
   const fail = (section: string, ref: string, e: unknown) =>
     errors.push({ section, ref, error: e instanceof Error ? e.message : String(e) });
+
+  // Applies FIRST, before `properties`: a payload reads "remove these, then
+  // load those", and nothing here should delete a row the same payload just
+  // added. notFound is result data, not an `errors` entry, but it is NOT a
+  // plain no-op: an unmatched `ids` ref still clears a stale
+  // `IMAGES_DIR/<id>` (see delete.ts), and only retries that way — re-sending
+  // a `listingUrls` ref after a removal failure returns a clean `notFound`
+  // while the orphan stays. A `listingUrls` ref resolves `listing_url` only
+  // (see delete.ts) — a ref that only matches some row's `alt_listing_url`
+  // also comes back `notFound`, not deleted. An image-directory removal
+  // failure is a real fault on an otherwise-successful delete, so it goes in
+  // `errors`. The section runs whenever `body.delete` is present at all —
+  // deletePropertiesByRef treats a missing/non-array/empty ref list as a
+  // no-op and reports a wrong-shaped one in `errors` itself.
+  if (body.delete) {
+    const { deleted, notFound, errors: delErrors } = deletePropertiesByRef(body.delete);
+    for (const { ref, error } of delErrors) fail("delete", ref, error);
+    result.delete = { deleted, notFound };
+  }
 
   if (body.properties?.length) {
     result.properties = loadProperties(body.properties);
