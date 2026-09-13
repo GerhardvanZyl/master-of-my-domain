@@ -396,5 +396,29 @@
     "hit": true,
     "lat": -37.9043358,
     "lng": 144.7756482
+  },
+  "6 yosemite street, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-13T23:03:00.474Z",
+    "hit": true,
+    "lat": -37.9045297,
+    "lng": 144.7613314
+  },
+  "25 jamaica street, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-13T23:03:02.656Z",
+    "hit": true,
+    "lat": -37.8923864,
+    "lng": 144.7134122
+  },
+  "94 bondi parade, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-13T23:03:04.438Z",
+    "hit": true,
+    "lat": -37.9049645,
+    "lng": 144.7714468
+  },
+  "58 beehive drive, williams landing, vic 3027, australia": {
+    "fetchedAt": "2026-09-13T23:03:06.824Z",
+    "hit": true,
+    "lat": -37.8635632,
+    "lng": 144.7511576
   }
 }
