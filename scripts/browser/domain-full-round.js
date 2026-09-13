@@ -201,7 +201,11 @@ window.__D = { phase: "start", feed: 0, pass: 0, of: 0, err: null, done: false }
           const photos = [...best.entries()]
             .sort((a, c) => Number((a[0].match(/_(\d+)$/) || [])[1] || 0) - Number((c[0].match(/_(\d+)$/) || [])[1] || 0))
             .map(([, u]) => u);
-          const price = typeof lm.price === "string" ? lm.price : "";
+          // On a listing PAGE the price string is listingSummary.displayPrice;
+          // listingSummary.price is not a string (every price came back empty
+          // on 2026-09-13). The search feed's listingModel.price IS a string.
+          const price = [lm.price, cp.listingSummary?.displayPrice, cp.listingModel?.price]
+            .find((v) => typeof v === "string") ?? "";
           out.push({ ...t, final: r.url, price, status: /\bsold\b/i.test(price) ? "sold" : null, photos,
             beds: lm.beds ?? null, baths: lm.baths ?? null, parking: lm.parking ?? null });
         }
