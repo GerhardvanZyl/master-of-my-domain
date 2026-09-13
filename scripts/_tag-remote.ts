@@ -242,13 +242,20 @@ async function main() {
         skipped++;
         continue;
       }
-      const file = path.join(TMP, `${im.id}.webp`);
       try {
-        if (!fs.existsSync(file)) {
-          const r = await fetch(`${BASE}/api/img/${pid}/${im.id}.webp`);
-          if (!r.ok) throw new Error(`img ${r.status}`);
-          fs.writeFileSync(file, Buffer.from(await r.arrayBuffer()));
+        // Stored under its real extension — Domain serves some gallery slots
+        // (often the floorplan) as GIF, and /api/img 404s the .webp guess.
+        let file = "";
+        for (const ext of ["webp", "gif", "jpg", "png"]) {
+          const f = path.join(TMP, `${im.id}.${ext}`);
+          if (fs.existsSync(f)) { file = f; break; }
+          const r = await fetch(`${BASE}/api/img/${pid}/${im.id}.${ext}`);
+          if (!r.ok) continue;
+          fs.writeFileSync(f, Buffer.from(await r.arrayBuffer()));
+          file = f;
+          break;
         }
+        if (!file) throw new Error("img 404 for webp/gif/jpg/png");
         const verdict = await classifyRoom(path.resolve(file), MODEL);
         classified++;
         // Domain puts the floorplan last; notes='floorplan' beats the app's

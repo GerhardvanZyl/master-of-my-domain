@@ -76,7 +76,7 @@ const heldById = new Map(
 // "/<id>" (a bare-id missing target) -> the listing_url the live app holds.
 const urlOf = (t) => (/^\/\d+$/.test(t.url) ? heldById.get(t.url.slice(1)) ?? t.url : t.url);
 
-fs.writeFileSync("data/harvest/feed.json", JSON.stringify({ pages: P.pages, err: P.err, rows: P.feed }));
+if (P.feed.length) fs.writeFileSync("data/harvest/feed.json", JSON.stringify({ pages: P.pages, err: P.err, rows: P.feed }));
 
 // _pass-apply-live.mjs keys on the listing URL and reads { status, price, imgs }.
 // "unresolved" (a page that parsed but carried no listing) becomes "unknown",
@@ -87,10 +87,10 @@ for (const r of P.out) {
   pass[urlOf(r)] = { status, price: r.price ?? "", imgs: r.photos ?? [] };
 }
 for (const e of P.errs) pass[urlOf(e)] = { status: "error:" + e.err, price: "", imgs: [] };
-fs.writeFileSync("data/harvest/pass-1.json", JSON.stringify(pass));
+fs.writeFileSync(`data/harvest/${PASS}.json`, JSON.stringify(pass));
 
 const sold = P.sold.map(([id, , price, tag]) => ({ listingUrl: heldById.get(String(id)), ...parseSold(price, tag), raw: `${price} | ${tag}` }));
-fs.writeFileSync(
+if (P.sold.length) fs.writeFileSync(
   "data/harvest/_sold-search.json",
   JSON.stringify({ sold: sold.filter((s) => s.listingUrl).map(({ raw: _, ...s }) => s) }, null, 1),
 );
