@@ -424,6 +424,573 @@ async function main() {
   );
   assert.match(untaggedMismatch.note, /untagged/i, "note explains the divergence rather than staying silent about it");
 
+  // --- delete: POST /api/batch `delete` section ---
+  const IMAGES_ROOT = path.join(tmp, "images");
+
+  /** Loads a minimal fresh property via the same path `properties` uses, returns its id. */
+  async function createProperty(listingUrl: string, address: string): Promise<string> {
+    await post({ properties: [{ listingUrl, sourceSite: "domain", address, suburb: "Point Cook" }] });
+    return (sqlite.prepare("SELECT id FROM properties WHERE listing_url = ?").get(listingUrl) as { id: string }).id;
+  }
+
+  // 1. Deletes by `ids`.
+  const URL_DEL1 = "https://www.domain.com.au/10-del-st-point-cook-vic-3030-2020000100";
+  const del1Id = await createProperty(URL_DEL1, "10 Del St");
+  const rDel1 = await post({ delete: { ids: [del1Id] } });
+  assert.equal(rDel1.status, 200, "delete by id does not 500");
+  assert.equal(sec<{ deleted: number }>(rDel1.json, "delete").deleted, 1, "1 deleted by id");
+  assert.equal(count("SELECT COUNT(*) c FROM properties WHERE id = ?", del1Id), 0, "property row gone");
+
+  // 2. Deletes by `listingUrls`.
+  const URL_DEL2 = "https://www.domain.com.au/11-del-st-point-cook-vic-3030-2020000101";
+  const del2Id = await createProperty(URL_DEL2, "11 Del St");
+  const rDel2 = await post({ delete: { listingUrls: [URL_DEL2] } });
+  assert.equal(rDel2.status, 200, "delete by listingUrl does not 500");
+  assert.equal(sec<{ deleted: number }>(rDel2.json, "delete").deleted, 1, "1 deleted by listingUrl");
+  assert.equal(count("SELECT COUNT(*) c FROM properties WHERE id = ?", del2Id), 0, "property row gone");
+
+  // 3. Children go with it -- the FK cascade actually firing (PRAGMA foreign_keys = ON;
+  // asserted per-table rather than trusting a blanket "cascade worked").
+  const URL_DEL3 = "https://www.domain.com.au/12-del-st-point-cook-vic-3030-2020000102";
+  const del3Id = await createProperty(URL_DEL3, "12 Del St");
+  const now3 = new Date().toISOString();
+  sqlite
+    .prepare("INSERT INTO images (id, property_id, source_url, local_path, ordinal, created_at) VALUES (?,?,?,?,?,?)")
+    .run("img_del3_1", del3Id, "https://rimh2/x/img_del3_1.jpg", "images/del3/1.jpg", 0, now3);
+  sqlite
+    .prepare("INSERT INTO image_tags (image_id, room_type, tagged_by, tagged_at, notes) VALUES (?,?,?,?,?)")
+    .run("img_del3_1", "kitchen", "claude-code", now3, null);
+  sqlite
+    .prepare("INSERT INTO property_ratings (property_id, profile, vibe, updated_at) VALUES (?,?,?,?)")
+    .run(del3Id, "gerhard", "like", now3);
+  sqlite
+    .prepare(
+      "INSERT INTO price_history " +
+        "(id, property_id, date, event, price_display, price_numeric, created_at) VALUES (?,?,?,?,?,?,?)",
+    )
+    .run("ph_del3_1", del3Id, "2026-01-01", "Listed", "$800,000", 800000, now3);
+  sqlite
+    .prepare("INSERT INTO property_changes (id, property_id, field, before, after, created_at) VALUES (?,?,?,?,?,?)")
+    .run("pc_del3_1", del3Id, "price_display", null, "$800,000", now3);
+  sqlite
+    .prepare("INSERT INTO shares (id, property_id, from_profile, to_profile, created_at) VALUES (?,?,?,?,?)")
+    .run("sh_del3_1", del3Id, "gerhard", "johanita", now3);
+  // Second-level cascade: property -> images -> similarity_group_members,
+  // via image_id (not property_id directly) -- the one child table case 3
+  // otherwise never exercises.
+  sqlite
+    .prepare("INSERT INTO similarity_groups (id, label, created_at) VALUES (?,?,?)")
+    .run("grp_del3_1", "kitchen", now3);
+  sqlite
+    .prepare("INSERT INTO similarity_group_members (group_id, image_id, added_at) VALUES (?,?,?)")
+    .run("grp_del3_1", "img_del3_1", now3);
+
+  const rDel3 = await post({ delete: { ids: [del3Id] } });
+  assert.equal(sec<{ deleted: number }>(rDel3.json, "delete").deleted, 1, "property with children deletes");
+  assert.equal(count("SELECT COUNT(*) c FROM properties WHERE id = ?", del3Id), 0, "property row gone");
+  assert.equal(count("SELECT COUNT(*) c FROM images WHERE property_id = ?", del3Id), 0, "images cascaded");
+  assert.equal(count("SELECT COUNT(*) c FROM image_tags WHERE image_id = ?", "img_del3_1"), 0, "image_tags cascaded");
+  assert.equal(count("SELECT COUNT(*) c FROM property_ratings WHERE property_id = ?", del3Id), 0, "ratings cascaded");
+  assert.equal(
+    count("SELECT COUNT(*) c FROM price_history WHERE property_id = ?", del3Id),
+    0,
+    "price_history cascaded",
+  );
+  assert.equal(
+    count("SELECT COUNT(*) c FROM property_changes WHERE property_id = ?", del3Id),
+    0,
+    "property_changes cascaded",
+  );
+  assert.equal(count("SELECT COUNT(*) c FROM shares WHERE property_id = ?", del3Id), 0, "shares cascaded");
+  assert.equal(
+    count("SELECT COUNT(*) c FROM similarity_group_members WHERE image_id = ?", "img_del3_1"),
+    0,
+    "similarity_group_members cascaded via image_id (second-level cascade)",
+  );
+
+  // 4. scrape_jobs is the special case: the one FK with no ON DELETE action.
+  // Detach (property_id -> NULL), never delete -- this is the case a naive
+  // "just cascade everything" implementation breaks in production.
+  const URL_DEL4 = "https://www.domain.com.au/13-del-st-point-cook-vic-3030-2020000103";
+  const del4Id = await createProperty(URL_DEL4, "13 Del St");
+  const now4 = new Date().toISOString();
+  sqlite
+    .prepare("INSERT INTO scrape_jobs (id, url, status, property_id, created_at, updated_at) VALUES (?,?,?,?,?,?)")
+    .run("job_del4_1", URL_DEL4, "done", del4Id, now4, now4);
+
+  const rDel4 = await post({ delete: { ids: [del4Id] } });
+  assert.equal(rDel4.status, 200, "a property with an active scrape_jobs row does not 500 the delete");
+  assert.equal(
+    sec<{ deleted: number }>(rDel4.json, "delete").deleted,
+    1,
+    "property with a scrape_jobs row still deletes -- would FK-fail without the detach",
+  );
+  assert.equal(count("SELECT COUNT(*) c FROM properties WHERE id = ?", del4Id), 0, "property row gone");
+  const jobRow4 = sqlite.prepare("SELECT property_id p FROM scrape_jobs WHERE id = ?").get("job_del4_1") as {
+    p: string | null;
+  };
+  assert.equal(jobRow4.p, null, "scrape_jobs row detached (property_id NULL), not deleted");
+  assert.equal(count("SELECT COUNT(*) c FROM scrape_jobs WHERE id = ?", "job_del4_1"), 1, "job row itself survives");
+
+  // 5. Idempotent: unknown refs land in notFound, add nothing to errors, never throw.
+  const rDelUnknown = await post({
+    delete: { ids: ["no-such-id-xyz"], listingUrls: ["https://www.domain.com.au/no-such-listing-xyz"] },
+  });
+  assert.equal(rDelUnknown.status, 200, "deleting unknown refs does not throw/500");
+  assert.deepEqual(
+    sec<{ notFound: string[] }>(rDelUnknown.json, "delete").notFound.slice().sort(),
+    ["https://www.domain.com.au/no-such-listing-xyz", "no-such-id-xyz"].sort(),
+    "both unknown refs reported in notFound",
+  );
+  assert.equal(sec<{ deleted: number }>(rDelUnknown.json, "delete").deleted, 0, "nothing deleted for unknown refs");
+  assert.equal(sec<unknown[]>(rDelUnknown.json, "errors").length, 0, "unknown refs are not errors rows");
+
+  // 5b. Re-sending the same delete twice is a no-op the second time.
+  const URL_DEL5 = "https://www.domain.com.au/14-del-st-point-cook-vic-3030-2020000104";
+  const del5Id = await createProperty(URL_DEL5, "14 Del St");
+  const rDel5First = await post({ delete: { ids: [del5Id] } });
+  assert.equal(sec<{ deleted: number }>(rDel5First.json, "delete").deleted, 1, "first send deletes the property");
+  const rDel5Second = await post({ delete: { ids: [del5Id] } });
+  assert.equal(
+    sec<{ deleted: number }>(rDel5Second.json, "delete").deleted,
+    0,
+    "re-sending the same delete a second time deletes nothing further",
+  );
+  assert.deepEqual(
+    sec<{ notFound: string[] }>(rDel5Second.json, "delete").notFound,
+    [del5Id],
+    "the second send reports the id as notFound",
+  );
+  assert.equal(sec<unknown[]>(rDel5Second.json, "errors").length, 0, "notFound on re-send is not an errors row");
+
+  // 6. Ordering: `delete` applies before `properties` in the SAME payload, and
+  // key order in the JS object literal must not change that -- the route
+  // reads body.delete / body.properties directly, it does not iterate keys.
+  const URL_DEL6 = "https://www.domain.com.au/15-del-st-point-cook-vic-3030-2020000105";
+  const del6IdBefore = await createProperty(URL_DEL6, "15 Del St");
+  const rDel6a = await post({
+    delete: { listingUrls: [URL_DEL6] },
+    properties: [{ listingUrl: URL_DEL6, sourceSite: "domain", address: "15 Del St Re-added" }],
+  });
+  assert.equal(rDel6a.status, 200, "delete-then-reload in one payload does not 500");
+  const afterA = sqlite.prepare("SELECT id, address FROM properties WHERE listing_url = ?").get(URL_DEL6) as
+    | { id: string; address: string }
+    | undefined;
+  assert.ok(afterA, "property EXISTS afterwards -- deleted first, then re-added, not left missing");
+  assert.equal(afterA!.address, "15 Del St Re-added", "the surviving row is the newly-loaded one");
+  assert.notEqual(afterA!.id, del6IdBefore, "fresh id proves the old row really was deleted before the reload");
+
+  // 7. Image directory removal.
+  const URL_DEL7 = "https://www.domain.com.au/16-del-st-point-cook-vic-3030-2020000106";
+  const del7Id = await createProperty(URL_DEL7, "16 Del St");
+  const del7ImgDir = path.join(IMAGES_ROOT, del7Id);
+  fs.mkdirSync(del7ImgDir, { recursive: true });
+  fs.writeFileSync(path.join(del7ImgDir, "1.jpg"), "fake-image-bytes");
+  assert.ok(fs.existsSync(del7ImgDir), "sanity: image dir exists before delete");
+  const rDel7 = await post({ delete: { ids: [del7Id] } });
+  assert.equal(sec<{ deleted: number }>(rDel7.json, "delete").deleted, 1);
+  assert.ok(!fs.existsSync(del7ImgDir), "image directory removed after delete");
+  assert.equal(sec<unknown[]>(rDel7.json, "errors").length, 0, "a clean image removal is not an errors row");
+
+  // 8. Transaction atomicity: force the property-row DELETE to fail AFTER the
+  // scrape_jobs detach has already run in the same transaction, using a
+  // TEMP TRIGGER (test-only SQLite object -- no production code touched) that
+  // RAISEs on the specific row. Proves the detach rolls back too: if the two
+  // statements were not one transaction, the detach would survive the DELETE
+  // failing and job_del8_1.property_id would be NULL afterwards.
+  const URL_DEL8 = "https://www.domain.com.au/17-del-st-point-cook-vic-3030-2020000107";
+  const del8Id = await createProperty(URL_DEL8, "17 Del St");
+  const now8 = new Date().toISOString();
+  sqlite
+    .prepare("INSERT INTO scrape_jobs (id, url, status, property_id, created_at, updated_at) VALUES (?,?,?,?,?,?)")
+    .run("job_del8_1", URL_DEL8, "done", del8Id, now8, now8);
+
+  sqlite.exec(
+    `CREATE TEMP TRIGGER trg_block_del8 BEFORE DELETE ON properties WHEN OLD.id = '${del8Id}' ` +
+      `BEGIN SELECT RAISE(ABORT, 'test: forced failure to prove atomicity'); END;`,
+  );
+
+  const { deleteProperty } = await import("../src/db/queries/delete");
+  let del8Threw = false;
+  try {
+    deleteProperty(del8Id);
+  } catch {
+    del8Threw = true;
+  }
+  assert.ok(del8Threw, "the forced trigger failure propagates out of deleteProperty rather than being swallowed");
+  assert.equal(
+    count("SELECT COUNT(*) c FROM properties WHERE id = ?", del8Id),
+    1,
+    "property row still present -- the failed delete rolled back",
+  );
+  const jobAfter8 = sqlite.prepare("SELECT property_id p FROM scrape_jobs WHERE id = ?").get("job_del8_1") as {
+    p: string | null;
+  };
+  assert.equal(
+    jobAfter8.p,
+    del8Id,
+    "scrape_jobs detach rolled back together with the failed delete -- one transaction, not two independent writes",
+  );
+
+  sqlite.exec("DROP TRIGGER trg_block_del8");
+  // With the forced failure removed, the same delete now succeeds normally.
+  const rDel8 = await post({ delete: { ids: [del8Id] } });
+  assert.equal(
+    sec<{ deleted: number }>(rDel8.json, "delete").deleted,
+    1,
+    "delete succeeds once the forced failure trigger is gone",
+  );
+
+  // 9. REGRESSION: a per-ref failure on the delete path must not escape as an
+  // unhandled 500 that discards the rest of the payload. `{}` bound directly
+  // as a SQL parameter throws `RangeError: Too few parameter values were
+  // provided` from better-sqlite3 -- this must go through the HTTP post()
+  // path, not a direct deleteProperty() call, because that's exactly what let
+  // this slip past case 8 above.
+  const URL_DEL9A = "https://www.domain.com.au/18-del-st-point-cook-vic-3030-2020000108";
+  const URL_DEL9B = "https://www.domain.com.au/19-del-st-point-cook-vic-3030-2020000109";
+  const URL_DEL9C = "https://www.domain.com.au/20-del-st-point-cook-vic-3030-2020000110";
+  const del9AId = await createProperty(URL_DEL9A, "18 Del St");
+  const del9BId = await createProperty(URL_DEL9B, "19 Del St");
+
+  const rDel9 = await post({
+    delete: { ids: [del9AId, {}, del9BId] },
+    properties: [{ listingUrl: URL_DEL9C, sourceSite: "domain", address: "20 Del St" }],
+  });
+  assert.equal(rDel9.status, 200, "a bad-shape ref in delete.ids does not 500 the whole request");
+  assert.equal(
+    sec<{ deleted: number }>(rDel9.json, "delete").deleted,
+    2,
+    "both valid refs around the bad one are still deleted -- containment, not an all-or-nothing abort",
+  );
+  assert.equal(count("SELECT COUNT(*) c FROM properties WHERE id = ?", del9AId), 0, "idA deleted");
+  assert.equal(count("SELECT COUNT(*) c FROM properties WHERE id = ?", del9BId), 0, "idB deleted");
+  assert.ok(
+    sec<{ section: string }[]>(rDel9.json, "errors").some((e) => e.section === "delete"),
+    "the bad-shape ref is reported under errors, section delete -- not swallowed, not a throw",
+  );
+  assert.equal(
+    count("SELECT COUNT(*) c FROM properties WHERE listing_url = ?", URL_DEL9C),
+    1,
+    "the properties section in the SAME payload still applied despite the bad delete ref",
+  );
+
+  // 10. REGRESSION: a re-send must be able to clear an image directory that
+  // failed to remove on a PRIOR send. fs.rmSync is patched (and restored
+  // immediately after, success or failure) to fail only for this directory --
+  // property ids are read via `fs.rmSync(dir, ...)` property access, not a
+  // destructured import, so the patch on the shared module object is observed.
+  const URL_DEL10 = "https://www.domain.com.au/21-del-st-point-cook-vic-3030-2020000111";
+  const del10Id = await createProperty(URL_DEL10, "21 Del St");
+  const del10ImgDir = path.join(IMAGES_ROOT, del10Id);
+  fs.mkdirSync(del10ImgDir, { recursive: true });
+  fs.writeFileSync(path.join(del10ImgDir, "1.jpg"), "fake-image-bytes");
+
+  // `import fs from "node:fs"` elsewhere in this codebase binds to this same
+  // mutable default-export object -- patching a property on it (rather than
+  // the frozen ESM namespace `fsMod` itself) is what makes delete.ts's
+  // `fs.rmSync(...)` property lookup observe the patch.
+  const fsMod = (await import("node:fs")).default as typeof fs;
+  const originalRmSync = fsMod.rmSync;
+  fsMod.rmSync = (p: fs.PathLike, opts?: fs.RmOptions) => {
+    if (p === del10ImgDir) throw new Error("simulated fs failure");
+    return originalRmSync(p, opts as fs.RmOptions & { recursive: true });
+  };
+  let rDel10First: { status: number; json: Json };
+  try {
+    rDel10First = await post({ delete: { ids: [del10Id] } });
+  } finally {
+    fsMod.rmSync = originalRmSync;
+  }
+  assert.equal(
+    sec<{ deleted: number }>(rDel10First.json, "delete").deleted,
+    1,
+    "row deleted on first send despite the fs failure",
+  );
+  assert.ok(fs.existsSync(del10ImgDir), "orphan directory survives the failed removal");
+  assert.ok(
+    sec<{ section: string; ref: string }[]>(rDel10First.json, "errors").some(
+      (e) => e.section === "delete" && e.ref === del10Id,
+    ),
+    "the fs failure is reported in errors",
+  );
+
+  // Re-send: the ref is now notFound (row already gone), but the filesystem
+  // step must still run -- that is the whole point of this regression.
+  const rDel10Second = await post({ delete: { ids: [del10Id] } });
+  assert.equal(
+    sec<{ deleted: number }>(rDel10Second.json, "delete").deleted,
+    0,
+    "second send: nothing left in the DB to delete",
+  );
+  assert.deepEqual(
+    sec<{ notFound: string[] }>(rDel10Second.json, "delete").notFound,
+    [del10Id],
+    "second send: id reported notFound",
+  );
+  assert.ok(!fs.existsSync(del10ImgDir), "the orphan directory is finally removed on re-send");
+  assert.equal(
+    sec<unknown[]>(rDel10Second.json, "errors").length,
+    0,
+    "a clean removal on re-send is not an errors row",
+  );
+
+  // 11. Path guard: an id containing a path separator must not let delete
+  // reach outside its OWN top-level directory. `startsWith(root + sep)`
+  // confines to the subtree, not a direct child, so id = "<victimId>/nested"
+  // still passes it and recursively destroys part of a DIFFERENT property's
+  // files while that property's own row survives untouched.
+  const URL_DEL11 = "https://www.domain.com.au/22-del-st-point-cook-vic-3030-2020000112";
+  const victim11Id = await createProperty(URL_DEL11, "22 Del St");
+  const victim11Dir = path.join(IMAGES_ROOT, victim11Id);
+  const victim11NestedDir = path.join(victim11Dir, "nested");
+  fs.mkdirSync(victim11NestedDir, { recursive: true });
+  fs.writeFileSync(path.join(victim11Dir, "keep.jpg"), "victim's own photo");
+  fs.writeFileSync(path.join(victim11NestedDir, "marker.txt"), "nested marker");
+
+  const maliciousId11 = `${victim11Id}/nested`;
+  const now11 = new Date().toISOString();
+  sqlite
+    .prepare(
+      "INSERT INTO properties (id, source_site, listing_url, scraped_at, created_at, updated_at) VALUES (?,?,?,?,?,?)",
+    )
+    .run(maliciousId11, "domain", "https://www.domain.com.au/malicious-path-traversal-11", now11, now11, now11);
+
+  const rDel11 = await post({ delete: { ids: [maliciousId11] } });
+  assert.equal(sec<{ deleted: number }>(rDel11.json, "delete").deleted, 1, "the malicious row itself is deleted");
+  assert.ok(
+    fs.existsSync(victim11NestedDir) && fs.existsSync(path.join(victim11NestedDir, "marker.txt")),
+    "the OTHER property's nested subfolder survives -- confined to a direct child of IMAGES_DIR",
+  );
+  assert.ok(fs.existsSync(path.join(victim11Dir, "keep.jpg")), "the victim property's own photo is untouched");
+  assert.equal(
+    count("SELECT COUNT(*) c FROM properties WHERE id = ?", victim11Id),
+    1,
+    "the victim property's row is untouched",
+  );
+  assert.equal(
+    sec<unknown[]>(rDel11.json, "errors").length,
+    0,
+    "the skipped fs step (not a direct child) is not an errors row",
+  );
+
+  // 12. `listingUrls` resolves `listing_url` ONLY, never `alt_listing_url` --
+  // deliberately unlike sold/withdrawn/priceObserve. A ref that is only some
+  // row's alt_listing_url must come back notFound, delete nothing, and leave
+  // that row untouched: resolving a destructive ref through an alias can't be
+  // made idempotent (a re-send after a successful delete could match, and
+  // destroy, a different row that only carries the ref as its alt URL).
+  const URL_DEL12_DOMAIN = "https://www.domain.com.au/23-del-st-point-cook-vic-3030-2020000113";
+  const URL_DEL12_REA = "https://www.realestate.com.au/property-house-vic-point+cook-987654321";
+  const del12Id = await createProperty(URL_DEL12_DOMAIN, "23 Del St");
+  sqlite.prepare("UPDATE properties SET alt_listing_url = ? WHERE id = ?").run(URL_DEL12_REA, del12Id);
+
+  const rDel12 = await post({ delete: { listingUrls: [URL_DEL12_REA] } });
+  assert.equal(
+    sec<{ deleted: number }>(rDel12.json, "delete").deleted,
+    0,
+    "a ref that is only some row's alt_listing_url resolves to nothing",
+  );
+  assert.deepEqual(
+    sec<{ notFound: string[] }>(rDel12.json, "delete").notFound,
+    [URL_DEL12_REA],
+    "the alt-only ref is reported notFound, not resolved",
+  );
+  assert.equal(
+    count("SELECT COUNT(*) c FROM properties WHERE id = ?", del12Id),
+    1,
+    "the row survives -- it was never named by its own listing_url",
+  );
+
+  // 13. REGRESSION: a `sub/../<victimId>` id matches no row (notFound), but
+  // path.resolve collapses it to a single path segment equal to <victimId>,
+  // so `dirname(dir) === root` alone would still pass and let the fs step
+  // destroy a DIFFERENT property's real image directory with no DB row
+  // involved and no error reported. Requiring `basename(id) === id` BEFORE
+  // resolving closes this without restoring the ids pre-check SELECT.
+  const URL_DEL13 = "https://www.domain.com.au/24-del-st-point-cook-vic-3030-2020000114";
+  const victim13Id = await createProperty(URL_DEL13, "24 Del St");
+  const victim13Dir = path.join(IMAGES_ROOT, victim13Id);
+  fs.mkdirSync(victim13Dir, { recursive: true });
+  fs.writeFileSync(path.join(victim13Dir, "keep.jpg"), "victim's own photo");
+
+  const maliciousId13 = `sub/../${victim13Id}`;
+  const rDel13 = await post({ delete: { ids: [maliciousId13] } });
+  assert.equal(sec<{ deleted: number }>(rDel13.json, "delete").deleted, 0, "the traversal ref matches no row");
+  assert.deepEqual(
+    sec<{ notFound: string[] }>(rDel13.json, "delete").notFound,
+    [maliciousId13],
+    "the traversal ref is reported notFound",
+  );
+  assert.ok(
+    fs.existsSync(victim13Dir) && fs.existsSync(path.join(victim13Dir, "keep.jpg")),
+    "the victim's OWN image directory survives -- the traversal ref must not reach it",
+  );
+  assert.equal(
+    count("SELECT COUNT(*) c FROM properties WHERE id = ?", victim13Id),
+    1,
+    "the victim property's row is untouched",
+  );
+
+  // 14. Same guard also covers a nested id -- "<victimId>/nested" matches no
+  // row either; costs nothing to check the fs step leaves it alone too.
+  const URL_DEL14 = "https://www.domain.com.au/25-del-st-point-cook-vic-3030-2020000115";
+  const victim14Id = await createProperty(URL_DEL14, "25 Del St");
+  const victim14Dir = path.join(IMAGES_ROOT, victim14Id);
+  fs.mkdirSync(victim14Dir, { recursive: true });
+  fs.writeFileSync(path.join(victim14Dir, "keep.jpg"), "victim's own photo");
+
+  const maliciousId14 = `${victim14Id}/nested`;
+  const rDel14 = await post({ delete: { ids: [maliciousId14] } });
+  assert.equal(sec<{ deleted: number }>(rDel14.json, "delete").deleted, 0, "the nested ref matches no row");
+  assert.ok(
+    fs.existsSync(victim14Dir) && fs.existsSync(path.join(victim14Dir, "keep.jpg")),
+    "the victim's OWN image directory survives",
+  );
+
+  // 17. REGRESSION: a non-string element reported via `String(x)` can itself
+  // throw -- `TypeError: Cannot convert object to primitive value` for a
+  // JSON-constructible object like `{"toString":1}`, whose `toString` is a
+  // non-callable data property. `stringRefs` runs OUTSIDE `runById`'s
+  // try/catch, so the throw escapes `deletePropertiesByRef` and the
+  // uncontained call in the route: HTTP 500 with no body, after part of the
+  // delete already committed, every later section of the SAME payload
+  // discarded -- the exact hole sec-001/round-1 closed, reopened.
+  const URL_DEL17 = "https://www.domain.com.au/29-del-st-point-cook-vic-3030-2020000119";
+  const URL_DEL17_NEW = "https://www.domain.com.au/30-del-st-point-cook-vic-3030-2020000120";
+  const del17Id = await createProperty(URL_DEL17, "29 Del St");
+
+  const rDel17 = await post({
+    delete: { ids: [del17Id], listingUrls: [{ toString: 1 }] },
+    properties: [{ listingUrl: URL_DEL17_NEW, sourceSite: "domain", address: "30 Del St" }],
+  });
+  assert.equal(rDel17.status, 200, "a non-string element that itself throws on String() must not 500 the batch");
+  assert.equal(sec<{ deleted: number }>(rDel17.json, "delete").deleted, 1, "the valid id ref still deletes");
+  assert.equal(
+    count("SELECT COUNT(*) c FROM properties WHERE id = ?", del17Id),
+    0,
+    "the valid id's property row is gone",
+  );
+  assert.ok(
+    sec<{ section: string }[]>(rDel17.json, "errors").some((e) => e.section === "delete"),
+    "the throwing ref is reported under errors, section delete -- not an uncaught 500",
+  );
+  assert.equal(
+    count("SELECT COUNT(*) c FROM properties WHERE listing_url = ?", URL_DEL17_NEW),
+    1,
+    "the properties section in the SAME payload still applied despite the throwing delete ref",
+  );
+
+  // 18. The identity guard: `id = "."` and `id = ".."` must not reach the
+  // filesystem step at all. Without the guard, `path.resolve(root, ".")`
+  // collapses to `root` itself, and the fs step -- which runs UNCONDITIONALLY
+  // -- would `fs.rmSync(root, {recursive: true})`, destroying every
+  // property's images in one call. A sibling property with a real image
+  // directory proves it: it must survive both sends untouched.
+  const URL_DEL18_SIBLING = "https://www.domain.com.au/31-del-st-point-cook-vic-3030-2020000121";
+  const sibling18Id = await createProperty(URL_DEL18_SIBLING, "31 Del St");
+  const sibling18Dir = path.join(IMAGES_ROOT, sibling18Id);
+  fs.mkdirSync(sibling18Dir, { recursive: true });
+  fs.writeFileSync(path.join(sibling18Dir, "keep.jpg"), "sibling's own photo");
+  assert.ok(fs.existsSync(IMAGES_ROOT), "sanity: IMAGES_ROOT exists before the guard cases run");
+
+  const rDel18Dot = await post({ delete: { ids: ["."] } });
+  assert.equal(rDel18Dot.status, 200, "id '.' does not 500");
+  assert.equal(sec<{ deleted: number }>(rDel18Dot.json, "delete").deleted, 0, "'.' matches no row");
+  assert.ok(fs.existsSync(IMAGES_ROOT), "IMAGES_ROOT itself survives id '.'");
+  assert.ok(
+    fs.existsSync(sibling18Dir) && fs.existsSync(path.join(sibling18Dir, "keep.jpg")),
+    "the sibling's OWN image directory survives id '.'",
+  );
+
+  const rDel18DotDot = await post({ delete: { ids: [".."] } });
+  assert.equal(rDel18DotDot.status, 200, "id '..' does not 500");
+  assert.equal(sec<{ deleted: number }>(rDel18DotDot.json, "delete").deleted, 0, "'..' matches no row");
+  assert.ok(fs.existsSync(IMAGES_ROOT), "IMAGES_ROOT itself survives id '..'");
+  assert.ok(
+    fs.existsSync(sibling18Dir) && fs.existsSync(path.join(sibling18Dir, "keep.jpg")),
+    "the sibling's OWN image directory survives id '..'",
+  );
+
+  // 19. The per-ref try/catch in `runById` (inside `deletePropertiesByRef`)
+  // must contain a genuine throw from `deleteProperty` on a VALID, resolved
+  // string id -- distinct from case 9, whose `{}` element never reaches
+  // `runById` at all (it is filtered a step earlier by `stringRefs`). Force
+  // the throw with the same TEMP TRIGGER technique case 8 uses, through
+  // `post()`, alongside another valid ref and a `properties` entry in the SAME
+  // payload -- proving containment, not just that the exception exists.
+  const URL_DEL19_BLOCKED = "https://www.domain.com.au/32-del-st-point-cook-vic-3030-2020000122";
+  const URL_DEL19_OTHER = "https://www.domain.com.au/33-del-st-point-cook-vic-3030-2020000123";
+  const URL_DEL19_NEW = "https://www.domain.com.au/34-del-st-point-cook-vic-3030-2020000124";
+  const del19BlockedId = await createProperty(URL_DEL19_BLOCKED, "32 Del St");
+  const del19OtherId = await createProperty(URL_DEL19_OTHER, "33 Del St");
+
+  sqlite.exec(
+    `CREATE TEMP TRIGGER trg_block_del19 BEFORE DELETE ON properties WHEN OLD.id = '${del19BlockedId}' ` +
+      `BEGIN SELECT RAISE(ABORT, 'test: forced failure to prove the per-ref try/catch'); END;`,
+  );
+
+  const rDel19 = await post({
+    delete: { ids: [del19BlockedId, del19OtherId] },
+    properties: [{ listingUrl: URL_DEL19_NEW, sourceSite: "domain", address: "34 Del St" }],
+  });
+  sqlite.exec("DROP TRIGGER trg_block_del19");
+
+  assert.equal(rDel19.status, 200, "a genuine throw on one ref does not 500 the whole request");
+  assert.equal(
+    count("SELECT COUNT(*) c FROM properties WHERE id = ?", del19BlockedId),
+    1,
+    "the triggered ref's property survives -- the failed delete rolled back",
+  );
+  assert.equal(
+    sec<{ deleted: number }>(rDel19.json, "delete").deleted,
+    1,
+    "the OTHER valid ref still deletes despite the triggered one throwing",
+  );
+  assert.equal(count("SELECT COUNT(*) c FROM properties WHERE id = ?", del19OtherId), 0, "the other ref's row is gone");
+  assert.ok(
+    sec<{ section: string; ref: string }[]>(rDel19.json, "errors").some(
+      (e) => e.section === "delete" && e.ref === del19BlockedId,
+    ),
+    "the triggered ref lands in errors under section delete",
+  );
+  assert.equal(
+    count("SELECT COUNT(*) c FROM properties WHERE listing_url = ?", URL_DEL19_NEW),
+    1,
+    "the properties section in the SAME payload still applied despite the per-ref throw",
+  );
+
+  // 20. A non-array `ids`/`listingUrls` must be reported loudly, the same way
+  // a bad-shape ELEMENT already is -- not silently treated as empty. The
+  // route-level guard also runs whenever `body.delete` is present, so a
+  // wrong-shaped container isn't dropped before it ever reaches the module
+  // that reports it.
+  const URL_DEL20 = "https://www.domain.com.au/35-del-st-point-cook-vic-3030-2020000125";
+  const del20Id = await createProperty(URL_DEL20, "35 Del St");
+
+  const rDel20String = await post({ delete: { ids: del20Id } });
+  assert.equal(rDel20String.status, 200, "a string ids container does not 500");
+  assert.equal(
+    sec<{ deleted: number }>(rDel20String.json, "delete").deleted,
+    0,
+    "nothing deleted from a bad container",
+  );
+  assert.ok(
+    sec<{ section: string }[]>(rDel20String.json, "errors").some((e) => e.section === "delete"),
+    "a non-array ids container is reported under errors, section delete",
+  );
+  assert.equal(count("SELECT COUNT(*) c FROM properties WHERE id = ?", del20Id), 1, "the property is untouched");
+
+  const rDel20Obj = await post({ delete: { ids: { "0": del20Id } } });
+  assert.equal(rDel20Obj.status, 200, "a plain-object ids container does not 500");
+  assert.ok("delete" in rDel20Obj.json, "the delete section runs and reports, rather than being skipped entirely");
+  assert.equal(sec<{ deleted: number }>(rDel20Obj.json, "delete").deleted, 0, "nothing deleted from a bad container");
+  assert.ok(
+    sec<{ section: string }[]>(rDel20Obj.json, "errors").some((e) => e.section === "delete"),
+    "a non-array-like ids container is reported under errors, section delete",
+  );
+  assert.equal(count("SELECT COUNT(*) c FROM properties WHERE id = ?", del20Id), 1, "still untouched");
+
   sqlite.close();
   try {
     fs.rmSync(tmp, { recursive: true, force: true });

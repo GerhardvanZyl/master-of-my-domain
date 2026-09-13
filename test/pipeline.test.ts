@@ -179,7 +179,7 @@ async function main() {
 
     // --- Delete: works even with a scrape_jobs row referencing the property,
     // cascades DB rows, and removes image files from disk ---
-    const { deleteProperty } = await import("../src/db/queries/properties");
+    const { deleteProperty } = await import("../src/db/queries/delete");
     sqlite
       .prepare(
         "INSERT INTO scrape_jobs (id, url, status, property_id, created_at, updated_at) VALUES ('job_t', ?, 'done', ?, ?, ?)",

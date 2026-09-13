@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { db } from "../client";
 import {
@@ -12,7 +10,6 @@ import {
   propertyChanges,
 } from "../schema";
 import type { Property, PriceHistory, PropertyRating } from "../schema";
-import { IMAGES_DIR } from "@/lib/env";
 import { priorityScore } from "@/lib/priority";
 
 /**
@@ -629,19 +626,4 @@ export function listPropertyChanges(opts: {
   const thumbOf = (id: string): string | null => pickHero(byProp.get(id) ?? [])?.localPath ?? null;
 
   return rows.map((r) => ({ ...r, thumbPath: thumbOf(r.propertyId) }));
-}
-
-export function deleteProperty(id: string): void {
-  // Detach history rows first: scrape_jobs.property_id has no ON DELETE action,
-  // so with foreign_keys=ON the delete would otherwise fail.
-  db.update(scrapeJobs)
-    .set({ propertyId: null })
-    .where(eq(scrapeJobs.propertyId, id))
-    .run();
-  db.delete(properties).where(eq(properties.id, id)).run();
-  // id comes from a request param — keep the rm strictly inside IMAGES_DIR.
-  const dir = path.resolve(IMAGES_DIR, id);
-  if (dir.startsWith(path.resolve(IMAGES_DIR) + path.sep)) {
-    fs.rmSync(dir, { recursive: true, force: true });
-  }
 }

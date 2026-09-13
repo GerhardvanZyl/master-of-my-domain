@@ -13,6 +13,11 @@
 // Images are chunked because each one is a server-side download: a 300-photo
 // section in one request sits there for minutes and any proxy in between gives
 // up. Every section is idempotent, so a chunk that fails is simply re-sent.
+//
+// `delete` needs no chunking (it's just id/listing_url strings, no downloads)
+// so it rides along in the same request as `properties` etc. via `...rest`
+// below — the route applies `delete` before `properties` regardless of key
+// order in the JSON, so "remove these, then load those" is safe in one file.
 import fs from "node:fs";
 
 const flag = (n, d) => {

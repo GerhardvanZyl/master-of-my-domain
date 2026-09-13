@@ -64,6 +64,7 @@ applied in this order):
 
 | section | mirrors | notes |
 | --- | --- | --- |
+| `delete` | *(none)* | `{ listingUrls?, ids? }`; applies **first**; unmatched ref deletes no row, not an error |
 | `properties` | `npm run load` | `LoadItem[]`, upsert by `listing_url`, partial |
 | `images` | `npm run load:images` | server downloads; SLOW — chunk it |
 | `tags` | `npm run tag:set` | `notes` carries `hero`/`floorplan`/`master`; `ifAbsent` never clobbers a hand correction |
@@ -71,6 +72,30 @@ applied in this order):
 | `sold` / `withdrawn` | `npm run mark-sold` | replaces prior status + `Sold` row in place |
 | `priceObserve` | `npm run price:observe` | |
 | `shortlist` | `npm run shortlist:set` | full replace: `1` for given URLs, `0` for every other Domain listing |
+
+`delete` resolves a `listingUrls` ref against `listing_url` **only** —
+deliberately unlike `sold`/`withdrawn`/`priceObserve`, which also resolve
+`alt_listing_url` via `findProperty`. `listing_url` is UNIQUE, so this can
+never be ambiguous. Resolving a *destructive* reference through an alias
+can't be made idempotent: after a successful delete, re-sending the exact
+same ref could match a different row — one that only ever carried it as
+`alt_listing_url` — and destroy that row too, on the documented "just re-send
+a failed batch" recovery path. A caller holding only an REA (alt) URL should
+pass the property `id`, or its canonical `listing_url`, instead. It removes
+the property's `IMAGES_DIR/<id>` directory but deliberately **never** touches
+`data/media/<id>/` — the user's own inspection photos and videos, the one
+thing in this app that isn't re-fetchable from Domain. ponytail: cleaning
+that up needs the user's explicit say-so as its own feature; see
+`.claude/review/conventions.md` ("MEDIA_DIR is never removed by an automated
+delete path") before changing this.
+
+An unmatched ref is **not** a plain no-op: an `ids` ref that matches no row
+still clears a stale `IMAGES_DIR/<id>` left over from a prior image-removal
+failure, which is also the ONLY way such a failure can be retried — once a
+`listingUrls` ref's row is gone, the URL no longer resolves to an id, so a
+re-send of that ref returns a clean `notFound` while the orphan directory is
+permanent. Prefer `ids` over `listingUrls` when re-sending to clean up a
+reported `image directory not removed` error.
 
 Bad rows are collected into `errors` and reported with `ok: false` rather than
 failing the request, so one dud can't discard the other 300 — **check `errors`,
