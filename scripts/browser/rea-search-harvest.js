@@ -94,5 +94,7 @@ window.__REA = { rows: [], sold: [], perSuburb: {}, done: false, err: null, at: 
   let bin = "";
   for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
   S.gzB64Len = bin.length;
-  location.href = "http://127.0.0.1:3300/#MOMDGZ=" + encodeURIComponent(btoa(bin));
+  // `#name=<file>&d=` is the only form the receiver's landing page posts; the
+  // old `#MOMDGZ=` fragment reaches it as "no payload" and the harvest is lost.
+  location.href = "http://127.0.0.1:3300/#name=rea-search-gz&d=" + encodeURIComponent(btoa(bin));
 })();
