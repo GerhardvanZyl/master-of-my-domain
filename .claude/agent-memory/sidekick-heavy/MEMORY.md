@@ -4,3 +4,4 @@
 - [Repo scratch & DB hygiene](repo-sqlite-scratch-and-db-hygiene.md) — tsx module resolution, `.mts` for scratch, CRLF, sed/python line skew, `data/app.db` restore
 - [Twin-merge convergence](project-twin-merge-convergence.md) — cross-source gap-fills, same-source relistings overwrite, and what still oscillates
 - [Delisted derivation](project-delisted-derivation.md) — `alt_listing_url`, the one-place rule, and why derivation alone would be a regression
+- [Hero & floorplan invariant](project-hero-and-floorplan-invariant.md) — `pickHero` ignores `ordinal`; how the floorplan scripts must resolve the cover, and the two-file runtime split

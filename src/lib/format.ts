@@ -1,3 +1,22 @@
+/**
+ * Display title for a property card/row/heading. Never the raw `listingUrl` —
+ * a URL is not a title (some REA "address available on request" listings
+ * disclose no street address at all, only a suburb). Suburb is the next-best
+ * disclosed detail; a plain string is the last resort so a screen never shows
+ * a bare listing link where an address belongs.
+ */
+export function propertyTitle(p: {
+  address: string | null;
+  suburb?: string | null;
+  // Every real caller is a PropertyListItem, which always carries this — kept
+  // in the parameter shape (not read below) so a test can pass the real
+  // caller's shape, and so a future edit that reaches for it as a fallback is
+  // at least typed the same as the property it must never leak.
+  listingUrl?: string | null;
+}): string {
+  return p.address ?? p.suburb ?? "Address not disclosed";
+}
+
 export function formatPrice(
   display: string | null,
   numeric: number | null,

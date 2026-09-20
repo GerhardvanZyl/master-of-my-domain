@@ -5,6 +5,7 @@ export interface RoomImage {
   localPath: string;
   propertyId: string;
   address: string | null;
+  suburb: string | null;
   roomType: string | null;
   taggedBy: string | null;
   confidence: number | null;
@@ -13,6 +14,7 @@ export interface RoomImage {
 export interface PropertyColumn {
   propertyId: string;
   address: string | null;
+  suburb: string | null;
   images: RoomImage[];
 }
 
@@ -21,7 +23,7 @@ function groupByProperty(rows: RoomImage[]): PropertyColumn[] {
   for (const r of rows) {
     let c = cols.get(r.propertyId);
     if (!c) {
-      c = { propertyId: r.propertyId, address: r.address, images: [] };
+      c = { propertyId: r.propertyId, address: r.address, suburb: r.suburb, images: [] };
       cols.set(r.propertyId, c);
     }
     c.images.push(r);
@@ -59,7 +61,7 @@ export function imagesByRoom(roomType: string): PropertyColumn[] {
   const rows = sqlite
     .prepare(
       `SELECT i.id, i.local_path AS localPath, i.property_id AS propertyId,
-        p.address AS address, t.room_type AS roomType,
+        p.address AS address, p.suburb AS suburb, t.room_type AS roomType,
         t.tagged_by AS taggedBy, t.confidence AS confidence
        FROM image_tags t
        JOIN images i ON i.id = t.image_id
@@ -99,7 +101,7 @@ export function groupMembers(groupId: string): PropertyColumn[] {
   const rows = sqlite
     .prepare(
       `SELECT i.id, i.local_path AS localPath, i.property_id AS propertyId,
-        p.address AS address, t.room_type AS roomType,
+        p.address AS address, p.suburb AS suburb, t.room_type AS roomType,
         t.tagged_by AS taggedBy, t.confidence AS confidence
        FROM similarity_group_members m
        JOIN images i ON i.id = m.image_id

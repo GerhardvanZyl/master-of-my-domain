@@ -7,7 +7,7 @@ import {
   type ImageWithTag,
 } from "@/db/queries/properties";
 import { vibeScore } from "@/lib/vibes";
-import { formatPrice, fmtNum, fmtDistance, fmtMinutes } from "@/lib/format";
+import { formatPrice, fmtNum, fmtDistance, fmtMinutes, propertyTitle } from "@/lib/format";
 import { formatInspection } from "@/lib/inspection";
 import CompareRooms, { type CompareCol } from "@/components/CompareRooms";
 import PropertyMap, { AreaPhotos } from "@/components/PropertyMap";
@@ -244,6 +244,7 @@ export default async function ComparePage({
   const roomCols: CompareCol[] = props.map((p) => ({
     propertyId: p.id,
     address: p.address,
+    suburb: p.suburb,
     rooms: roomsFromImages(imgsByProp.get(p.id) ?? []),
   }));
 
@@ -298,7 +299,7 @@ export default async function ComparePage({
                       </div>
                       <Link href={`/property/${p.id}`} className="block px-3.5 py-3">
                         <div className="font-serif text-[18px] leading-tight">
-                          {p.address ?? p.listingUrl}
+                          {propertyTitle(p)}
                         </div>
                         <div className="mt-1 text-[11px] uppercase tracking-wide text-mute">
                           {p.sourceSite}
@@ -403,9 +404,9 @@ export default async function ComparePage({
               <div key={p.id} className="w-[28rem] shrink-0">
                 <div
                   className="mb-2 truncate font-serif text-base"
-                  title={p.address ?? ""}
+                  title={propertyTitle(p)}
                 >
-                  {p.address ?? p.id}
+                  {propertyTitle(p)}
                 </div>
                 <AreaPhotos lat={p.latitude} lng={p.longitude} seed={p.id} />
               </div>

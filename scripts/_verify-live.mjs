@@ -6,6 +6,7 @@
 //
 // Usage: node scripts/_verify-live.mjs [base]
 import fs from "node:fs";
+import { scanRenderedFloorplans } from "./lib/floorplan-scan.mjs";
 
 const BASE = process.argv[2] || "http://192.168.68.125:3225";
 
@@ -62,6 +63,21 @@ const estimated = live.filter((p) => /^estimated/i.test(p.ptSteps || ""));
 // A row with neither address nor price is an artifact, not a listing.
 const orphans = vic.filter((p) => !p.address);
 
+// Not every listing genuinely has a published floorplan, so this is reported
+// rather than a hard `check()` failure — the fast HTTP scan can't tell
+// "genuinely none" from "missed"; scripts/floorplan-coverage.ts (no --fast)
+// is what draws that distinction. This still catches silent drift: a rising
+// count round over round without anyone running the full coverage check is
+// exactly what let 133/567 go unnoticed (2026-09-20 brief, ITEM 4).
+//
+// Same sweep floorplan-coverage.ts runs, from lib/floorplan-scan.mjs. It
+// swallows per-page failures by design: this informational scan sits ahead of
+// every check() and the report below, and ~500 fetches in front of them meant
+// one delisted row or one post-deploy container restart discarded the whole
+// verification.
+const scan = await scanRenderedFloorplans(BASE, live);
+const noFloorplan = scan.missing.map((p) => p.id);
+
 check(status.ok, "GET /api/batch did not return ok");
 check(status.untagged === 0, `${status.untagged} images still untagged`);
 check(noThumb.length === 0, `${noThumb.length} live listings have photos but no hero/thumb`);
@@ -75,6 +91,11 @@ check(
   nsw.every((p) => p.ptMinutesToFlinders != null),
   `${nsw.filter((p) => p.ptMinutesToFlinders == null).length} frozen NSW rows lost their transit time`,
 );
+
+const floorplanNote =
+  `${noFloorplan.length} live listings render no floorplan — run ` +
+  `'npm run floorplan:coverage' for the storedButUnmarked/noCandidateStored ` +
+  `split before assuming they're genuinely absent.`;
 
 const report = {
   base: BASE,
@@ -92,9 +113,14 @@ const report = {
   liveNoThumb: noThumb.length,
   liveNoStation: noStation.length,
   liveNoTransit: noTransit.length,
+  liveNoFloorplan: noFloorplan.length,
+  // Pages the sweep could not read. They are UNKNOWN, not "has a floorplan",
+  // so liveNoFloorplan above is a partial count whenever this is non-empty.
+  floorplanScanErrors: scan.errors,
   transitEstimated: estimated.length,
   orphanRows: orphans.map((p) => `${p.id} ${p.listingUrl}`),
   FAILURES: fail,
+  ...(noFloorplan.length > 0 ? { floorplanNote } : {}),
 };
 console.log(JSON.stringify(report, null, 1));
 fs.writeFileSync("data/harvest/_verify-live.json", JSON.stringify(report, null, 1));

@@ -14,11 +14,16 @@
 // capture does append floorplans last, but syncImages can drop an image, and a
 // positional match would then silently mark the wrong photo.
 //
-// It also marks the cover. For REA, ordinal 0 IS the hero — pickHero ranks
-// through urlIds(), which parses Domain's filename convention and returns null
-// for REA — so the app renders it correctly either way, but `_verify-live.mjs`
-// checks for an explicit notes='hero' and would report every REA row as a
-// listing with photos and no hero. Marking it makes the implicit rule visible.
+// It also marks the cover, and that write is load-bearing rather than
+// cosmetic. Ordinal 0 is the cover REA's capture leads with, but it is NOT
+// what pickHero resolves to on its own: an earlier claim here said urlIds()
+// returns null for REA filenames so ordinal 0 wins by default, which ignored
+// the rung above it — pickHero prefers the lowest "Image N" in the alt text,
+// and REA writes "Media Overview Image 2" on ordinal 1 while leaving ordinal 0
+// with no alt at all. On prop_927d99ebd31f that made ordinal 1 the rendered
+// hero (verified live, 2026-09-20). pickHero never reads `ordinal`. So this
+// tag is what actually pins the cover — without it the hero is whatever the
+// alt text happens to say.
 //
 // Run this AFTER the room tagger, never before: the tagger skips any image
 // whose notes are 'hero' or 'floorplan' (rewriting them would drop the note),

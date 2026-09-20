@@ -50,8 +50,10 @@ data/media/
 # subagent-driven-development scratch (ledger, briefs, review packages)
 /.superpowers/
 
-# Image cache pulled from the live app by scripts/_tag-remote.ts (regenerable)
+# Image cache pulled from the live app by scripts/_tag-remote.ts,
+# scripts/_recover-floorplans.ts and scripts/floorplan-coverage.ts (regenerable)
 .remote-imgs/
+.remote-imgs-floorplan*/
 
 # dev-loop review run artifacts (findings, logs, scratch worktrees)
 .claude/review/runs/

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { PropertyListItem } from "@/db/queries/properties";
 import { imageUrl } from "@/lib/images";
-import { priceLine, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDate } from "@/lib/format";
+import { priceLine, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDate, propertyTitle } from "@/lib/format";
 import { formatInspection } from "@/lib/inspection";
 import { commuteDestination } from "@/lib/commute";
 import { DEFAULT_VIBE_CONFIG, loadVibeConfig, vibeScore } from "@/lib/vibes";
@@ -175,7 +175,13 @@ function shouldSkipCardNav(e: CardClickEvent): boolean {
  */
 const DBLCLICK_GRACE_MS = 250;
 
-function useCardNav(href: string) {
+/**
+ * `onOpen`, when given, fires exactly once the navigation actually happens —
+ * used by /inbox to mark a share read on open rather than on list load (see
+ * PropertyRow's `onOpen` prop). Optional and unused by PropertyCard, so its
+ * absence leaves this function's behaviour exactly as before.
+ */
+function useCardNav(href: string, onOpen?: () => void) {
   const router = useRouter();
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => void (timer.current && clearTimeout(timer.current)), []);
@@ -183,6 +189,7 @@ function useCardNav(href: string) {
     onClick: (e: CardClickEvent) => {
       if (shouldSkipCardNav(e)) return;
       if (!(e.target as HTMLElement).closest?.("[data-selectable]")) {
+        onOpen?.();
         router.push(href); // instant: no text here to double-click
         return;
       }
@@ -190,6 +197,7 @@ function useCardNav(href: string) {
       timer.current = setTimeout(() => {
         timer.current = null;
         if ((window.getSelection()?.toString() ?? "").trim()) return;
+        onOpen?.();
         router.push(href);
       }, DBLCLICK_GRACE_MS);
     },
@@ -391,7 +399,7 @@ const PropertyCard = memo(function PropertyCard({
             href={`/property/${p.id}`}
             className="rounded focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-forest"
           >
-            {p.address ?? p.listingUrl}
+            {propertyTitle(p)}
           </Link>
         </h3>
         <div className="mb-2.5 flex flex-wrap items-baseline gap-2.5">
@@ -525,6 +533,20 @@ const PropertyCard = memo(function PropertyCard({
  * reason `showCompare` is a flag rather than a required prop: /inbox shows
  * properties shared by another profile, and doesn't currently wire a watch
  * handler through — same opt-out shape as `showCompare`, not a new mechanism.
+ *
+ * `dense` (default off, so the home grid's own list layout is untouched) folds
+ * the four separate price/beds/station/transit flex columns into one wrapping
+ * line under the address instead. Those columns are fixed proportions tuned
+ * for the grid's full-width list container; /inbox nests this row inside a
+ * narrower bordered card (it also carries the share strip), and at that width
+ * the same four columns fight for space and truncate mid-word — the reported
+ * "squashed" layout. Wrapping instead of forcing four more columns to share
+ * the shrunken width is the same pattern PropertyCard already uses for its own
+ * meta block, just reused here rather than invented fresh.
+ *
+ * `onOpen`, when given, fires once the property is actually navigated to
+ * (single click on the row, or a direct click on the address link) — /inbox
+ * uses it to mark that property's share read on open rather than on list load.
  */
 export const PropertyRow = memo(function PropertyRow({
   p,
@@ -537,17 +559,63 @@ export const PropertyRow = memo(function PropertyRow({
   attention = false,
   watched = false,
   onWatch,
+  dense = false,
+  onOpen,
 }: Pick<TileProps, "p" | "score" | "isSel" | "selectFull" | "onToggle" | "profile"> & {
   showCompare?: boolean;
   attention?: boolean;
   watched?: boolean;
   onWatch?: (id: string, current: boolean) => void;
+  dense?: boolean;
+  onOpen?: () => void;
 }) {
-  const nav = useCardNav(`/property/${p.id}`);
+  const nav = useCardNav(`/property/${p.id}`, onOpen);
   const tag = SHORTLIST_TAGS.find((t) => t.id === p.shortlistTag);
   const isNew = Date.now() - new Date(p.createdAt).getTime() < NEW_FOR_MS;
   const inspect = formatInspection(p.nextInspection);
   const price = priceLine(p);
+
+  const titleLine = (
+    <span className="flex items-center gap-2">
+      <Link
+        href={`/property/${p.id}`}
+        onClick={onOpen}
+        className="truncate rounded font-serif text-lg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-forest"
+      >
+        {propertyTitle(p)}
+      </Link>
+      {tag && (
+        <span
+          className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold text-white"
+          style={{ background: tag.colour }}
+        >
+          {tag.label}
+        </span>
+      )}
+      {p.delisted && (
+        <span className="shrink-0 rounded bg-[#B84A3A] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+          {p.saleStatus === "sold"
+            ? `Sold${fmtSoldDate(p.soldDate) ? ` · ${fmtSoldDate(p.soldDate)}` : ""}`
+            : p.saleStatus === "withdrawn"
+              ? "Withdrawn"
+              : "Off-market"}
+        </span>
+      )}
+      {isNew && !p.delisted && (
+        <span className="shrink-0 rounded bg-forest px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+          New
+        </span>
+      )}
+      {attention && (
+        <span
+          title="Not in your Domain shortlist — add it there"
+          className="shrink-0 rounded bg-amber px-1.5 py-0.5 text-[10px] font-bold text-white"
+        >
+          ⚠
+        </span>
+      )}
+    </span>
+  );
 
   return (
     <div
@@ -569,70 +637,65 @@ export const PropertyRow = memo(function PropertyRow({
       <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[9px] bg-amber font-serif text-base text-white">
         {score}
       </span>
-      <div className="min-w-0 flex-[1.4]">
-        <span className="flex items-center gap-2">
-          <Link
-            href={`/property/${p.id}`}
-            className="truncate rounded font-serif text-lg focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-forest"
-          >
-            {p.address ?? p.listingUrl}
-          </Link>
-          {tag && (
-            <span
-              className="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold text-white"
-              style={{ background: tag.colour }}
-            >
-              {tag.label}
+      {dense ? (
+        <div className="min-w-0 flex-1">
+          {titleLine}
+          <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[12.5px] text-[#5B5A52]">
+            <span className="font-semibold text-forest">{price.text}</span>
+            {price.note && <span className="text-[11px] text-mute">{price.note}</span>}
+            <span>
+              {p.beds ?? "—"} bd · {p.baths ?? "—"} ba · {p.parking ?? "—"} car
             </span>
-          )}
-          {p.delisted && (
-            <span className="shrink-0 rounded bg-[#B84A3A] px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-              {p.saleStatus === "sold"
-                ? `Sold${fmtSoldDate(p.soldDate) ? ` · ${fmtSoldDate(p.soldDate)}` : ""}`
-                : p.saleStatus === "withdrawn"
-                  ? "Withdrawn"
-                  : "Off-market"}
+            {p.suburb && <span>{p.suburb}</span>}
+            {p.nearestStation && (
+              <span>
+                🚉 {p.nearestStation} · {fmtDistance(p.stationDistanceM)}
+              </span>
+            )}
+            {p.ptMinutesToFlinders != null && (
+              <span>
+                🕑 {fmtMinutes(p.ptMinutesToFlinders)}
+                {isTransitEstimated(p.ptSteps) && (
+                  <span title="Estimated from the nearest tracked property">*</span>
+                )}
+              </span>
+            )}
+            {inspect?.upcoming && (
+              <span className="font-semibold text-forest">📅 {inspect.label}</span>
+            )}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="min-w-0 flex-[1.4]">
+            {titleLine}
+            <span className="flex items-center gap-2 text-xs text-mute">
+              {p.suburb ?? "—"}
+              {inspect?.upcoming && (
+                <span className="font-semibold text-forest">📅 {inspect.label}</span>
+              )}
             </span>
-          )}
-          {isNew && !p.delisted && (
-            <span className="shrink-0 rounded bg-forest px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-              New
-            </span>
-          )}
-          {attention && (
-            <span
-              title="Not in your Domain shortlist — add it there"
-              className="shrink-0 rounded bg-amber px-1.5 py-0.5 text-[10px] font-bold text-white"
-            >
-              ⚠
-            </span>
-          )}
-        </span>
-        <span className="flex items-center gap-2 text-xs text-mute">
-          {p.suburb ?? "—"}
-          {inspect?.upcoming && (
-            <span className="font-semibold text-forest">📅 {inspect.label}</span>
-          )}
-        </span>
-      </div>
-      <span className="flex-1 text-sm">
-        <span className="font-semibold text-forest">{price.text}</span>
-        {price.note && <span className="ml-1 text-[11px] text-mute">{price.note}</span>}
-      </span>
-      <span className="flex-1 text-[13px] text-body">
-        {p.beds ?? "—"} bd · {p.baths ?? "—"} ba · {p.parking ?? "—"} car
-      </span>
-      <span className="flex-[1.3] truncate text-[12.5px] text-[#5B5A52]">
-        {p.nearestStation
-          ? `${p.nearestStation} · ${fmtDistance(p.stationDistanceM)}`
-          : "—"}
-      </span>
-      <span className="flex-[0.8] text-[12.5px] text-[#5B5A52]">
-        {fmtMinutes(p.ptMinutesToFlinders)}
-        {isTransitEstimated(p.ptSteps) && (
-          <span title="Estimated from the nearest tracked property">*</span>
-        )}
-      </span>
+          </div>
+          <span className="flex-1 text-sm">
+            <span className="font-semibold text-forest">{price.text}</span>
+            {price.note && <span className="ml-1 text-[11px] text-mute">{price.note}</span>}
+          </span>
+          <span className="flex-1 text-[13px] text-body">
+            {p.beds ?? "—"} bd · {p.baths ?? "—"} ba · {p.parking ?? "—"} car
+          </span>
+          <span className="flex-[1.3] truncate text-[12.5px] text-[#5B5A52]">
+            {p.nearestStation
+              ? `${p.nearestStation} · ${fmtDistance(p.stationDistanceM)}`
+              : "—"}
+          </span>
+          <span className="flex-[0.8] text-[12.5px] text-[#5B5A52]">
+            {fmtMinutes(p.ptMinutesToFlinders)}
+            {isTransitEstimated(p.ptSteps) && (
+              <span title="Estimated from the nearest tracked property">*</span>
+            )}
+          </span>
+        </>
+      )}
       {onWatch && (
         <button
           type="button"
@@ -1487,7 +1550,7 @@ export default function PropertyGrid({
                   key={id}
                   className="flex items-center gap-1.5 rounded-full bg-hairline py-1 pl-3 pr-1.5 text-xs font-medium text-body"
                 >
-                  <span className="max-w-[140px] truncate">{p.address ?? p.listingUrl}</span>
+                  <span className="max-w-[140px] truncate">{propertyTitle(p)}</span>
                   <button
                     type="button"
                     onClick={() => toggle(id)}

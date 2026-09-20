@@ -379,6 +379,17 @@ preserves that image's existing room type rather than overwriting it with the
 fresh (coarser) verdict. For floorplans on images `_tag-remote.ts` never
 revisits, `scripts/_recover-floorplans.ts` is the dedicated recovery pass.
 
+**The remaining gap — what `_tag-remote.ts` never revisits — gets closed once,
+at the end of the WHOLE round (Domain + REA both done), by
+`npm run floorplan:coverage` in Finish, below.** It runs a model classification
+over every candidate image, same as `_recover-floorplans.ts`, so it must run
+AFTER every tagging/marking step in this document, Domain's and REA's alike —
+running it mid-round would only have to be re-run anyway, and running it before
+the room tagger risks the same permanent-misclassification trap: both
+`_recover-floorplans.ts` and `_rea-floorplan-mark.mjs` skip any image whose
+`notes` is already `hero`/`floorplan`, so marking a floorplan before the tagger
+sees an image leaves it forever unclassified by room.
+
 Then top up the six comparison groups — one representative image per property
 per group, because the app renders one column per property:
 
@@ -597,6 +608,59 @@ and hid `93 Shaftsbury Bvd` vs `93 Shaftsbury Boulevard` behind an abbreviation.
 
 ## Finish
 
+**Close the floorplan gap first — every round, not only when someone
+notices.** 133 of 567 live property pages went silently without a floorplan
+for months (2026-09-20 brief) precisely because nothing checked:
+
+**Call it via `npx tsx` directly, not `npm run floorplan:coverage -- --flag`
+— see the `npm run <script> -- --key=value` warning earlier in this
+document. That form drops the `=` arguments on this PowerShell, so the flag
+below would silently not reach `process.argv`, run the full multi-hour pass
+with `WRITE_TAGS` null, write no tags file, and leave the round with nothing
+to push.**
+
+```bash
+npx tsx scripts/floorplan-coverage.ts --write-tags=data/harvest/_batch-tags-floorplan-coverage.json
+node scripts/batch-push.mjs --base=http://192.168.68.125:3225 \
+  --file=data/harvest/_batch-tags-floorplan-coverage.json
+```
+
+`floorplan:coverage` is the first-class, repeatable version of this check —
+not another `_`-prefixed one-off. It names every live property (both sources)
+with no rendered `>Floorplan<` block and — by actually classifying the stored
+gallery with the same model/prompt/threshold as `_recover-floorplans.ts`
+(both call `scripts/lib/floorplan-recover.ts`, so they cannot drift), not
+guessing from image count — splits them into three buckets:
+
+| bucket | means | what to do |
+| --- | --- | --- |
+| `storedButUnmarked` | a stored image classifies as the floorplan | the command above tags it — nothing else needed |
+| `notClassified` | the property had candidates but **not one could be classified** (LM Studio down, `/api/img` erroring) | re-run the check; these were never looked at |
+| `noCandidateStored` | no candidate classified as the floorplan — either every candidate was genuinely looked at (check `failedImageIds`: empty means this), or some threw and were never looked at at all (non-empty `failedImageIds` — a re-run may still find it) | STOP only when `failedImageIds` is empty, see below |
+
+It is slow (one local-model call per candidate image, ~1-4s each), so budget a
+similar window to step 4's tagging pass; `npx tsx scripts/floorplan-coverage.ts
+--fast` gives an instant missing-count without the split when you only need to
+know whether the gap grew, not close it. `scanErrors` in the report lists
+property pages that would not load at all — those are unknown, not covered, so
+re-run if it is non-empty.
+
+**STOP before trying to close it further only for a `noCandidateStored` entry
+whose own `failedImageIds` is empty** — that is the only shape that actually
+means "every candidate was looked at and none is a floorplan". A property
+where some candidates classified clean misses and others threw (LM Studio
+blip, `/api/img` erroring) also lands in `noCandidateStored` (tech-005: the
+bucket is not re-run because doing so costs a full re-classification of every
+candidate, including the ones that already got a good verdict), but its
+`failedImageIds` is non-empty, so it needs a re-run, not a capture. The only
+way to get a floorplan that was never downloaded is a fresh browser capture of
+that listing, and browser automation requires the user's own per-session
+approval (standing rule) — report the count and the property ids for entries
+with empty `failedImageIds`, do not drive Chrome to fetch them yourself.
+**`notClassified` is not this bucket either** — it is a failed pass, not a
+missing photo, and asking the user to open a browser for it wastes an approval
+that has to be granted by hand.
+
 ```bash
 node scripts/_verify-live.mjs    # checks every claim the report will make
 ```
@@ -609,5 +673,19 @@ asserts the things that quietly go wrong
 station, and that the 25 frozen NSW rows still number 25 with their transit
 intact.
 
+It also reports `liveNoFloorplan` — a fast, HTTP-only rescan of the same
+`>Floorplan<` marker `floorplan:coverage` checks, run from the same helper
+(`scripts/lib/floorplan-scan.mjs`). This one is informational, not a hard
+failure: not every listing genuinely has a published floorplan, and a plain
+HTTP scan can't tell "genuinely none" from "missed" the way the model
+classification in step 4 can. A **non-zero and non-shrinking** count here
+across rounds means the coverage-check step above was skipped — re-run it
+before reporting the round done. Pages that would not load are listed
+separately in `floorplanScanErrors` and are unknown rather than covered, so
+`liveNoFloorplan` is a partial count whenever that array is non-empty; the
+sweep deliberately never fails the run over one, because it sits ahead of
+every blocking check in the script.
+
 Report: new listings, price changes, sold/withdrawn, photos + floorplans added,
-heroes set, rooms tagged, transit filled, and **that the live app is updated**.
+heroes set, rooms tagged, transit filled, floorplan coverage (missing count and
+how many were recovered this round), and **that the live app is updated**.

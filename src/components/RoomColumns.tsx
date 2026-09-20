@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { PropertyColumn } from "@/db/queries/rooms";
 import { imageUrl } from "@/lib/images";
+import { propertyTitle } from "@/lib/format";
 import { isMachineTagged, type PhotoLite } from "@/lib/photo";
 import Lightbox from "./Lightbox";
 
@@ -31,9 +32,9 @@ export default function RoomColumns({ columns }: { columns: PropertyColumn[] }) 
               <Link
                 href={`/property/${col.propertyId}`}
                 className="mb-2 block truncate font-serif text-base hover:text-forest"
-                title={col.address ?? col.propertyId}
+                title={propertyTitle(col)}
               >
-                {col.address ?? col.propertyId}
+                {propertyTitle(col)}
               </Link>
               <div className="space-y-2">
                 {col.images.map((img) => (
