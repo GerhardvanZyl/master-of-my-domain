@@ -392,3 +392,122 @@ inside a review round.
 Raise it only if the user has asked for media to be cleaned up, or if the orphaned
 directories are shown to be causing a concrete problem — and then as a feature, with
 the user's say-so, not as a fix.
+
+---
+
+## `pickHero`'s first rung is the `Image N` index in `alt` text — not ordinal, not position, not shape
+
+**Owning lane:** technical.
+**Recorded:** 2026-09-20, run `20260920-1449-bugfix`.
+
+`pickHero` (`src/lib/photo.ts`, re-exported from `src/db/queries/properties.ts`)
+resolves the cover in this order: an explicit `notes='hero'`; else the lowest
+`Image N` index parsed out of `alt`; else the lowest-photoIndex 3:2 shot from
+Domain's filename convention; else the lowest-index real landscape; else
+`imgs[0]`. **It never reads `ordinal`.**
+
+Any code that reasons about "which image is the cover" must resolve it through
+`pickHero` itself. Do not substitute a proxy.
+
+This cost a live regression in the run above. A floorplan pass excluded
+`ordinal === 0` as "the hero" on the strength of a comment in
+`scripts/_rea-floorplan-mark.mjs` asserting "for REA, ordinal 0 IS the hero".
+Measured on the affected property: ordinal 0 had `alt: null` while ordinal 1
+carried `alt: "Media Overview Image 2"`, so the alt rung selected ordinal 1
+outright and the guard protected the wrong image. The claim was wrong in both
+directions — the comment has since been corrected.
+
+Note also that tagging a previously-*invisible* image `notes='floorplan'` forces
+`isVisibleImage` true and therefore **can** move the hero, by adding a candidate
+to the pool `pickHero` folds over.
+
+---
+
+## The skip-when-no-explicit-hero rule is deliberately superseded
+
+**Owning lane:** requirements.
+**Recorded:** 2026-09-20, run `20260920-1449-bugfix`.
+
+`scripts/_recover-floorplans.ts` once skipped any property with no explicit
+`notes='hero'` image rather than guess which image was the cover. That rule is
+**retired**, deliberately and after review. The floorplan pass now excludes
+whatever `pickHero()` returns over the `isVisibleImage()`-filtered array, and
+there is no skip branch.
+
+Ratified because the substitute is strictly stronger for the purpose the rule
+served ("never overwrite a hero"), and the argument was traced rather than
+accepted: candidates are drawn only from already-visible images, so a tag cannot
+pull a previously-invisible image into the pool; the write sets
+`notes='floorplan'` and `roomType = existing ?? 'other'`; and `pickHero` ranks
+only on `roomType==='exclude'`, `notes==='hero'`, `alt`, `sourceUrl`, `width`
+and `height` — none of which that write touches.
+
+**Recorded because the pressure to relax it will recur.** Keeping the rule made
+roughly 14 of every 15 REA rows unprocessable, and two separate agents relaxed
+it unilaterally in a single run before it was ratified on evidence — the first
+time incorrectly, with live consequences. Do not re-litigate it, and do not
+re-relax it by a different route.
+
+---
+
+## A script with an unconditional `main().catch()` at module scope is unsafe to import from
+
+**Owning lane:** architecture.
+**Recorded:** 2026-09-20, run `20260920-1449-bugfix`.
+
+Importing a helper out of such a script **executes its `main()` as an import
+side effect.** In the run above, importing `classifyFloorplan` from
+`scripts/_recover-floorplans.ts` launched a live, unbounded local-VLM sweep
+against a stale audit file that had to be killed with `Stop-Process`.
+
+Before importing from any script under `scripts/`, check for an `isMain` guard.
+Shared runtime code belongs in a module with no entry point —
+`scripts/_live-http.mjs`, `scripts/lib/*` — not in a script that also runs.
+
+---
+
+## Importing `src/db/queries/properties.ts` opens and migrates `data/app.db`
+
+**Owning lane:** architecture.
+**Recorded:** 2026-09-20, run `20260920-1449-bugfix`.
+
+`src/db/client.ts` calls `createConnection()` at **module scope**, so merely
+importing anything from `src/db/queries/properties.ts` mkdirs `DATA_DIR` and
+`IMAGES_DIR`, opens the database, applies the DDL and runs `migrateColumns()`.
+Measured with `DB_PATH`/`DATA_DIR` redirected to a scratch path: a ~151 KB
+database plus WAL/SHM sidecars and an `images/` directory appear, and
+`[db] …app.db — 0 properties` is printed.
+
+Image-selection **policy** — `pickHero`, `isVisibleImage`, `isPropertyPhoto`,
+`aspect`, `isHeroPhoto`, `urlIds`, `isRealLandscape`, `altIndex` — therefore
+lives in `src/lib/photo.ts`, which has no persistence dependency.
+`properties.ts` re-exports three of them as a **compatibility shim** for
+existing callers. New code, and anything under `scripts/`, must import from
+`@/lib/photo`.
+
+This matters beyond tidiness: a live-HTTP-only round command that imports the
+query module migrates the tracked 11.6 MB database that the standing project
+rule treats as read-only, and prints a local row count directly above a report
+about the live instance — the exact confusion `scripts/_verify-live.mjs`'s own
+header warns about.
+
+---
+
+## `npm run <script> -- --flag` silently drops arguments on this repo's PowerShell
+
+**Owning lane:** artifacts.
+**Recorded:** 2026-09-20, run `20260920-1449-bugfix`.
+
+Every `--`-prefixed argument after npm's `--` separator is swallowed before it
+reaches `process.argv` — not only the ones containing `=`. Reproduced against a
+minimal package: `npm run t -- --fast --write-tags=foo.json` delivers neither.
+
+**Call scripts directly: `npx tsx scripts/<name>.ts --flag=value`.**
+
+This was already written in one procedure document and still got reintroduced
+into that same document's new commands. As written, the documented floorplan
+backfill would have run a multi-hour classification pass with its output flag
+unset, produced no tags file, and left the round finishing with the floorplans
+still unmarked — the exact failure the procedure exists to prevent. It is a
+convention now so it binds reviewers and future rounds, not just readers of that
+one file.

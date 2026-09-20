@@ -36,23 +36,10 @@ export default function InboxPage() {
           if (cancelled) return;
           setItems(d.shares);
           setError(null);
-          // Mark read only what was just shown as unread — NOT "every unread
-          // share for this profile" (a share landing between this GET and the
-          // POST below would otherwise get silently marked read without ever
-          // being displayed). Scoped to its own .catch so a failed mark-read
-          // doesn't blank out a list that loaded fine.
-          const unreadIds = d.shares.filter((s) => s.share.readAt == null).map((s) => s.share.id);
-          fetch("/api/shares/read", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ profile, ids: unreadIds }),
-          })
-            .then(() => {
-              if (!cancelled) window.dispatchEvent(new Event("sharesread"));
-            })
-            .catch(() => {
-              /* best-effort; the list already rendered successfully */
-            });
+          // No mark-read here any more — a share is "unread" until its
+          // property is actually opened (see markOpened below), not merely
+          // listed. Marking on load made the unread dot vanish (and the bell
+          // clear) before the user had looked at anything.
         })
         .catch(() => {
           if (!cancelled) setError("Couldn't load your inbox.");
@@ -68,6 +55,36 @@ export default function InboxPage() {
       window.removeEventListener("focus", load);
     };
   }, [ready, profile]);
+
+  // Mark one share read the moment its property is opened (PropertyRow's
+  // `onOpen`, fired on navigation, not on mere render) — so the highlight
+  // means "not yet opened", not "not yet listed". Only ever called with an id
+  // out of the `items` this page already fetched and rendered (the callback
+  // closes over `p.share.id` from the map below), preserving the same
+  // "only ids actually shown may be marked read" property the old load-time
+  // call had — a share arriving after this GET is simply not in `items` yet,
+  // so it can't be touched here either.
+  function markOpened(shareId: string) {
+    if (!profile) return;
+    setItems((prev) =>
+      prev
+        ? prev.map((it) =>
+            it.share.id === shareId && it.share.readAt == null
+              ? { ...it, share: { ...it.share, readAt: new Date().toISOString() } }
+              : it,
+          )
+        : prev,
+    );
+    fetch("/api/shares/read", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profile, ids: [shareId] }),
+    })
+      .then(() => window.dispatchEvent(new Event("sharesread")))
+      .catch(() => {
+        /* best-effort; the optimistic local update above already reflects it */
+      });
+  }
 
   if (!ready) return null;
 
@@ -93,27 +110,45 @@ export default function InboxPage() {
 
       {items && items.length > 0 && (
         <div className="flex flex-col gap-3">
-          {items.map((p) => (
-            <div key={p.share.id} className="overflow-hidden rounded-2xl border border-line bg-white">
-              <div className="flex flex-wrap items-center gap-2 border-b border-hairline bg-sand px-4 py-2 text-[12.5px] text-[#5a5344]">
-                {p.share.readAt == null && (
-                  <span aria-label="unread" className="h-[7px] w-[7px] shrink-0 rounded-full bg-forest" />
-                )}
-                <span className="font-semibold text-forest">Shared by {p.share.fromProfile}</span>
-                <span className="text-mute">· {fmtRelative(p.share.createdAt)}</span>
-                {p.share.note && <span className="italic">&ldquo;{p.share.note}&rdquo;</span>}
+          {items.map((p) => {
+            const unopened = p.share.readAt == null;
+            return (
+              <div
+                key={p.share.id}
+                className={`overflow-hidden rounded-2xl border bg-white ${
+                  unopened ? "border-forest" : "border-line"
+                }`}
+              >
+                <div
+                  className={`flex flex-wrap items-center gap-2 border-b border-hairline bg-sand px-4 py-2
+                    text-[12.5px] text-[#5a5344]`}
+                >
+                  {unopened && (
+                    <span
+                      className={`shrink-0 rounded bg-forest px-1.5 py-0.5 text-[10px] font-bold
+                        uppercase tracking-wide text-white`}
+                    >
+                      Not yet opened
+                    </span>
+                  )}
+                  <span className="font-semibold text-forest">Shared by {p.share.fromProfile}</span>
+                  <span className="text-mute">· {fmtRelative(p.share.createdAt)}</span>
+                  {p.share.note && <span className="italic">&ldquo;{p.share.note}&rdquo;</span>}
+                </div>
+                <PropertyRow
+                  p={p}
+                  score={Math.round(vibeScore(p, p.ratings, vibeCfg))}
+                  isSel={false}
+                  selectFull={false}
+                  onToggle={() => {}}
+                  profile={profile}
+                  showCompare={false}
+                  dense
+                  onOpen={unopened ? () => markOpened(p.share.id) : undefined}
+                />
               </div>
-              <PropertyRow
-                p={p}
-                score={Math.round(vibeScore(p, p.ratings, vibeCfg))}
-                isSel={false}
-                selectFull={false}
-                onToggle={() => {}}
-                profile={profile}
-                showCompare={false}
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </section>

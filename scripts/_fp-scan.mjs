@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 const db = new Database("data/app.db", { readonly: true });
 
-// Mirrors src/db/queries/properties.ts — keep in sync if that changes.
+// Mirrors src/lib/photo.ts — keep in sync if that changes.
 const aspect = (w, h) => (w && h ? w / h : null);
 const isPropertyPhoto = (w, h) => {
   const a = aspect(w, h);

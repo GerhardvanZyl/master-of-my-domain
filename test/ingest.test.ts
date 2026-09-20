@@ -138,6 +138,54 @@ async function main() {
   });
   assert.notEqual(otherId, twinId, "a different street number stays a separate property");
 
+  // REGRESSION (FIX 1 / tech-001): two DIFFERENT withheld-address REA listings
+  // ("Address available on request") in the same suburb must produce two rows,
+  // not one. Before the fix, ReaAdapter.normalize wrote og:title into `address`
+  // for a withheld listing, so both listings normalized to the identical
+  // address "Address available on request, Seabrook" — addressKey() then
+  // produced the same key for both and the second upsertProperty call silently
+  // merged onto the first, keeping the first's listing_url but the second's
+  // price/beds. `address` must stay null instead; suburb/state (from the URL
+  // slug) carry the disclosed detail, and null has no addressKey at all so no
+  // twin match is even attempted.
+  const { ReaAdapter } = await import("../src/scrape/adapters/rea");
+  const withheldRaw = (externalId: string, price: string, beds: number) => ({
+    url: `https://www.realestate.com.au/property-house-vic-seabrook-${externalId}`,
+    jsonLd: [],
+    ogTitle: "Address available on request, Seabrook",
+    bodyText: price,
+    ariaLabels: [`House with ${beds} bedrooms`],
+  });
+  const withheldA = ReaAdapter.normalize(withheldRaw("2000001", "$700,000", 3)).property;
+  const withheldB = ReaAdapter.normalize(withheldRaw("2000002", "$900,000", 4)).property;
+  assert.equal(withheldA.address, null, "withheld listing A has no address, never an og:title stand-in");
+  assert.equal(withheldB.address, null, "withheld listing B has no address, never an og:title stand-in");
+  const withheldACount = (
+    sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }
+  ).c;
+  const withheldAId = upsertProperty(withheldA);
+  const withheldBId = upsertProperty(withheldB);
+  assert.notEqual(
+    withheldAId,
+    withheldBId,
+    "two different withheld-address REA listings in the same suburb must not merge",
+  );
+  assert.equal(
+    (sqlite.prepare("SELECT COUNT(*) c FROM properties").get() as { c: number }).c,
+    withheldACount + 2,
+    "both withheld listings inserted as separate rows, not merged onto one",
+  );
+  const withheldRowA = sqlite
+    .prepare("SELECT price_display AS price, beds FROM properties WHERE id = ?")
+    .get(withheldAId) as Record<string, unknown>;
+  const withheldRowB = sqlite
+    .prepare("SELECT price_display AS price, beds FROM properties WHERE id = ?")
+    .get(withheldBId) as Record<string, unknown>;
+  assert.equal(withheldRowA.price, "$700,000", "listing A keeps its own price, not B's");
+  assert.equal(withheldRowB.price, "$900,000", "listing B keeps its own price, not A's");
+  assert.equal(withheldRowA.beds, 3, "listing A keeps its own beds, not B's");
+  assert.equal(withheldRowB.beds, 4, "listing B keeps its own beds, not A's");
+
   // The CLI bulk loader must make the SAME call. It keys on listing_url, so a
   // harvest of the same house under a new URL used to insert a duplicate that
   // ingest would have merged — leaving your ratings on the row you can't see.

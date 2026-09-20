@@ -23,7 +23,16 @@ import ShareButton from "@/components/ShareButton";
 import WatchToggle from "@/components/WatchToggle";
 import { listMedia } from "@/lib/media";
 import { imageUrl } from "@/lib/images";
-import { formatPrice, fmtAud, fmtNum, fmtDistance, fmtMinutes, isTransitEstimated, fmtSoldDateLong } from "@/lib/format";
+import {
+  formatPrice,
+  fmtAud,
+  fmtNum,
+  fmtDistance,
+  fmtMinutes,
+  isTransitEstimated,
+  fmtSoldDateLong,
+  propertyTitle,
+} from "@/lib/format";
 import { formatInspection } from "@/lib/inspection";
 import { commuteDestination } from "@/lib/commute";
 import { isValidPropertyComAuUrl, propertyComAuSearchUrl } from "@/lib/property-com-au";
@@ -426,7 +435,7 @@ export default async function PropertyDetail({
               {property.suburb ? ` · ${property.suburb}` : ""}
             </span>
             <h1 className="my-1 break-words font-serif text-[32px] leading-tight">
-              {property.address ?? property.listingUrl}
+              {propertyTitle(property)}
             </h1>
             <div className="flex flex-wrap items-baseline gap-3">
               <span className="font-serif text-[26px] text-forest">

@@ -160,10 +160,17 @@ async function main() {
     assert.equal(property.parking, 2, "rea fixture parking");
     assert.equal(property.propertyType, "House", "rea fixture propertyType");
     assert.equal(property.externalId, "152196328", "rea fixture externalId");
+    // The fixture's Event.startDate (2026-09-05) is a frozen literal that
+    // eventually falls behind the clock — asserting it against a fixed
+    // absolute date goes stale the moment "today" passes it (it already has).
+    // Assert the BEHAVIOUR instead: a past inspection is filtered out. The
+    // complementary "a future one is returned" behaviour is covered below by
+    // the reaEventsPayload tests, which build their dates from Date.now() and
+    // so never go stale either.
     assert.equal(
       property.nextInspection,
-      new Date("2026-09-05T12:00:00+10:00").toISOString(),
-      "rea fixture nextInspection",
+      null,
+      "rea fixture inspection date is past — filtered by earliestEventStart's cutoff, same as elsewhere",
     );
     assert.ok(
       property.description && property.description.length > 0,
@@ -443,6 +450,135 @@ async function main() {
       "rea falls back to non-price display when no $ appears",
     );
     assert.equal(property.priceNumeric, null, "rea non-price display has no numeric price");
+  }
+
+  // --- REA: slug-derived state/suburb, used only when there's no Residence
+  // block (an "address available on request" listing). Exercised through
+  // normalize() rather than calling deriveFromReaSlug() directly — it's not
+  // exported, and going through normalize() is what actually proves the
+  // fallback is wired up, not just that the parser alone works.
+  {
+    // Happy path: multi-word suburb, "+" is the space.
+    const { property } = ReaAdapter.normalize({
+      url: "https://www.realestate.com.au/property-house-vic-point+cook-151945812",
+      jsonLd: [],
+      bodyText: "Address available on request",
+    });
+    assert.equal(property.state, "VIC", "slug-derived state");
+    assert.equal(property.suburb, "Point Cook", "slug-derived multi-word suburb, + as space");
+  }
+  {
+    // A different state token, single-word suburb.
+    const { property } = ReaAdapter.normalize({
+      url: "https://www.realestate.com.au/property-house-nsw-northsydney-151945813",
+      jsonLd: [],
+      bodyText: "Address available on request",
+    });
+    assert.equal(property.state, "NSW", "slug-derived state, different token");
+    assert.equal(property.suburb, "Northsydney", "slug-derived single-word suburb");
+  }
+  {
+    // Malformed: no trailing external-id digits -> degrades to null, doesn't throw.
+    const { property } = ReaAdapter.normalize({
+      url: "https://www.realestate.com.au/property-house-vic-point+cook",
+      jsonLd: [],
+      bodyText: "Address available on request",
+    });
+    assert.equal(property.state, null, "slug with no trailing digits -> null state, not a throw");
+    assert.equal(property.suburb, null, "slug with no trailing digits -> null suburb, not a throw");
+  }
+  {
+    // Malformed: no recognised AU state abbreviation anywhere in the slug ->
+    // degrades to null rather than guessing which token might be the state.
+    const { property } = ReaAdapter.normalize({
+      url: "https://www.realestate.com.au/property-house-nowhere-nothing-151945814",
+      jsonLd: [],
+      bodyText: "Address available on request",
+    });
+    assert.equal(property.state, null, "slug with no recognised state token -> null state");
+    assert.equal(
+      property.suburb,
+      null,
+      "slug with no recognised state token -> null suburb (never a partial fragment)",
+    );
+  }
+  {
+    // Malformed: empty URL -> degrades to null, doesn't throw.
+    const { property } = ReaAdapter.normalize({
+      url: "",
+      jsonLd: [],
+      bodyText: "Address available on request",
+    });
+    assert.equal(property.state, null, "empty url -> null state, not a throw");
+    assert.equal(property.suburb, null, "empty url -> null suburb, not a throw");
+  }
+  {
+    // Malformed: a slug shaped nothing like a listing URL (an agent profile
+    // page, no digit-suffixed id, no state token) -> degrades to null.
+    const { property } = ReaAdapter.normalize({
+      url: "https://www.realestate.com.au/find-agent/agent/john-smith",
+      jsonLd: [],
+      bodyText: "Address available on request",
+    });
+    assert.equal(property.state, null, "non-listing-shaped slug -> null state, not a throw");
+    assert.equal(property.suburb, null, "non-listing-shaped slug -> null suburb, not a throw");
+  }
+
+  // --- REA: withheld-address listing (no Residence block) must leave `address`
+  // null (never an og:title stand-in — that collapses every withheld-address
+  // listing in the same suburb onto one addressKey, see src/scrape/persist.ts)
+  // and must stay "partial", never "ok", even once price and beds are present.
+  // Real capture: ".../property-house-vic-seabrook-151867256", an "Address
+  // available on request" listing (see brief ITEM 1 and the
+  // rea-source-of-truth conventions entry on golden fixtures).
+  {
+    const seabrookRaw = JSON.parse(
+      fs.readFileSync(
+        fileURLToPath(new URL("./fixtures/rea-seabrook-withheld.json", import.meta.url)),
+        "utf8",
+      ),
+    ) as RawPageData;
+    const { property } = ReaAdapter.normalize(seabrookRaw);
+    assert.equal(
+      property.address,
+      null,
+      "withheld listing address stays null — never an og:title stand-in",
+    );
+    assert.equal(property.suburb, "Seabrook", "withheld listing suburb derived from the slug");
+    assert.equal(property.state, "VIC", "withheld listing state derived from the slug");
+    // The capture DOES carry a price and a bed count, which is exactly the
+    // trap: an unguarded status ternary keyed on the derived `address` would
+    // wrongly report "ok" here.
+    assert.ok(property.priceDisplay, "sanity: withheld listing has a price");
+    assert.equal(property.beds, 3, "sanity: withheld listing has a bed count");
+    assert.equal(
+      property.status,
+      "partial",
+      "a derived address (no Residence block) must never flip status to ok, even with price and beds present",
+    );
+  }
+  {
+    // Complement: a listing WITH a Residence block, a price and beds still
+    // reaches "ok" — the guard above must not have made "ok" unreachable.
+    const okRaw: RawPageData = {
+      url: "https://www.realestate.com.au/property-house-vic-disclosed-151999999",
+      jsonLd: [
+        {
+          "@type": "Residence",
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: "7 Disclosed St",
+            addressLocality: "Disclosedville",
+            addressRegion: "VIC",
+            postalCode: "3000",
+          },
+        },
+      ],
+      ariaLabels: ["House with 3 bedrooms 2 bathrooms 2 car spaces"],
+      bodyText: "$700,000",
+    };
+    const { property } = ReaAdapter.normalize(okRaw);
+    assert.equal(property.status, "ok", "a disclosed address with price and beds still reaches ok");
   }
 
   // --- REA: graceful degradation ---

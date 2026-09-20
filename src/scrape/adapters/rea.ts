@@ -154,6 +154,44 @@ function externalIdFromUrl(url: string): string | null {
   return m ? m[1] : null;
 }
 
+const AU_STATE_ABBRS = new Set(["nsw", "vic", "qld", "wa", "sa", "tas", "act", "nt"]);
+
+/**
+ * REA listing URLs are shaped
+ * ".../property-<type words>-<state>-<suburb[+with+plus+for+spaces]>-<externalId>"
+ * (e.g. ".../property-house-vic-point+cook-151945812"). Used only when there's
+ * no JSON-LD Residence block to fall back on — an "address available on
+ * request" listing still discloses its state and suburb via the URL.
+ *
+ * This runs on untrusted scraped input, so any slug that doesn't match the
+ * expected shape degrades to nulls rather than guessing or throwing: never
+ * emit a partial fragment as a suburb.
+ */
+function deriveFromReaSlug(url: string): { state: string | null; suburb: string | null } {
+  const bare = url.split(/[?#]/)[0].replace(/\/+$/, "");
+  const last = bare.split("/").pop();
+  if (!last) return { state: null, suburb: null };
+
+  const parts = last.split("-");
+  if (parts.length < 2 || !/^\d+$/.test(parts[parts.length - 1])) {
+    return { state: null, suburb: null };
+  }
+
+  const body = parts.slice(0, -1); // drop the trailing external id
+  const stateIdx = body.findIndex((s) => AU_STATE_ABBRS.has(s.toLowerCase()));
+  if (stateIdx === -1) return { state: null, suburb: null };
+
+  const state = body[stateIdx].toUpperCase();
+  const suburb = body
+    .slice(stateIdx + 1)
+    .join(" ")
+    .split(/[+ ]+/)
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join(" ");
+  return { state, suburb: suburb || null };
+}
+
 /** og:description carries the full description but with <br/> markup — strip to plain text. */
 function stripHtml(s: string): string | null {
   const plain = s.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "").trim();
@@ -185,15 +223,29 @@ export const ReaAdapter: Adapter = {
     const eventBlocks = ldBlocks.filter((b) => b["@type"] === "Event");
 
     const ldAddress = asRecord(residence?.address);
-    const address = composeAddress(
+    // The only source of `address`. Null whenever REA withholds the street
+    // address ("Address available on request"), which is also when
+    // `residence` itself is absent — and it MUST stay null in that case, never
+    // fall back to og:title ("Address available on request, Seabrook") or any
+    // other display stand-in: addressKey (src/scrape/persist.ts) keys
+    // twin-matching on `address`, so a stand-in string collapses every
+    // withheld-address listing in the same suburb onto one key and silently
+    // merges distinct houses. The UI falls back to suburb on its own
+    // (propertyTitle, src/lib/format.ts), so nothing is lost by leaving this
+    // null.
+    const residenceAddress = composeAddress(
       str(ldAddress?.streetAddress),
       str(ldAddress?.addressLocality),
       str(ldAddress?.addressRegion),
       str(ldAddress?.postalCode),
     );
-    const suburb = str(ldAddress?.addressLocality);
-    const state = str(ldAddress?.addressRegion);
     const postcode = str(ldAddress?.postalCode);
+
+    // No Residence block: the page still discloses state/suburb via the URL
+    // slug — surface those rather than leaving every field null.
+    const slugFallback = residence ? null : deriveFromReaSlug(raw.url);
+    const suburb = str(ldAddress?.addressLocality) ?? slugFallback?.suburb ?? null;
+    const state = str(ldAddress?.addressRegion) ?? slugFallback?.state ?? null;
 
     const nextInspection = earliestEventStart(eventBlocks);
 
@@ -263,7 +315,7 @@ export const ReaAdapter: Adapter = {
       sourceSite: "rea",
       listingUrl: raw.url,
       externalId,
-      address,
+      address: residenceAddress,
       suburb,
       state,
       postcode,
@@ -281,7 +333,7 @@ export const ReaAdapter: Adapter = {
       longitude,
       nextInspection,
       raw: {
-        address,
+        address: residenceAddress,
         priceDisplay,
         beds,
         baths,
@@ -291,8 +343,10 @@ export const ReaAdapter: Adapter = {
         imageCount: images.length,
       },
       // Essentials must ALL come through for "ok" — an address alone (the
-      // pre-fix failure mode) must report "partial", not "ok".
-      status: address && priceDisplay && beds != null ? "ok" : "partial",
+      // pre-fix failure mode) must report "partial", not "ok". A withheld
+      // listing's `address` is already null (see above), so this simply reads
+      // as "and address is present" — no separate stand-in to guard against.
+      status: residenceAddress && priceDisplay && beds != null ? "ok" : "partial",
     };
 
     return { property, images };

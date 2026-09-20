@@ -42,12 +42,18 @@ time is spent chasing the wrong thing.
 - **Some test files leave an untracked `.next-test-*/types/` directory** behind
   (named by `test/ui.test.ts`). It shows up as `??` in `git status` and is a
   regenerable artifact — delete it before handing the tree back.
-- **`npm test` is a single `&&` chain and short-circuits.** As of 2026-09-07
-  `test/adapters.test.ts` fails on a rotted REA `nextInspection` fixture
-  (`expected '2026-09-05T02:00:00.000Z', actual null`), so `npm test` never
-  reaches the 24 files after it. Sweep them with
-  `for f in test/*.test.ts; do npx tsx "$f"; done` instead, skipping
-  `adapters.test.ts` and `ui.test.ts` (the latter drives real Chrome and is
-  `npm run test:ui`, not part of `npm test`).
+- **`npm test` is a single `&&` chain and short-circuits, and there is NO test
+  auto-discovery** — a new `test/*.test.ts` that is not appended to that chain
+  in `package.json` silently never runs. (The `adapters.test.ts` fixture rot
+  noted here previously was fixed; the whole chain was green on 2026-09-20.)
+- **Spawning a `tsx` script in a test from a foreign cwd works** — set
+  `TSX_TSCONFIG_PATH=<repo>/tsconfig.json` so `@/*` still resolves, and
+  `DB_PATH`/`DATA_DIR` into the temp dir so the child gets a throwaway database
+  and its relative `data/harvest/...` output lands in the temp dir instead of
+  clobbering the operator's real report. Verified on tsx 4.23.
+- **Quoted heredocs in the Bash tool still eat backslashes.** `<<'EOF'` did NOT
+  preserve `\` inside a JS regex literal; the written file had `\` and node
+  died with "Invalid regular expression". Use the Write/Edit tools for any file
+  containing regex or escape sequences.
 
 Related: [[project-sqlite-connect-migration]], [[project-twin-merge-convergence]]

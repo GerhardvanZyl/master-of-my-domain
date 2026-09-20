@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { PropertyListItem } from "@/db/queries/properties";
 import { DEFAULT_VIBE_CONFIG, vibeScore, type VibeConfig } from "@/lib/vibes";
 import { useVibeConfig } from "@/lib/use-vibe-config";
+import { propertyTitle } from "@/lib/format";
 
 type Field = { key: keyof VibeConfig; label: string; hint?: string; step?: number };
 
@@ -201,7 +202,7 @@ export default function VibesConfig({
                 <span className="w-6 font-serif text-[15px] opacity-50">{i + 1}</span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[13px] font-medium">
-                    {p.address ?? p.listingUrl}
+                    {propertyTitle(p)}
                   </span>
                   <span className="block text-[10.5px] opacity-50">{p.suburb ?? "—"}</span>
                 </span>

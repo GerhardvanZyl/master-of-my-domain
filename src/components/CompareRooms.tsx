@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { imageUrl } from "@/lib/images";
+import { propertyTitle } from "@/lib/format";
 import { ROOM_ROW_ORDER, type PhotoLite } from "@/lib/photo";
 import Lightbox from "./Lightbox";
 import TagSelect from "./TagSelect";
@@ -11,6 +12,7 @@ import TagSelect from "./TagSelect";
 export interface CompareCol {
   propertyId: string;
   address: string | null;
+  suburb: string | null;
   // room key ("kitchen", "master", …) -> that property's photos of that room
   rooms: Record<string, PhotoLite[]>;
 }
@@ -167,8 +169,8 @@ export default function CompareRooms({ columns }: { columns: CompareCol[] }) {
                   key={col.propertyId}
                   className="flex min-w-[280px] flex-1 flex-col text-white"
                 >
-                  <div className="mb-2 truncate text-xs text-neutral-300" title={col.address ?? ""}>
-                    {col.address ?? col.propertyId}
+                  <div className="mb-2 truncate text-xs text-neutral-300" title={propertyTitle(col)}>
+                    {propertyTitle(col)}
                   </div>
                   <div className="relative flex min-h-0 flex-1 items-center justify-center rounded bg-black/40">
                     {img ? (
