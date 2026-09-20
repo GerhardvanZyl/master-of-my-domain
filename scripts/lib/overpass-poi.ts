@@ -28,7 +28,10 @@ export type OverpassElement = {
 export type PoiType = "station" | "playground" | "coles" | "vet";
 
 const CACHE_PATH = path.resolve(process.cwd(), "data/harvest/poi-cache.json");
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+// ponytail: env override, default unchanged. overpass-api.de started 406ing
+// every request on 2026-09-20 (not transient — all 3 retries); a mirror via
+// OVERPASS_URL unblocks the round without touching the default.
+const OVERPASS_URL = process.env.OVERPASS_URL || "https://overpass-api.de/api/interpreter";
 const POLITE_DELAY_MS = 2000;
 
 type CacheFile = Record<string, { fetchedAt: string; elements: OverpassElement[] }>;

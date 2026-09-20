@@ -1,6 +1,6 @@
 ---
 name: update-properties
-description: Fetch the latest Point Cook / Williams Landing / Torquay / Seabrook listings from Domain, load them with full galleries INCLUDING floorplans, set exact Domain cover heroes, tag rooms with the local model, refresh transit and price history, and update the live app. Use when the user says "update the properties", "fetch the latest properties", "sync Domain", "get the new listings", or asks for any part of that round.
+description: Fetch the latest Point Cook / Williams Landing / Torquay / Seabrook listings from BOTH Domain and realestate.com.au, load them with full galleries INCLUDING floorplans, set exact Domain cover heroes, tag rooms with the local model, refresh transit and price history, and update the live app. Use when the user says "update the properties", "fetch the latest properties", "sync Domain", "get the new listings", or asks for any part of that round.
 ---
 
 # Update properties (the full round)
@@ -15,6 +15,8 @@ The user has asked for each of these explicitly and emphatically:
 5. Update travel info.
 6. Update pricing history.
 7. **Make sure the live app at `http://192.168.68.125:3225` ends up updated.**
+8. **Do all of that for BOTH sources** — Domain (steps 0–8) *and*
+   realestate.com.au (step 9). Only one source if the user names one.
 
 ## Before you start
 
@@ -33,6 +35,27 @@ The user has asked for each of these explicitly and emphatically:
   and let the user click Connect. Never pick a browser yourself. Then *prove*
   it is local: point it at the loopback-only receiver and confirm the file
   appears (see step 0). `isLocal` is not trustworthy.
+- **domain.com.au JS permission is per BROWSER PROFILE, and a profile that
+  lacks it denies SILENTLY.** Measured 2026-09-20 and this is the important
+  one: on one Chrome profile, `navigate` to Domain succeeded and then *every*
+  `javascript_tool` call on that tab returned `Permission denied by user`
+  instantly — including a one-line `window.__D` read, with the user watching
+  and no popup ever appearing. The user opened a DIFFERENT Chrome profile,
+  `switch_browser` selected it, and the identical 6.5KB call ran first time.
+  So:
+  - **`Permission denied by user` on Domain is usually not a refusal**, and it
+    is not the payload size. Diagnose it, do not retry: navigate the same tab
+    to `http://127.0.0.1:3300/` and run `location.host`. If that works and
+    Domain does not, the profile lacks Domain site access. **Retrying the big
+    call proves nothing and wastes the user's time.**
+  - **The fix is a different browser profile, not a different script.** Ask the
+    user to open the Chrome profile that has Domain enabled, then
+    `switch_browser` and let them Connect. Re-prove locality for the new
+    connection — the local-only rule is per connection, and a fresh
+    `?name=<probe>` through the receiver is free.
+  - Everything staged in node survives a profile switch: the snapshot,
+    `_round-call.js` and the receiver are all unaffected. Only re-do the
+    locality proof and the navigate.
 - **YOU GET ONE CONFIRMATION PER SYNC, AND IT MUST FETCH EVERYTHING.**
   That is the user's standing rule, not a guideline. That single call has to
   come home with **all of it — properties, full galleries, floorplans, prices,
@@ -64,6 +87,25 @@ The user has asked for each of these explicitly and emphatically:
   ~2.5KB bot-challenge body). Read pages through a hidden **iframe** instead —
   a document request is not challenged.
 
+- **A round is BOTH sources, every time.** Stated 2026-09-06 after an REA-only
+  round was reported as complete: the two do not overlap, each carries listings
+  and price moves the other does not, and each has data the other lacks. Run
+  them SEQUENTIALLY, not interleaved — Domain needs the permission popup, and
+  REA's local-model tagging saturates the GPU. Whichever runs second
+  re-baselines with `_snapshot-live.mjs` first, so it already sees the first
+  half's inserts and cannot duplicate them. Report per source.
+- **An REA `listing_url` must NEVER overwrite a domain.com.au one.** Both
+  existing side by side is fine; the Domain link is the one the user clicks
+  through to. This already holds — `loadProperties` leaves `listingUrl` out of
+  its update `set`, so a capture merging onto an existing row keeps that row's
+  URL — so the job is not to break it. In particular, a price or status update
+  for a row we already hold must push the **held** row's `listing_url`, never
+  the URL of whichever site the observation came from: `properties` upserts by
+  `listing_url`, so pushing an REA link at a Domain row WOULD repoint it.
+  `_rea-diff.ts` carries `listing_url` from the snapshot for exactly that
+  reason — keep it. Never "fix" a link by delete + re-insert: the row carries
+  ratings, notes, viewed state and price history.
+
 ## 0. Set up
 
 ```bash
@@ -71,26 +113,103 @@ node scripts/_receiver.mjs &          # writes POSTed harvest to data/harvest/
 node scripts/_snapshot-live.mjs       # baseline pulled from .125; the diff needs this
 ```
 
-Then `switch_browser`, navigate the tab to `http://127.0.0.1:3300/?name=_localcheck`,
-and confirm `data/harvest/_localcheck.json` appeared. That file can only be
-written by a browser on this machine, so it is the locality proof.
+Then `switch_browser` and let the user click Connect (if exactly one browser is
+already connected, `list_connected_browsers` is enough — but still prove
+locality). Navigate the tab to `http://127.0.0.1:3300/?name=_localcheck` and
+confirm `data/harvest/_localcheck.json` appeared. That file can only be written
+by a browser on this machine, so it is the locality proof. Loopback and
+navigations are free — neither raises the Domain popup.
 
 **Delete stale harvest files before each run** (`data/harvest/feed.json`,
-`drop.json`). They persist between sessions and reading last week's feed as if
-it were today's is a silent, expensive mistake.
+`drop.json`, `pass-*.json`, `domain-round-gz.json`, `domain-retry-gz.json`).
+They persist between sessions and reading last week's feed as if it were
+today's is a silent, expensive mistake.
 
-## 1. Search feed (1 approval, ~90s)
+**Order the round so the popup happens once.** Only one column below costs
+anything, so do all the free work FIRST and have the finished call in hand
+before you touch Domain:
 
-Navigate to the standing search and run `scripts/browser/feed-harvest.js`:
+| free (no popup) | costs the popup |
+| --- | --- |
+| `switch_browser`, `list_connected_browsers`, `tabs_context_mcp` | any `javascript_tool` call on a domain.com.au tab |
+| `navigate` — to loopback AND to Domain | ...including a one-line read |
+| any `javascript_tool` on `127.0.0.1:3300` | |
+| every node/tsx script in this skill | |
+
+So: receiver → snapshot → **build the call** (step 1) → connect → locality proof
+→ navigate to the Domain search → **ask for the permission, then paste the one
+call**. Say plainly that it is the one. Never spend it on a probe, a locality
+check, or a first chunk.
+
+## 1. Build the ONE call — feed + diff + sold search + listing pass
+
+**Build it in node BEFORE you ask for anything.** This is the only browser
+action of the round that raises the popup, so it has to be the whole round:
+
+```bash
+node scripts/_snapshot-live.mjs     # baseline from .125 (step 0 already ran it)
+node scripts/_round-ids.mjs         # -> data/harvest/_round-call.js
+```
+
+`_round-ids.mjs` minifies `scripts/browser/domain-full-round.js` and prepends
+`window.__IDS` — what the live app already holds, as sorted Domain listing ids,
+delta-encoded base36 (~1.6KB for 450). It self-checks the decoder against the
+encoder, so a corrupt id list fails in node rather than in the browser. Paste
+the file's contents **verbatim** as the `javascript_tool` text. Proven
+2026-09-13: 6.2KB, 18 feed pages, 346 listings, feed → diff → sold search →
+66 listing pages, bridged home in ~2.5h on one click.
+
+**Why the held ids travel inside the call:** Domain's own page load DROPS the
+URL fragment, so a `/goto`-style handoff arrives empty, and a cross-origin fetch
+to 127.0.0.1 is blocked by Private Network Access. There is no third channel.
+Id-matching reads a relist as "new" (25 of 45 one run); the server merges it by
+address and it keeps its photos — extra fetches, not a bug.
+
+The call keeps the payload in `localStorage` *before* navigating home, so if the
+bridge navigation fails you re-send it from the receiver page instead of
+re-running 2.5 hours of round. Then split what came back:
+
+```bash
+node scripts/_domain-round-split.mjs   # domain-round-gz.json -> feed.json, pass-1.json, _sold-search.json
+```
+
+It needs a fresh `data/harvest/_snapshot.json`: the browser only knows listing
+ids, so a missing target comes home as `/<id>` and is mapped back to its held
+`listing_url` here.
+
+**A retry is another popup, so batch every failure into one.**
+`node scripts/_round-ids.mjs --retry=<targets.json>` (`[{url, why}]`) builds
+`_retry-call.js` — listing pass only, no feed or sold search — which bridges
+home as `domain-retry-gz`. Budget ~2x the nominal spacing: a 41-page retry took
+~75 min, not the ~31 the 45s implies.
+
+Fallback only if the one-call build is broken: `scripts/browser/feed-harvest.js`
+then `scripts/browser/listing-pass.js`, bridged with
+`scripts/browser/bridge-post.js` on the receiver page (127.0.0.1 never prompts).
+That is two popups, which is a failed round by the user's rule — fix
+`domain-full-round.js` instead.
+
+Two field bugs already paid for, both of which silently zero the round:
+
+- **`galleryV2.photos[].desktopUrl` is an object `{"1x","2x"}`**, not a string.
+  Treating it as a string threw on all 66 listing pages → zero galleries.
+- **On a listing PAGE the price is `listingSummary.displayPrice`.**
+  `listingSummary.price` is not a string there, so a pass came back with every
+  price empty and could not confirm sold-by-page. The search feed's
+  `listingModel.price` IS a string. Fall through both.
+
+The standing search the call pages through:
 
 ```
 https://www.domain.com.au/sale/?suburb=point-cook-vic-3030,williams-landing-vic-3027,torquay-vic-3228,seabrook-vic-3028&bedrooms=3-any&bathrooms=2-any&carspaces=1-any&price=600000-1100000&ssubs=0
 ```
 
-Search pages are WAF-tolerant — page them rapidly (1.3s). The call ends by
-navigating itself to `http://127.0.0.1:3300/#MOMD=<payload>`; then run
-`scripts/browser/bridge-post.js` on the receiver page (127.0.0.1 never prompts)
-with `name=feed`.
+Search pages are WAF-tolerant — page them rapidly (1.3s); listing pages are not
+(step 3). **Missing listings go to Domain's `/sold-listings/` search first** —
+also WAF-tolerant at 1.3s, and it gives the sold price AND the real sale date
+("Sold by private treaty 07 Sep 2026"); 23 of 55 missing resolved there one run.
+Only what it cannot resolve gets a page fetch, by bare id `domain.com.au/<id>`,
+which redirects either to the listing or to `/property-profile/` = withdrawn.
 
 **`__NEXT_DATA__` streams.** A length check alone is not enough — the tag can be
 in the DOM and past 5000 chars while its text is still arriving, giving
@@ -135,6 +254,11 @@ node scripts/_sync-diff-live.mjs                  # -> _diff.json
   pseudo-row stores a timestamp there, so a truthiness check lets it through.
 
 ## 3. Per-listing pass (floorplans + sold prices)
+
+**In the one-call round this already happened** — the pass is the tail of the
+step 1 call and `_domain-round-split.mjs` has written `pass-1.json`. Skip
+straight to `_pass-apply-live.mjs` below. `_pass-targets.mjs` chunks a pass for
+the two-popup fallback path only:
 
 ```bash
 node scripts/_pass-targets.mjs      # -> data/harvest/_pass-<n>.js, chunked
@@ -192,6 +316,16 @@ banner strips, sub-500px icons, read off the `-w<W>-h<H>` basename. Those come
 in via the page-HTML source and then sit permanently untagged, because the
 property page never lists them for the tagger to reach.
 
+**Guard every pass file before you push it.** `data/harvest/pass-*.json` is
+gitignored and persists between rounds. A half-updated splitter once wrote a
+retry to `pass-1`, so `_pass-apply-live.mjs pass-2` read a STALE pass file and
+re-marked 8 already-sold properties — and `markSold` with no `date` resets their
+`Sold` row to today, destroying the real sale dates. **Check the key count
+matches this round's target count before any status push.**
+
+**Never pipe a push script through `| head`** — SIGPIPE can kill it mid-run,
+leaving a partial apply that looks like a completed one.
+
 **Sold vs withdrawn:** Domain keeps sold/under-offer listings IN the feed under
 `tags.tagText = "Under offer"`, so absence is not the only signal. Treat as
 **sold** only when the price text matches `/\bsold\b/i`; plain "Under
@@ -232,6 +366,10 @@ clobbered. A re-run now **skips** any image that already carries a room type
 reclassifies everything — expect `written`/`skipped` to reflect how many
 images were actually new or eligible for re-examination, not the whole photo
 count.
+
+**Some gallery slots are GIFs**, often the floorplan at a late ordinal. The
+tagger tries `webp/gif/jpg/png` against `/api/img/<pid>/<id>.<ext>`; an `img 404`
+from it means the wrong extension was guessed, not a missing file.
 
 `notes='floorplan'` beats `pickFloorplan`'s shape heuristic, which misses
 floorplans rendered at 4:3, 1.29, 1.47 and even 3:2. `_tag-remote.ts` applies it
@@ -289,6 +427,16 @@ DB — scope to `WHERE altitude_m IS NULL AND state<>'NSW'`. `compute-stations` 
 `compute-metadata` write files first, so strip NSW before pushing. Both accept
 `PROPS_JSON`, so feed them this round's rows rather than the stale local DB.
 
+Two traps in these two, both of which survive a clean-looking run:
+
+- **They import `src/db/client` even under `PROPS_JSON`, and opening that client
+  auto-MIGRATES the local `data/app.db`** (schema only, no rows). Run
+  `git checkout -- data/app.db` afterwards so the tracked snapshot stays put.
+- **On an Overpass 504 they refuse to write**, leaving LAST round's
+  `_*-new.json` in place — and pushing those silently applies stale enrichment
+  (done once, 15 Aug's files). Delete the `_*-new.json` files before running and
+  check the row set matches this round's `_new.json` before pushing.
+
 Transit to Flinders St at 07:30 Monday, for new listings only:
 
 ```bash
@@ -312,8 +460,10 @@ validates, so it cannot be hand-trimmed. Two traps in particular:
 `get_page_text` times out on Maps; read `document.body.innerText`, and note that
 an async IIFE returns `{}` in this harness — wait, then evaluate synchronously.
 
-Fallback: `npx tsx scripts/_transit-estimate.ts --apply` (nearest measured
-neighbour, zone-split so Torquay never borrows a Point Cook time). It is
+Fallback: `_transit-estimate.ts` (nearest measured neighbour, zone-split so
+Torquay never borrows a Point Cook time). **`--apply` writes the LOCAL DB — do
+not use it here.** Emit a payload with `OUT_JSON=` and push that to `.125`
+instead. It is
 accurate to ~3 min on average, but the outliers are ±14 — measure when you can.
 `pt_steps` must not start "Estimated" unless it really is; that prefix drives
 the UI's `*` marker.
@@ -350,6 +500,100 @@ withdrawn / priceObserve). **Check the `errors` array — a 200 is not proof of 
 clean apply**, bad rows are collected rather than thrown.
 
 Otherwise commit `data/` and have the user `git pull` + rebuild on `.125`.
+
+## 9. The REA half (realestate.com.au)
+
+Committed scripts as of 2026-09-06. Same live app, same `/api/batch`, same
+read-only rule on the local DB.
+
+```bash
+node scripts/_receiver.mjs &                 # already running from step 0
+node scripts/_snapshot-live.mjs              # RE-baseline: the Domain half just inserted
+```
+
+1. `scripts/browser/rea-search-harvest.js` — one JS call, ~30 pages, ~3 min.
+2. `npx tsx scripts/_rea-diff.ts` → `_rea-pass.json` / `_rea-price.json` / `_rea-sold.json`.
+3. `scripts/browser/rea-listing-pass.js` with the pass URLs (3s spacing).
+4. `npx tsx scripts/_rea-ingest.ts` → push `properties`, then `images --chunk=3`.
+5. `npx tsx scripts/_tag-remote-rea.ts`, THEN `node scripts/_rea-floorplan-mark.mjs`.
+6. geocode → `compute-stations` → `compute-metadata` → `_alt-new-live.mjs` → transit.
+7. `node scripts/_verify-live.mjs`.
+
+**REA does NOT bot-wall a same-origin `fetch`** — unlike Domain. Search and
+listing pages both come back as full server HTML from a `fetch` on an REA tab,
+so no iframe and no page-driving. That is why REA tolerates 3s and needs no
+45s pacing.
+
+**The full gallery is in the server HTML** even though the DOM lazy-loads ~4
+images: GraphQL `MediaImage` / `MediaFloorplan` nodes with a `{size}`-templated
+CDN URL. `MediaFloorplan` is its own typename, so **REA floorplans are known,
+not guessed** — strictly better than Domain's last-position heuristic.
+
+Traps that have each cost real time:
+
+- **Card text is `textContent`, so fields run together** (`$1,100,0001 Frankie
+  Way`). Price must require comma-grouped thousands; the address needs the
+  price-run end as a lower bound, and a `\d{1,5}` cap on the street number or
+  an agent's mobile becomes one.
+- **`body.textContent` includes `<style>`** and REA opens with KB of inline CSS
+  — strip `script`/`style` or every listing normalizes as "no price".
+- **Bridge home gzipped through the receiver's landing page**
+  (`http://127.0.0.1:3300/#name=<file>&d=<gzip+base64>`), which strips the
+  fragment itself. A raw payload in a fragment gets echoed into tool output and
+  cost ~45K tokens once. 2026-09-14: harvesting under `#MOMDGZ=` reads as "no
+  payload" — it must be `#name=...&d=...`.
+- **The local vision model and Google Maps cannot run at once.** Tagging
+  saturates the GPU and Chrome's Maps renderer freezes hard (CDP evaluate times
+  out at 45s). Tag first, measure transit after.
+- **Price moves on Domain-held rows are reported, not pushed** — REA's wording
+  on a Domain row flip-flops every round. **This holds only while the row is
+  still live on Domain** — see the source-of-truth rule below.
+
+REA's JS permission behaves like Domain's (see "Before you start"): grant it
+once for realestate.com.au and the four calls above run without re-prompting.
+The half nominally costs 4 prompts (navigate, search, navigate back, pass)
+because the diff needs the live baseline computed in node between the two JS
+calls.
+
+## 10. When a row leaves Domain but lives on REA
+
+**A property that is no longer on Domain but is still listed for sale on REA is
+an REA row now, whatever it was captured as.** Stated 2026-09-20. REA becomes
+the source of truth for its price and status — the "report, don't push" rule
+above applies only while Domain still carries the listing.
+
+The classification, per row missing from this round's Domain feed:
+
+| Domain | REA buy | REA sold | Verdict |
+| --- | --- | --- | --- |
+| relisted under a new id | — | — | still a Domain row; the OLD row's withdrawal is correct |
+| absent | listed | no | **REA is truth** — push REA price, leave it live |
+| absent | no | listed | sold; REA corroborates the Domain sold record |
+| absent | no | no | gone from both; leave the status the pass derived |
+
+Three things this rule does NOT do:
+
+- **It does not beat a dated Domain sale.** A Domain `/sold-listings/` hit
+  carries a real settlement date; a stale REA buy card that the agent never
+  pulled down does not outrank it. Check REA's SOLD list before treating an REA
+  buy listing as proof a property is still for sale — 2026-09-20, four rows
+  looked like live REA price moves and were on REA's own sold list. REA
+  corroborated 11 of that round's 12 Domain sales.
+- **It does not repoint the link.** Push the HELD row's `listing_url` (the
+  domain.com.au one), never the REA URL — see the link rule in "Before you
+  start". `properties` upserts by `listing_url`, so pushing the REA link would
+  repoint the row.
+- **It does not mean "push every REA price".** Diff first: most REA-only rows
+  already carry the right price and need no write at all (1 of 2 in the round
+  that established this).
+
+**Matching addresses between the two sources — the trap.** Match the Domain feed
+on street number + street-name stem (`9 yarkon`), but match the REA side by
+**containment in the card text**, never by a leading-number regex: REA card text
+is `textContent` with the fields run together, so the agent's name or the price
+sits where the street number should be and a leading-number match silently reads
+the wrong token. Getting this wrong made 6 rows look REA-only when only 2 were,
+and hid `93 Shaftsbury Bvd` vs `93 Shaftsbury Boulevard` behind an abbreviation.
 
 ## Finish
 
