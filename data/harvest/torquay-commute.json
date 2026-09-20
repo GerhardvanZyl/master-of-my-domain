@@ -64,5 +64,11 @@
   "ptMinutesToFlinders": 117,
   "ptRouteSummary": "Drive 15 min to Waurn Ponds + V/Line to Southern Cross",
   "ptSteps": "Leave 7:30 AM, drive ~15 min to Waurn Ponds Station via Surf Coast Hwy/B100 (16.2 km), arrive 7:45 AM. Park (~13 min wait), catch the 7:58 AM V/Line Geelong service, arrive Southern Cross 9:27 AM. Total 117 min."
+ },
+ {
+  "listingUrl": "https://www.domain.com.au/10-romeo-court-torquay-vic-3228-2021164754",
+  "ptMinutesToFlinders": 117,
+  "ptRouteSummary": "Drive 18 min to Waurn Ponds + V/Line to Southern Cross",
+  "ptSteps": "Leave 7:30 AM, drive ~18 min to Waurn Ponds Station via Surf Coast Hwy/B100 (17.2 km), arrive 7:48 AM. Park (~10 min wait), catch the 7:58 AM V/Line Geelong service, arrive Southern Cross 9:27 AM. Total 117 min."
  }
 ]
