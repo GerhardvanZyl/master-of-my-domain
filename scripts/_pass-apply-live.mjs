@@ -53,6 +53,13 @@ const snap = JSON.parse(fs.readFileSync("data/harvest/_snapshot.json", "utf8"));
 
 const norm = (u) => (u || "").replace(/\/+$/, "").toLowerCase();
 const byUrl = new Map(snap.rows.filter((r) => /^https?:/.test(r.listing_url || "")).map((r) => [norm(r.listing_url), r]));
+// A RELIST keeps the row but changes the Domain listing id: the server merged
+// the new capture onto the existing row by address, so external_id is the new
+// id while listing_url still ends in the OLD one. A URL-only match drops every
+// one of them as "no property row" (28 of 66 targets, 2026-09-25) and the round
+// silently loses their galleries and sold/withdrawn status.
+const extOf = (u) => (String(u).match(/-(\d+)(?:\/)?$/) || [])[1] || null;
+const byExt = new Map(snap.rows.filter((r) => r.external_id).map((r) => [String(r.external_id), r]));
 const base = (u) => u.split("/").pop().split("?")[0];
 
 const gallery = [];
@@ -62,12 +69,16 @@ const problems = [];
 const skippedHavePhotos = [];
 
 for (const [key, v] of Object.entries(raw)) {
-  const listingUrl = key.startsWith("http") ? key : "https://www.domain.com.au" + key;
-  const prop = byUrl.get(norm(listingUrl));
+  const observedUrl = key.startsWith("http") ? key : "https://www.domain.com.au" + key;
+  const prop = byUrl.get(norm(observedUrl)) || byExt.get(extOf(observedUrl));
   if (!prop) {
-    problems.push({ listingUrl, why: "no property row on the live app" });
+    problems.push({ listingUrl: observedUrl, why: "no property row on the live app" });
     continue;
   }
+  // ALWAYS push the HELD row's url, never the observed one: `properties` and the
+  // status sections resolve by listing_url, so pushing a relist's new URL at a
+  // row stored under the old one would repoint (or duplicate) that row.
+  const listingUrl = prop.listing_url;
   if (String(v.status).startsWith("error") || v.status === "waf" || v.status === "unknown") {
     problems.push({ listingUrl, address: prop.address, why: v.status });
     continue;
