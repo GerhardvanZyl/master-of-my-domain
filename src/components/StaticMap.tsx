@@ -1,11 +1,17 @@
-import { TILE, project } from "@/lib/mercator";
+import { MAP_ZOOM as ZOOM, TILE, project } from "@/lib/mercator";
 
-const ZOOM = 15;
-// CARTO Voyager: the OSM data on a light, low-clutter, Google-ish palette.
-// Keyless, CDN-cached. Plain openstreetmap.org tiles carry far too much label
-// and POI ink to survive being shrunk into a ~150px card corner.
-const tileUrl = (x: number, y: number) =>
-  `https://basemaps.cartocdn.com/rastertiles/voyager/${ZOOM}/${x}/${y}.png`;
+// Google's own roadmap tiles, cached under public/maptiles by
+// scripts/_map-tiles.ts and served from our origin.
+//
+// This was CARTO Voyager, chosen because it put OSM data on a light,
+// Google-ish palette that survives being shrunk into a ~150px card corner
+// (plain openstreetmap.org tiles carry far too much label and POI ink at that
+// size). CARTO then began stamping "API KEY REQUIRED" across every tile.
+// Serving our own copy means no third party can do that to the card again.
+//
+// A tile only exists if _map-tiles.ts has been run since the property was
+// added, so onError below degrades to the backdrop rather than a broken image.
+const tileUrl = (x: number, y: number) => `/maptiles/${ZOOM}/${x}/${y}.png`;
 
 /**
  * Keyless map preview: a 2×2 block of cached raster tiles, translated so the
@@ -57,6 +63,12 @@ export default function StaticMap({
                 alt=""
                 loading="lazy"
                 decoding="async"
+                // An uncached tile (a listing in ground no round has covered
+                // yet) would otherwise render as a broken-image glyph in the
+                // corner of the card; hide it and let the backdrop show.
+                onError={(e) => {
+                  e.currentTarget.style.visibility = "hidden";
+                }}
                 className="h-full w-full"
               />
             )),

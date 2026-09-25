@@ -11,3 +11,8 @@ export function project(lat: number, lng: number, z: number) {
     y: (0.5 - Math.log((1 + s) / (1 - s)) / (4 * Math.PI)) * scale,
   };
 }
+
+/** Zoom for the card thumbnail's cached Google tiles. The capture script and
+ *  StaticMap MUST agree: a mismatch requests a z-level that was never cached
+ *  and every tile 404s, so this is the single source of truth for both. */
+export const MAP_ZOOM = 15;
