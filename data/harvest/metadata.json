@@ -1,198 +1,44 @@
 [
   {
-    "listingUrl": "https://www.domain.com.au/12-bluffview-terrace-point-cook-vic-3030-2021107687",
-    "greenCrossDistanceM": 7357,
+    "listingUrl": "https://www.realestate.com.au/property-house-vic-point+cook-152438844",
+    "greenCrossDistanceM": 7081,
     "playgrounds500m": 0,
-    "colesDistanceM": 2172,
+    "colesDistanceM": 1746,
     "colesName": "Coles"
   },
   {
-    "listingUrl": "https://www.domain.com.au/11-parkstone-crescent-point-cook-vic-3030-2021103802",
-    "greenCrossDistanceM": 3286,
-    "playgrounds500m": 0,
-    "colesDistanceM": 907,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/2-mertz-way-point-cook-vic-3030-2021111388",
-    "greenCrossDistanceM": 4551,
+    "listingUrl": "https://www.realestate.com.au/property-house-vic-williams+landing-152333744",
+    "greenCrossDistanceM": 4668,
     "playgrounds500m": 1,
-    "colesDistanceM": 819,
+    "colesDistanceM": 2146,
     "colesName": "Coles"
   },
   {
-    "listingUrl": "https://www.domain.com.au/44-kittyhawk-road-point-cook-vic-3030-2021107537",
-    "greenCrossDistanceM": 6537,
-    "playgrounds500m": 3,
-    "colesDistanceM": 2037,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/7-biscay-street-point-cook-vic-3030-2021110729",
-    "greenCrossDistanceM": 4368,
+    "listingUrl": "https://www.realestate.com.au/property-house-vic-point+cook-152349580",
+    "greenCrossDistanceM": 6618,
     "playgrounds500m": 2,
-    "colesDistanceM": 1982,
+    "colesDistanceM": 2085,
     "colesName": "Coles"
   },
   {
-    "listingUrl": "https://www.domain.com.au/35-peroomba-drive-point-cook-vic-3030-2021105250",
-    "greenCrossDistanceM": 7220,
+    "listingUrl": "https://www.realestate.com.au/property-house-vic-williams+landing-152386460",
+    "greenCrossDistanceM": 5257,
+    "playgrounds500m": 1,
+    "colesDistanceM": 2608,
+    "colesName": "Coles"
+  },
+  {
+    "listingUrl": "https://www.realestate.com.au/property-house-vic-point+cook-152448156",
+    "greenCrossDistanceM": 5007,
     "playgrounds500m": 2,
-    "colesDistanceM": 2149,
+    "colesDistanceM": 767,
     "colesName": "Coles"
   },
   {
-    "listingUrl": "https://www.domain.com.au/1-fleming-avenue-seabrook-vic-3028-2021102105",
-    "greenCrossDistanceM": 6056,
-    "playgrounds500m": 2,
-    "colesDistanceM": 1350,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/38-creston-street-point-cook-vic-3030-2021098142",
-    "greenCrossDistanceM": 1758,
+    "listingUrl": "https://www.realestate.com.au/property-house-vic-torquay-151489304",
+    "greenCrossDistanceM": 55754,
     "playgrounds500m": 1,
-    "colesDistanceM": 862,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/38-solitude-crescent-point-cook-vic-3030-2021111758",
-    "greenCrossDistanceM": 3244,
-    "playgrounds500m": 0,
-    "colesDistanceM": 2700,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/40-seagrass-crescent-point-cook-vic-3030-2021101845",
-    "greenCrossDistanceM": 3093,
-    "playgrounds500m": 0,
-    "colesDistanceM": 3283,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/4-manna-way-point-cook-vic-3030-2021102178",
-    "greenCrossDistanceM": 4023,
-    "playgrounds500m": 1,
-    "colesDistanceM": 2316,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/59-newport-avenue-williams-landing-vic-3027-2021105424",
-    "greenCrossDistanceM": 4703,
-    "playgrounds500m": 1,
-    "colesDistanceM": 2227,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/53-truganina-avenue-seabrook-vic-3028-2021111040",
-    "greenCrossDistanceM": 6121,
-    "playgrounds500m": 2,
-    "colesDistanceM": 1327,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/10-ostend-crescent-point-cook-vic-3030-2021101834",
-    "greenCrossDistanceM": 7352,
-    "playgrounds500m": 0,
-    "colesDistanceM": 2231,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/73-wincott-crescent-point-cook-vic-3030-2021072996",
-    "greenCrossDistanceM": 8643,
-    "playgrounds500m": 1,
-    "colesDistanceM": 3533,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/11-warrego-way-point-cook-vic-3030-2021106952",
-    "greenCrossDistanceM": 3835,
-    "playgrounds500m": 1,
-    "colesDistanceM": 2861,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/35a-yallock-circuit-torquay-vic-3228-2021110921",
-    "greenCrossDistanceM": 54437,
-    "playgrounds500m": 1,
-    "colesDistanceM": 2741,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/6-buttercup-lane-point-cook-vic-3030-2021104423",
-    "greenCrossDistanceM": 5447,
-    "playgrounds500m": 2,
-    "colesDistanceM": 733,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/12-jandakot-walk-point-cook-vic-3030-2021111711",
-    "greenCrossDistanceM": 3960,
-    "playgrounds500m": 1,
-    "colesDistanceM": 2225,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/4-elizabeth-grove-torquay-vic-3228-2021096346",
-    "greenCrossDistanceM": 57931,
-    "playgrounds500m": 1,
-    "colesDistanceM": 1165,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/14-lenox-walk-point-cook-vic-3030-2021097640",
-    "greenCrossDistanceM": 5514,
-    "playgrounds500m": 2,
-    "colesDistanceM": 590,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/6-foam-court-torquay-vic-3228-2020871879",
-    "greenCrossDistanceM": 55250,
-    "playgrounds500m": 1,
-    "colesDistanceM": 1763,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/19-loch-lomond-crescent-torquay-vic-3228-2021031035",
-    "greenCrossDistanceM": 53258,
-    "playgrounds500m": 0,
-    "colesDistanceM": 3816,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/21-7-mickleton-grove-point-cook-vic-3030-2021105807",
-    "greenCrossDistanceM": 4825,
-    "playgrounds500m": 1,
-    "colesDistanceM": 564,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/4-darsham-crescent-point-cook-vic-3030-2021111482",
-    "greenCrossDistanceM": 5275,
-    "playgrounds500m": 1,
-    "colesDistanceM": 1719,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/14-partridge-way-point-cook-vic-3030-2021104277",
-    "greenCrossDistanceM": 7013,
-    "playgrounds500m": 3,
-    "colesDistanceM": 2030,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/19-windmill-way-point-cook-vic-3030-2021099254",
-    "greenCrossDistanceM": 2984,
-    "playgrounds500m": 0,
-    "colesDistanceM": 3168,
-    "colesName": "Coles"
-  },
-  {
-    "listingUrl": "https://www.domain.com.au/29-terrene-terrace-point-cook-vic-3030-2021100802",
-    "greenCrossDistanceM": 4053,
-    "playgrounds500m": 2,
-    "colesDistanceM": 1714,
+    "colesDistanceM": 1297,
     "colesName": "Coles"
   }
 ]

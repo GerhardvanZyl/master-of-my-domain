@@ -3,13 +3,13 @@
   {
    "listingUrl": "https://www.domain.com.au/lot-111-daisy-avenue-torquay-vic-3228-2021153677",
    "street": "Lot 111 Daisy Avenue",
-   "price": "From $960,765",
+   "price": "From $942,071",
    "ptype": "New House & Land"
   },
   {
    "listingUrl": "https://www.domain.com.au/lot-111-daisy-avenue-torquay-vic-3228-2021155002",
    "street": "Lot 111, Daisy Avenue",
-   "price": "From $1,024,073",
+   "price": "From $999,274",
    "ptype": "New House & Land"
   },
   {
@@ -97,18 +97,6 @@
    "ptype": "New House & Land"
   },
   {
-   "listingUrl": "https://www.domain.com.au/143-briody-grove-briody-drive-torquay-vic-3228-2020865361",
-   "street": "143 Briody Grove - Briody Drive",
-   "price": "$912,841",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/142-briody-grove-briody-drive-torquay-vic-3228-2020865385",
-   "street": "142 Briody Grove - Briody Drive",
-   "price": "$986,959",
-   "ptype": "New House & Land"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867237",
    "street": "911 Stretton - Pipit Way",
    "price": "$996,390",
@@ -154,6 +142,18 @@
    "listingUrl": "https://www.domain.com.au/142-briody-grove-briody-drive-torquay-vic-3228-2020865336",
    "street": "142 Briody Grove - Briody Drive",
    "price": "$945,155",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/143-briody-grove-briody-drive-torquay-vic-3228-2020865361",
+   "street": "143 Briody Grove - Briody Drive",
+   "price": "$912,841",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/142-briody-grove-briody-drive-torquay-vic-3228-2020865385",
+   "street": "142 Briody Grove - Briody Drive",
+   "price": "$986,959",
    "ptype": "New House & Land"
   },
   {
@@ -219,16 +219,16 @@
  ],
  "soldish": [
   {
+   "listingUrl": "https://www.domain.com.au/11-snowbush-terrace-point-cook-vic-3030-2021055141",
+   "street": "11 Snowbush Terrace",
+   "price": "SOLD",
+   "tag": "Under offer"
+  },
+  {
    "listingUrl": "https://www.domain.com.au/61-pilatus-crescent-point-cook-vic-3030-2020981847",
    "street": "61 Pilatus Crescent",
    "price": "SOLD at Auction!",
    "tag": "Under offer"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/50-manna-gum-drive-torquay-vic-3228-2019207575",
-   "street": "50 Manna Gum Drive",
-   "price": "Offers Closing 21/9/26 @ 5pm (If not Sold Prior)",
-   "tag": ""
   },
   {
    "listingUrl": "https://www.domain.com.au/62-harlem-circuit-point-cook-vic-3030-2018338643",

@@ -420,5 +420,41 @@
     "hit": true,
     "lat": -37.8635632,
     "lng": 144.7511576
+  },
+  "20 montclair street, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-25T06:01:19.187Z",
+    "hit": true,
+    "lat": -37.8951263,
+    "lng": 144.7729362
+  },
+  "49 newport avenue, williams landing, vic 3027, australia": {
+    "fetchedAt": "2026-09-25T06:01:21.056Z",
+    "hit": true,
+    "lat": -37.8632097,
+    "lng": 144.7343213
+  },
+  "15 seedgrass street, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-25T06:01:22.581Z",
+    "hit": true,
+    "lat": -37.912641,
+    "lng": 144.7619338
+  },
+  "18 pintail street, williams landing, vic 3027, australia": {
+    "fetchedAt": "2026-09-25T06:01:24.979Z",
+    "hit": true,
+    "lat": -37.8541237,
+    "lng": 144.7327072
+  },
+  "9 wonga way, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-09-25T06:01:27.178Z",
+    "hit": true,
+    "lat": -37.9007493,
+    "lng": 144.7477553
+  },
+  "7 parkside crescent, torquay, vic 3228, australia": {
+    "fetchedAt": "2026-09-25T06:01:29.563Z",
+    "hit": true,
+    "lat": -38.3204209,
+    "lng": 144.3237504
   }
 }
