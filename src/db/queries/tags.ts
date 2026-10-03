@@ -180,6 +180,84 @@ export function setImageTagIfAbsent(input: {
   return result.changes > 0;
 }
 
+const basename = (url: string): string => (url.split("/").pop() ?? "").split("?")[0];
+
+export interface MarkFloorplansResult {
+  /** Rows actually written this call (newly marked or re-typed). An
+   * already-correctly-marked row is a no-op and is not counted, so a repeat
+   * call with the same floorplanUrls returns 0. */
+  marked: number;
+}
+
+/** Domain's slot basename shape, `<listingId>_<photoIndex>_<crop>_...` — the
+ * ONLY shape the basename fallback below may apply to. REA floorplan/photo
+ * URLs all end in a bare `image.jpg`/`image.png` shared by every image of
+ * the listing (tech-002): matching THAT by basename would mark every stored
+ * photo of an REA property as a floorplan, not just the real one. */
+const DOMAIN_SLOT_BASENAME_RE = /^\d+_\d+_\d+_/;
+
+/**
+ * Mark every stored image of `propertyId` whose `source_url` equals a
+ * floorplan URL, or — for a Domain-slot-shaped basename only — whose
+ * basename equals one: Domain re-signs URLs per capture, and a content-hash
+ * dedupe keeps the OLDER row under its original URL, so a freshly re-signed
+ * Domain floorplan can only ever match the stored row by basename. A
+ * non-Domain-shaped basename (REA's shared `image.jpg`) is matched by EXACT
+ * `source_url` only — see DOMAIN_SLOT_BASENAME_RE.
+ *
+ * Keeps the image's existing room_type if it has one (else 'other') and its
+ * existing confidence (there is no fresh verdict to replace it with). Never
+ * overwrites a hand correction (tagged_by='user') or an existing hero
+ * (notes='hero'). Idempotent: a row already correctly marked is left alone
+ * rather than rewritten, so re-running does not even touch its tagged_at —
+ * and `marked` counts only rows this call actually wrote, so a repeat call
+ * over the same floorplanUrls returns 0, not the number matched.
+ */
+export function markFloorplanImages(propertyId: string, floorplanUrls: string[]): MarkFloorplansResult {
+  if (!floorplanUrls.length) return { marked: 0 };
+  const urlSet = new Set(floorplanUrls);
+  const basenameSet = new Set(
+    floorplanUrls.map(basename).filter((b) => DOMAIN_SLOT_BASENAME_RE.test(b)),
+  );
+
+  const rows = sqlite
+    .prepare(
+      `SELECT i.id AS id, i.source_url AS sourceUrl, t.room_type AS roomType,
+              t.confidence AS confidence, t.tagged_by AS taggedBy, t.notes AS notes
+       FROM images i
+       LEFT JOIN image_tags t ON t.image_id = i.id
+       WHERE i.property_id = ?`,
+    )
+    .all(propertyId) as {
+    id: string;
+    sourceUrl: string;
+    roomType: string | null;
+    confidence: number | null;
+    taggedBy: string | null;
+    notes: string | null;
+  }[];
+
+  let marked = 0;
+  for (const row of rows) {
+    if (!urlSet.has(row.sourceUrl) && !basenameSet.has(basename(row.sourceUrl))) continue;
+    if (row.taggedBy === "user") continue;
+    if (row.notes === "hero") continue;
+
+    const roomType: RoomType = row.roomType && isRoomType(row.roomType) ? row.roomType : "other";
+    if (row.notes !== "floorplan" || row.roomType !== roomType) {
+      setImageTag({
+        imageId: row.id,
+        roomType,
+        confidence: row.confidence,
+        notes: "floorplan",
+        taggedBy: row.taggedBy ?? "claude-code",
+      });
+      marked++;
+    }
+  }
+  return { marked };
+}
+
 /** Find an existing group by case-insensitive label, or create one. */
 export function ensureGroup(input: {
   label: string;

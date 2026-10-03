@@ -309,12 +309,29 @@ confirm a gallery push by re-reading `image_count`, never by its exit status.
 Dedupe on **basename**, not `source_url`: Domain re-signs every URL per capture,
 so `syncImages` cannot tell a re-harvest from a new photo and will store the
 gallery twice. The live snapshot gives `image_count` but not basenames, so the
-only safe rule over HTTP is the one `_pass-apply-live.mjs` enforces: **load a
-gallery only for a property at zero photos**, and report the rest rather than
-guessing. It also drops what the app would never render anyway — squares,
-banner strips, sub-500px icons, read off the `-w<W>-h<H>` basename. Those come
-in via the page-HTML source and then sit permanently untagged, because the
-property page never lists them for the tagger to reach.
+only safe rule over HTTP is the one `_pass-apply-live.mjs` enforces: **never
+re-push photos for a property that already has them.** It still drops what the
+app would never render anyway — banner strips, sub-500px icons, read off the
+`-w<W>-h<H>` basename — but a `_3_` basename (a floorplan — same ground truth
+REA's own `MediaFloorplan` typename gives for free, known from the filename,
+not guessed) bypasses that shape filter outright, since Domain commonly serves
+floorplans at exactly the square aspect the filter exists to drop as agent
+cards/logos.
+
+**A property with photos but no floorplan still gets one.** Every gallery
+entry carries `floorplanUrls` (its `_3_` urls); for a property already at
+zero photos that rides along inside the normal `imageUrls` push. For a
+property that already has photos, `_pass-apply-live.mjs` instead emits a
+FLOORPLAN-ONLY entry — `imageUrls` holds just the `_3_` urls, never a photo
+already stored — so the one thing root cause 2 used to silently drop (a
+listing captured before this fix never got its floorplan) now closes on the
+next round that captures it, with no separate recovery step. The push server
+side (`POST /api/batch`'s `images` section) matches every stored image of the
+property against `floorplanUrls` by exact URL or by basename (Domain re-signs
+URLs per capture) and sets `notes='floorplan'` on it — never overwriting a
+hand tag or an existing hero. Listings with neither new photos nor a
+floorplan still land in `skippedHavePhotos`/`_status-<name>.json`, same as
+before.
 
 **Guard every pass file before you push it.** `data/harvest/pass-*.json` is
 gitignored and persists between rounds. A half-updated splitter once wrote a
@@ -362,22 +379,24 @@ mark (below) may overwrite an already-tagged image, but only when its existing
 tag is machine-written (no tag row, or `local-vlm`/`migration`/`rule`); a
 hand-curated tag (`claude-code`, `domain-cover`, `user`, ...) is never
 clobbered. A re-run now **skips** any image that already carries a room type
-(other than the last-position/hero exemption above), so it no longer
-reclassifies everything — expect `written`/`skipped` to reflect how many
-images were actually new or eligible for re-examination, not the whole photo
-count.
+(other than the floorplan/hero exemption above), so it no longer reclassifies
+everything — expect `written`/`skipped` to reflect how many images were
+actually new or eligible for re-examination, not the whole photo count.
 
-**Some gallery slots are GIFs**, often the floorplan at a late ordinal. The
-tagger tries `webp/gif/jpg/png` against `/api/img/<pid>/<id>.<ext>`; an `img 404`
-from it means the wrong extension was guessed, not a missing file.
+**Some gallery slots are GIFs**, often the floorplan. The tagger tries
+`webp/gif/jpg/png` against `/api/img/<pid>/<id>.<ext>`; an `img 404` from it
+means the wrong extension was guessed, not a missing file.
 
 `notes='floorplan'` beats `pickFloorplan`'s shape heuristic, which misses
-floorplans rendered at 4:3, 1.29, 1.47 and even 3:2. `_tag-remote.ts` applies it
-automatically to a last-position photo the model called "other" — including an
-already-tagged one, since that's the only slot the mark can ever land on; it
-preserves that image's existing room type rather than overwriting it with the
-fresh (coarser) verdict. For floorplans on images `_tag-remote.ts` never
-revisits, `scripts/_recover-floorplans.ts` is the dedicated recovery pass.
+floorplans rendered at 4:3, 1.29, 1.47 and even 3:2. `_tag-remote.ts` now
+decides the floorplan slot from the Domain basename's `_3_` crop (not from
+gallery position — a `_3_` image can land anywhere, and the old
+"last-image-classified-as-other" heuristic once let `notes='hero'` land on a
+`_3_` image when the two coincided), and never puts `notes='hero'` on that
+slot even if `heroIdx` points at it. It preserves the image's existing room
+type rather than overwriting it with the fresh (coarser) model verdict. For
+floorplans on images `_tag-remote.ts` never revisits,
+`scripts/_recover-floorplans.ts` is the dedicated recovery pass.
 
 **The remaining gap — what `_tag-remote.ts` never revisits — gets closed once,
 at the end of the WHOLE round (Domain + REA both done), by
@@ -407,8 +426,9 @@ drops the `=` arguments on this PowerShell.**
 
 ## 5. Heroes — Domain's exact cover, AFTER tagging
 
-Nothing to run — `_tag-remote.ts` set them in step 4. This section is the *why*,
-because the ordering constraint is the part that bites.
+`_tag-remote.ts` already set the hero for every listing it tagged in step 4
+(this round's pass) — this part is the *why*, because the ordering constraint
+is the part that bites.
 
 **Order matters and it is not obvious.** Applying heroes first inserts an
 `image_tags` row carrying only `notes='hero'`; `tag:auto` writes through
@@ -423,6 +443,32 @@ Match the full basename, falling back to the `<listingId>_<photoIndex>_` prefix
 (relisted properties' covers carry a different listingId than our external_id).
 **Check `notes='hero'`, not `tagged_by`.** Expect non-3:2 heroes — that IS what
 Domain leads with, and it is exactly why exact beats the old aspect heuristic.
+
+**Then re-sync heroes for the WHOLE feed, not just this round's pass — every
+round, not only when someone notices.** `_tag-remote.ts` only ever sets a hero
+for a listing it tags in the SAME pass; an agent changing Domain's cover on a
+listing this round never touched is never revisited, and nothing ever clears
+an old hero once a new one is set. Measured live 2026-10-03: 29 of 303
+listings' heroes did not match the feed's current cover, and 4 carried two:
+
+```bash
+node scripts/_hero-sync-live.mjs data/harvest/_batch-tags-hero-sync.json
+node scripts/batch-push.mjs --base=http://192.168.68.125:3225 \
+  --file=data/harvest/_batch-tags-hero-sync.json
+```
+
+Read-only against the live app; it writes nothing itself, only a `tags`
+payload. For every live Domain listing in the current feed it targets the
+stored image matching the feed cover's basename (same fallback as above), sets
+`notes='hero'` on it (keeping `room_type`/`tagged_by`), and clears `notes` on
+every OTHER current hero — to `notes='floorplan'` instead when that stray
+hero's own basename is a `_3_` image, so a floorplan that was wrongly marked
+hero (root cause 5, 29 Copeland Crescent) gets its real marker back, not a
+blank one. It **skips and reports** a listing with no stored target, whose
+current hero is hand-tagged (`tagged_by='user'`), or whose target itself is
+hand-tagged — never repoint a cover a person picked, or away from one. Emits
+nothing for a listing already correct, so a re-run is a no-op over an
+unchanged feed.
 
 ## 6. Enrichment + transit
 
@@ -610,7 +656,13 @@ and hid `93 Shaftsbury Bvd` vs `93 Shaftsbury Boulevard` behind an abbreviation.
 
 **Close the floorplan gap first — every round, not only when someone
 notices.** 133 of 567 live property pages went silently without a floorplan
-for months (2026-09-20 brief) precisely because nothing checked:
+for months (2026-09-20 brief) precisely because nothing checked. Steps 3 and 5
+above now close most of that gap at the source every round — the floorplan-
+only entries in step 3 (a listing with photos but no stored floorplan), and
+the hero re-sync in step 5 (a floorplan wrongly left marked `hero`) — so this
+check is the backstop for what those miss: a floorplan DOMAIN NEVER OFFERED in
+the per-listing pass (e.g. it only lives on a page the pass didn't fetch), not
+a floorplan this round's own capture already carried.
 
 **Call it via `npx tsx` directly, not `npm run floorplan:coverage -- --flag`
 — see the `npm run <script> -- --key=value` warning earlier in this
@@ -686,6 +738,18 @@ separately in `floorplanScanErrors` and are unknown rather than covered, so
 sweep deliberately never fails the run over one, because it sits ahead of
 every blocking check in the script.
 
-Report: new listings, price changes, sold/withdrawn, photos + floorplans added,
-heroes set, rooms tagged, transit filled, floorplan coverage (missing count and
-how many were recovered this round), and **that the live app is updated**.
+Report: new listings, price changes, sold/withdrawn, photos added, and
+floorplans added. **The floorplan-added count is `downloaded` + `floorplansMarked`
+from the `/api/batch` response** on the floorplan-only listings pushed in step 3 —
+both are now "new this call" counts (a re-matched, already-marked row is a
+no-op and no longer counted) — **never from the pass summary's
+`floorplanOnlyEntries`**, which means "offered this round", not "added": step 3
+re-offers a listing's `_3_` urls every round for as long as the capture carries
+one, regardless of whether it's already stored and marked. Harmless: syncImages
+dedupes by content hash so `downloaded` stays 0, and `markFloorplanImages` is a
+no-op over an already-marked row so `floorplansMarked` stays 0 too. Heroes set
+AND re-synced (step 5's
+`_hero-sync-live.mjs` counts: resynced, alreadyCorrect, skipped for no stored
+target, a hand-tagged hero, or a hand-tagged target), rooms tagged, transit
+filled, floorplan coverage (missing count and how many were recovered this
+round), and **that the live app is updated**.

@@ -9,6 +9,8 @@
 // Usage: node scripts/_pass-apply-live.mjs pass-1
 // Requires a fresh data/harvest/_snapshot.json (scripts/_snapshot-live.mjs).
 import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 /**
  * Does this Domain price string mean the property actually sold?
@@ -16,8 +18,80 @@ import fs from "node:fs";
  */
 export const isSoldPrice = (price) => /^\s*sold\b/i.test(price || "");
 
+export const base = (u) => u.split("/").pop().split("?")[0];
+
+// Domain basename convention: `<listingId>_<photoIndex>_<crop>_<date>...`.
+// crop `_3_` is a floorplan (same ground truth REA's own MediaFloorplan
+// typename gives for free) — known from the filename, never guessed.
+export const isFloorplanBasename = (u) => /^\d+_\d+_3_/.test(base(u));
+
+// Drop what the app would never render anyway. isPropertyPhoto() rejects
+// squares (agent cards / agency logos), banner strips and icons; those slip in
+// via the page-HTML source, get stored, and then sit permanently untagged
+// because the property page never lists them for the tagger to reach.
+// Dimensions are in the basename as -w<W>-h<H>. Domain floorplans are
+// commonly 1200×1200 — exactly the square aspect this filter exists to drop
+// — so a `_3_` basename bypasses the shape check entirely rather than being
+// discarded as an agent card/logo.
+export const renderable = (u) => {
+  if (isFloorplanBasename(u)) return true;
+  const m = /-w(\d+)-h(\d+)(?:\.|$)/.exec(base(u));
+  if (!m) return true; // unknown size — let the app decide
+  const w = +m[1], h = +m[2];
+  const a = w / h;
+  if (Math.max(w, h) < 500) return false;
+  if (a >= 2.2 || a <= 0.45) return false;
+  return !(a > 0.95 && a < 1.05);
+};
+
+/**
+ * One listing re-uploaded over time carries the SAME photo slot under several
+ * dates (26 Kittyhawk had _2_1_251209_, _2_1_260119_, _2_1_260505_). Basenames
+ * differ, so a basename dedupe keeps them all and the gallery fills with
+ * near-duplicates. Keep one per <listingId>_<photoIndex>_<crop>, newest upload.
+ */
+export function dedupSlots(imgs) {
+  const bySlot = new Map();
+  for (const u of imgs) {
+    const b = base(u);
+    const m = /^(\d+)_(\d+)_(\d+)_(\d+)_(\d+)/.exec(b);
+    const k = m ? `${m[1]}_${m[2]}_${m[3]}` : b;
+    const stamp = m ? `${m[4]}${m[5]}` : "";
+    const prev = bySlot.get(k);
+    if (!prev || stamp > prev.stamp) bySlot.set(k, { u, stamp });
+  }
+  return [...bySlot.values()].map((x) => x.u);
+}
+
+/**
+ * The gallery entry for one listing, given this capture's raw image urls and
+ * the property's CURRENTLY STORED photo count. Pure — no fs/network — so a
+ * test can exercise it directly.
+ *
+ * syncImages dedupes on source_url and Domain re-signs every URL per capture,
+ * so re-sending a property that already has photos stores the gallery TWICE.
+ * The live snapshot gives image_count but not basenames, so the safe rule is
+ * the one that has always applied: only ever load full galleries for
+ * zero-photo properties. A listing first captured before the `_3_` fix never
+ * got its floorplan though, so rather than reporting it and moving on, a
+ * FLOORPLAN-ONLY entry is returned instead — imageUrls holds just the `_3_`
+ * urls, never a photo already stored. Returns `null` when there is nothing
+ * new to add (no floorplan this capture either), so the caller can report it
+ * under skippedHavePhotos exactly as before.
+ */
+export function buildGalleryEntry(listingUrl, imageCount, imgs) {
+  const dedupedAll = dedupSlots(imgs);
+  const floorplanUrls = dedupedAll.filter(isFloorplanBasename);
+  if (imageCount > 0) {
+    if (!floorplanUrls.length) return null;
+    return { listingUrl, imageUrls: floorplanUrls, floorplanUrls };
+  }
+  const deduped = dedupedAll.filter(renderable);
+  return { listingUrl, imageUrls: deduped, floorplanUrls: deduped.filter(isFloorplanBasename) };
+}
+
 // node scripts/_pass-apply-live.mjs --selftest
-if (process.argv[2] === "--selftest") {
+function selftest() {
   const cases = [
     ["SOLD - $920,000", true],
     ["SOLD - Price Withheld", true],
@@ -42,149 +116,152 @@ if (process.argv[2] === "--selftest") {
   process.exit(bad ? 1 : 0);
 }
 
-
-const name = process.argv[2];
-if (!name) {
-  console.error("usage: node scripts/_pass-apply-live.mjs <harvest-name>   # e.g. pass-1");
-  process.exit(1);
-}
-const raw = JSON.parse(fs.readFileSync(`data/harvest/${name}.json`, "utf8"));
-const snap = JSON.parse(fs.readFileSync("data/harvest/_snapshot.json", "utf8"));
-
-const norm = (u) => (u || "").replace(/\/+$/, "").toLowerCase();
-const byUrl = new Map(snap.rows.filter((r) => /^https?:/.test(r.listing_url || "")).map((r) => [norm(r.listing_url), r]));
-// A RELIST keeps the row but changes the Domain listing id: the server merged
-// the new capture onto the existing row by address, so external_id is the new
-// id while listing_url still ends in the OLD one. A URL-only match drops every
-// one of them as "no property row" (28 of 66 targets, 2026-09-25) and the round
-// silently loses their galleries and sold/withdrawn status.
-const extOf = (u) => (String(u).match(/-(\d+)(?:\/)?$/) || [])[1] || null;
-const byExt = new Map(snap.rows.filter((r) => r.external_id).map((r) => [String(r.external_id), r]));
-const base = (u) => u.split("/").pop().split("?")[0];
-
-const gallery = [];
-const sold = [];
-const withdrawn = [];
-const problems = [];
-const skippedHavePhotos = [];
-
-for (const [key, v] of Object.entries(raw)) {
-  const observedUrl = key.startsWith("http") ? key : "https://www.domain.com.au" + key;
-  const prop = byUrl.get(norm(observedUrl)) || byExt.get(extOf(observedUrl));
-  if (!prop) {
-    problems.push({ listingUrl: observedUrl, why: "no property row on the live app" });
-    continue;
-  }
-  // ALWAYS push the HELD row's url, never the observed one: `properties` and the
-  // status sections resolve by listing_url, so pushing a relist's new URL at a
-  // row stored under the old one would repoint (or duplicate) that row.
-  const listingUrl = prop.listing_url;
-  if (String(v.status).startsWith("error") || v.status === "waf" || v.status === "unknown") {
-    problems.push({ listingUrl, address: prop.address, why: v.status });
-    continue;
+function main() {
+  if (process.argv[2] === "--selftest") {
+    selftest();
+    return;
   }
 
-  // "withdrawn" = redirected to /property-profile/ with no listing.
-  // "leased" = relisted as a RENTAL, so off the sale market without selling.
-  // Both are scrape_jobs withdrawn; neither gets a price_history row.
-  if (v.status === "withdrawn" || v.status === "leased") {
-    withdrawn.push({ listingUrl, address: prop.address, why: v.status });
-    continue;
+  const name = process.argv[2];
+  if (!name) {
+    console.error("usage: node scripts/_pass-apply-live.mjs <harvest-name>   # e.g. pass-1");
+    process.exit(1);
   }
+  const raw = JSON.parse(fs.readFileSync(`data/harvest/${name}.json`, "utf8"));
+  const snap = JSON.parse(fs.readFileSync("data/harvest/_snapshot.json", "utf8"));
 
-  // Sold ONLY when the price text says so. "Under contract"/"Under offer" is not
-  // a settled sale and marking it sold hides a listing that is still live.
-  //
-  // ANCHORED AT THE START, deliberately. A bare /\bsold\b/ also fires on the
-  // auction idiom "Offers Closing 21/9/26 @ 5pm (If not Sold Prior)" — a LIVE
-  // listing — and marking that sold delists a property still for sale. Every
-  // real sold price Domain serves leads with the word: "SOLD - $920,000",
-  // "SOLD - Price Withheld", or plain "Sold" (47 Yacht Rd, status underOffer).
-  // Failing closed here is the safe direction: a missed sale is caught next
-  // round, a false sale hides a live listing until someone notices.
-  const price = v.price || "";
-  if (isSoldPrice(price)) {
-    const m = /\$\s*(\d[\d,]*(?:\.\d+)?)\s*([km])?/i.exec(price);
-    let n = null;
-    if (m) {
-      const mult = m[2]?.toLowerCase() === "m" ? 1e6 : m[2]?.toLowerCase() === "k" ? 1e3 : 1;
-      const v2 = Math.round(parseFloat(m[1].replace(/,/g, "")) * mult);
-      if (v2 > 10000) n = v2;
+  const norm = (u) => (u || "").replace(/\/+$/, "").toLowerCase();
+  const urlRows = snap.rows.filter((r) => /^https?:/.test(r.listing_url || ""));
+  const byUrl = new Map(urlRows.map((r) => [norm(r.listing_url), r]));
+  // A RELIST keeps the row but changes the Domain listing id: the server merged
+  // the new capture onto the existing row by address, so external_id is the new
+  // id while listing_url still ends in the OLD one. A URL-only match drops every
+  // one of them as "no property row" (28 of 66 targets, 2026-09-25) and the round
+  // silently loses their galleries and sold/withdrawn status.
+  const extOf = (u) => (String(u).match(/-(\d+)(?:\/)?$/) || [])[1] || null;
+  const byExt = new Map(snap.rows.filter((r) => r.external_id).map((r) => [String(r.external_id), r]));
+
+  const gallery = [];
+  const sold = [];
+  const withdrawn = [];
+  const problems = [];
+  const skippedHavePhotos = [];
+  // Listings pushed as a FLOORPLAN-ONLY entry (root cause 2: a listing already
+  // has photos but never got its floorplan) — tracked separately from `gallery`
+  // so the summary below can report them distinctly from a full new gallery,
+  // and so `newPhotos` (req-003) never counts a re-offer that may already be
+  // stored: the real "was it actually new" count is the /api/batch response's
+  // `floorplansMarked`/`downloaded`, not this pass summary.
+  let floorplanOnlyCount = 0;
+  let newPhotosCount = 0;
+
+  for (const [key, v] of Object.entries(raw)) {
+    const observedUrl = key.startsWith("http") ? key : "https://www.domain.com.au" + key;
+    const prop = byUrl.get(norm(observedUrl)) || byExt.get(extOf(observedUrl));
+    if (!prop) {
+      problems.push({ listingUrl: observedUrl, why: "no property row on the live app" });
+      continue;
     }
-    sold.push({ listingUrl, address: prop.address, price: n, raw: price });
+    // ALWAYS push the HELD row's url, never the observed one: `properties` and the
+    // status sections resolve by listing_url, so pushing a relist's new URL at a
+    // row stored under the old one would repoint (or duplicate) that row.
+    const listingUrl = prop.listing_url;
+    if (String(v.status).startsWith("error") || v.status === "waf" || v.status === "unknown") {
+      problems.push({ listingUrl, address: prop.address, why: v.status });
+      continue;
+    }
+
+    // "withdrawn" = redirected to /property-profile/ with no listing.
+    // "leased" = relisted as a RENTAL, so off the sale market without selling.
+    // Both are scrape_jobs withdrawn; neither gets a price_history row.
+    if (v.status === "withdrawn" || v.status === "leased") {
+      withdrawn.push({ listingUrl, address: prop.address, why: v.status });
+      continue;
+    }
+
+    // Sold ONLY when the price text says so. "Under contract"/"Under offer" is not
+    // a settled sale and marking it sold hides a listing that is still live.
+    //
+    // ANCHORED AT THE START, deliberately. A bare /\bsold\b/ also fires on the
+    // auction idiom "Offers Closing 21/9/26 @ 5pm (If not Sold Prior)" — a LIVE
+    // listing — and marking that sold delists a property still for sale. Every
+    // real sold price Domain serves leads with the word: "SOLD - $920,000",
+    // "SOLD - Price Withheld", or plain "Sold" (47 Yacht Rd, status underOffer).
+    // Failing closed here is the safe direction: a missed sale is caught next
+    // round, a false sale hides a live listing until someone notices.
+    const price = v.price || "";
+    if (isSoldPrice(price)) {
+      const m = /\$\s*(\d[\d,]*(?:\.\d+)?)\s*([km])?/i.exec(price);
+      let n = null;
+      if (m) {
+        const mult = m[2]?.toLowerCase() === "m" ? 1e6 : m[2]?.toLowerCase() === "k" ? 1e3 : 1;
+        const v2 = Math.round(parseFloat(m[1].replace(/,/g, "")) * mult);
+        if (v2 > 10000) n = v2;
+      }
+      sold.push({ listingUrl, address: prop.address, price: n, raw: price });
+    }
+
+    if (!v.imgs?.length) continue;
+
+    const entry = buildGalleryEntry(listingUrl, prop.image_count, v.imgs);
+    if (!entry) {
+      skippedHavePhotos.push({ address: prop.address, have: prop.image_count, offered: v.imgs.length });
+      continue;
+    }
+    gallery.push(entry);
+    if (prop.image_count > 0) {
+      floorplanOnlyCount++;
+    } else {
+      newPhotosCount += entry.imageUrls.length;
+    }
   }
 
-  if (!v.imgs?.length) continue;
+  fs.writeFileSync(`data/harvest/_gallery-${name}.json`, JSON.stringify(gallery, null, 1));
+  fs.writeFileSync(
+    `data/harvest/_status-${name}.json`,
+    JSON.stringify({ sold, withdrawn, problems, skippedHavePhotos }, null, 1),
+  );
 
-  // syncImages dedupes on source_url and Domain re-signs every URL per capture,
-  // so re-sending a property that already has photos stores the gallery TWICE.
-  // The live snapshot gives image_count but not basenames, so the safe rule is
-  // the one that has always applied: only ever load galleries for zero-photo
-  // properties. Anything else is reported, not silently dropped.
-  if (prop.image_count > 0) {
-    skippedHavePhotos.push({ address: prop.address, have: prop.image_count, offered: v.imgs.length });
-    continue;
+  console.log(
+    JSON.stringify({
+      listings: Object.keys(raw).length,
+      galleriesToLoad: gallery.length,
+      // Floorplans OFFERED this round, not necessarily new — may already be
+      // stored (req-003). The real "added" count is /api/batch's
+      // floorplansMarked/downloaded, read after the push, not this field.
+      floorplanOnlyEntries: floorplanOnlyCount,
+      newPhotos: newPhotosCount,
+      sold: sold.length,
+      withdrawn: withdrawn.length,
+      problems: problems.length,
+      skippedHavePhotos: skippedHavePhotos.length,
+    }),
+  );
+  if (sold.length) {
+    console.log("\nSOLD:");
+    for (const s of sold) console.log(`  ${s.address} | ${s.price ?? "price withheld"} | "${s.raw}"`);
   }
-
-  // One listing re-uploaded over time carries the SAME photo slot under several
-  // dates (26 Kittyhawk had _2_1_251209_, _2_1_260119_, _2_1_260505_). Basenames
-  // differ, so a basename dedupe keeps them all and the gallery fills with
-  // near-duplicates. Keep one per <listingId>_<photoIndex>_<crop>, newest upload.
-  const bySlot = new Map();
-  for (const u of v.imgs) {
-    const b = base(u);
-    const m = /^(\d+)_(\d+)_(\d+)_(\d+)_(\d+)/.exec(b);
-    const k = m ? `${m[1]}_${m[2]}_${m[3]}` : b;
-    const stamp = m ? `${m[4]}${m[5]}` : "";
-    const prev = bySlot.get(k);
-    if (!prev || stamp > prev.stamp) bySlot.set(k, { u, stamp });
+  if (withdrawn.length) {
+    console.log("\nWITHDRAWN:");
+    for (const w of withdrawn) console.log(`  ${w.address} (${w.why})`);
   }
-  // Drop what the app would never render anyway. isPropertyPhoto() rejects
-  // squares (agent cards / agency logos), banner strips and icons; those slip in
-  // via the page-HTML source, get stored, and then sit permanently untagged
-  // because the property page never lists them for the tagger to reach.
-  // Dimensions are in the basename as -w<W>-h<H>.
-  const renderable = (u) => {
-    const m = /-w(\d+)-h(\d+)(?:\.|$)/.exec(base(u));
-    if (!m) return true; // unknown size — let the app decide
-    const w = +m[1], h = +m[2];
-    const a = w / h;
-    if (Math.max(w, h) < 500) return false;
-    if (a >= 2.2 || a <= 0.45) return false;
-    return !(a > 0.95 && a < 1.05);
-  };
-  const deduped = [...bySlot.values()].map((x) => x.u).filter(renderable);
-  gallery.push({ listingUrl, imageUrls: deduped });
+  if (problems.length) {
+    console.log("\nPROBLEMS (re-run these):");
+    for (const p of problems) console.log(`  ${p.address ?? p.listingUrl} — ${p.why}`);
+  }
+  console.log("\ngalleries to load (photo counts — a NEW listing at 1-2 is a capture failure):");
+  for (const g of gallery) {
+    const floorplanOnly = g.floorplanUrls?.length === g.imageUrls.length;
+    const tag = floorplanOnly ? "  (floorplan only)" : "";
+    console.log(`  ${String(g.imageUrls.length).padStart(3)}  ${g.listingUrl.split("/").pop()}${tag}`);
+  }
 }
 
-fs.writeFileSync(`data/harvest/_gallery-${name}.json`, JSON.stringify(gallery, null, 1));
-fs.writeFileSync(
-  `data/harvest/_status-${name}.json`,
-  JSON.stringify({ sold, withdrawn, problems, skippedHavePhotos }, null, 1),
-);
-
-console.log(
-  JSON.stringify({
-    listings: Object.keys(raw).length,
-    galleriesToLoad: gallery.length,
-    newPhotos: gallery.reduce((a, g) => a + g.imageUrls.length, 0),
-    sold: sold.length,
-    withdrawn: withdrawn.length,
-    problems: problems.length,
-    skippedHavePhotos: skippedHavePhotos.length,
-  }),
-);
-if (sold.length) {
-  console.log("\nSOLD:");
-  for (const s of sold) console.log(`  ${s.address} | ${s.price ?? "price withheld"} | "${s.raw}"`);
-}
-if (withdrawn.length) {
-  console.log("\nWITHDRAWN:");
-  for (const w of withdrawn) console.log(`  ${w.address} (${w.why})`);
-}
-if (problems.length) {
-  console.log("\nPROBLEMS (re-run these):");
-  for (const p of problems) console.log(`  ${p.address ?? p.listingUrl} — ${p.why}`);
-}
-console.log("\ngalleries to load (photo counts — a NEW listing at 1-2 is a capture failure):");
-for (const g of gallery) console.log(`  ${String(g.imageUrls.length).padStart(3)}  ${g.listingUrl.split("/").pop()}`);
+// Only run when this file is the entrypoint — same isMain guard _tag-remote.ts
+// and _hero-sync-live.mjs use, so a test can import the pure helpers above
+// (isFloorplanBasename, renderable, dedupSlots, buildGalleryEntry) without
+// requiring a harvest file on disk or an argv[2] (conventions.md: "a script
+// with an unconditional main() at module scope is unsafe to import from").
+const isMain =
+  process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) main();

@@ -8,8 +8,10 @@
  * write the tags back through /api/batch.
  *
  * Also sets each listing's hero. Domain's own cover is the search feed's
- * images[0] basename, and we know which slot that basename occupies in the
- * gallery we uploaded, so the hero is simply the image at that ordinal.
+ * images[0] basename; heroIndexFor finds which LIVE image's own sourceUrl
+ * matches it, so the hero is the image AT that slot in the stored gallery —
+ * not a slot shared with the raw pass capture (see heroIndexFor's doc
+ * comment).
  *
  * Usage: npx tsx scripts/_tag-remote.ts <out-payload.json>
  */
@@ -33,8 +35,21 @@ const get = async (u: string) => {
 };
 const basename = (u: string) => u.split("/").pop()!.split("?")[0];
 
+/**
+ * A Domain image basename of the form `<listingId>_<n>_3_<…>` is a
+ * floorplan; `_1_` is a photo. Known from the filename, the same way REA's
+ * own `MediaFloorplan` typename is — not guessed from gallery position.
+ * Replaces the old "last image classifies as 'other'" heuristic, which could
+ * put `notes='hero'` on a `_3_` image whenever heroIdx (computed from the
+ * feed cover, independently) happened to land on the same slot (29 Copeland
+ * Crescent). See notesFor for how floorplan now outranks hero outright
+ * rather than merely avoiding the old position coincidence.
+ */
+export const isFloorplanBasename = (u: string): boolean => /^\d+_\d+_3_/.test(basename(u));
+
 interface LiveImage {
   id: string;
+  sourceUrl: string | null;
   roomType: string | null;
   notes: string | null;
   taggedBy: string | null;
@@ -42,6 +57,14 @@ interface LiveImage {
 
 export interface DetectedImage {
   id: string;
+  /** This image's OWN stored URL — the ONLY thing isFloorplanBasename/the hero
+   * match may be decided from (tech-001/req-001, round 1: the raw pass
+   * capture `v.imgs` is a different array, a different length, and often a
+   * different order than this live/stored gallery — dedupSlots, the
+   * zero-photo gate and a floorplan-only append all shift the two out of
+   * alignment — so indexing into v.imgs by THIS image's position picked the
+   * wrong basename on 6 real listings). */
+  sourceUrl: string | null;
   tagged: boolean;
   /** The image's existing tag row, if any — carried through (rather than
    * discarded, as the pre-round-2 version did) so the floorplan decision
@@ -70,6 +93,7 @@ export async function detectTaggedImages(base: string, propertyId: string): Prom
   const liveImages = (await getLiveImages(base, propertyId)) as LiveImage[];
   return liveImages.map((r) => ({
     id: r.id,
+    sourceUrl: r.sourceUrl,
     tagged: r.roomType != null,
     roomType: r.roomType,
     notes: r.notes,
@@ -78,34 +102,94 @@ export async function detectTaggedImages(base: string, propertyId: string): Prom
 }
 
 /**
+ * Which slot in `imgs` (stored/live order) is Domain's current cover: the
+ * feed cover's full basename first, falling back to the
+ * `<listingId>_<photoIndex>_` prefix (a relist's cover carries a different
+ * listingId than our external_id) — matched against each image's OWN
+ * sourceUrl, never a position in the raw pass capture (see DetectedImage's
+ * sourceUrl doc comment for why that was wrong for the floorplan decision,
+ * and applies identically here: heroIdx used to be computed from `v.imgs`
+ * and then used as an index into this differently-shaped array). -1 when
+ * there is no cover or nothing matches.
+ */
+export function heroIndexFor(imgs: { sourceUrl: string | null }[], cover: string): number {
+  if (!cover) return -1;
+  let idx = imgs.findIndex((im) => basename(im.sourceUrl ?? "") === cover);
+  if (idx < 0) {
+    const pre = cover.split("_").slice(0, 2).join("_") + "_";
+    idx = imgs.findIndex((im) => basename(im.sourceUrl ?? "").startsWith(pre));
+  }
+  return idx;
+}
+
+export interface ImageDecision {
+  index: number;
+  image: DetectedImage;
+  isHero: boolean;
+  isFloorplan: boolean;
+}
+
+/**
+ * Per-image hero/floorplan verdicts for one property's CURRENT stored
+ * gallery, decided entirely from each image's own sourceUrl (via
+ * isFloorplanBasename / heroIndexFor) — never from a position shared with
+ * the raw pass capture. Pure, so the regression guard for tech-001/req-001
+ * can exercise the real decision instead of reimplementing it.
+ */
+export function decideImages(imgs: DetectedImage[], cover: string): ImageDecision[] {
+  const heroIdx = heroIndexFor(imgs, cover);
+  return imgs.map((image, index) => ({
+    index,
+    image,
+    isHero: index === heroIdx,
+    isFloorplan: isFloorplanBasename(image.sourceUrl ?? ""),
+  }));
+}
+
+/**
+ * notes='floorplan' outranks notes='hero' outright — checked first,
+ * unconditionally — so a `_3_` image can never end up with notes='hero',
+ * whatever heroIdx says (29 Copeland Crescent, root cause 5). Extracted so
+ * the regression test imports the real decision rather than a hand-written
+ * copy (tests-001).
+ */
+export function notesFor(isFloorplan: boolean, isHero: boolean, model: string): string {
+  return isFloorplan ? "floorplan" : isHero ? "hero" : `local:${model}`;
+}
+
+/**
  * Whether image `i` needs to be run through the model at all. The hero
  * always does (its verdict decides nothing but still gets recorded); an
- * untagged image always does. The LAST image is the only slot
- * notes:"floorplan" can ever apply to (see the ternary in main() below), so
- * an already-tagged, non-hero last image is exempted from the "already
- * tagged, skip" rule TOO — but only when the floorplan mark could actually
- * land: `ifAbsentFor` (below) is the single source of truth for whether that
- * write can clobber the existing row, so the exemption asks it directly
- * rather than re-deriving the same machine/hand partition (tech-007,
- * 20260823-1800-fix-tagging-round-defects round 3) — a hand-owned last image
- * cannot be changed by any verdict the model returns, so the download plus
- * inference is skipped for it same as any other already-tagged image.
+ * untagged image always does. The image whose Domain basename carries the
+ * `_3_` crop (a floorplan — known from the filename, not guessed from
+ * position: see isFloorplanBasename) is the only slot notes:"floorplan" can
+ * ever apply to (see notesFor), so an already-tagged,
+ * non-hero floorplan-basename image is exempted from the "already tagged,
+ * skip" rule TOO — but only when the floorplan mark could actually land:
+ * `ifAbsentFor` (below) is the single source of truth for whether that write
+ * can clobber the existing row, so the exemption asks it directly rather than
+ * re-deriving the same machine/hand partition (tech-007,
+ * 20260823-1800-fix-tagging-round-defects round 3) — a hand-owned floorplan
+ * image cannot be changed by any verdict the model returns, so the download
+ * plus inference is skipped for it same as any other already-tagged image.
  *
  * (tech-004, round 2: fixing detectTaggedImages above made the "already
- * tagged, skip" rule fire for the first time, and without SOME isLast
- * exemption a last-position photo that already carries ANY room type — 19 of
- * 25 sampled live properties, per that round's measurement — could never be
- * classified again to check whether it's actually a floorplan.)
+ * tagged, skip" rule fire for the first time, and without SOME exemption for
+ * the floorplan slot, an already-tagged photo in that slot — 19 of 25 sampled
+ * live properties, per that round's measurement — could never be classified
+ * again to check whether it's actually a floorplan. Originally keyed on LAST
+ * position rather than basename — see isFloorplanBasename's doc comment for
+ * why that produced a real hero/floorplan collision.)
  */
 export function shouldClassify(
   tagged: boolean,
   isHero: boolean,
-  isLast: boolean,
+  isFloorplan: boolean,
   existingTaggedBy: string | null,
   existingNotes: string | null,
 ): boolean {
   if (isHero || !tagged) return true;
-  if (!isLast) return false;
+  if (!isFloorplan) return false;
   return !ifAbsentFor(false, "floorplan", existingTaggedBy, existingNotes);
 }
 
@@ -132,8 +216,8 @@ function isMachineOrAbsent(existingTaggedBy: string | null): boolean {
  * every image as untagged, so `ifAbsent:false` silently clobbered hand
  * corrections. Also never overwrites when `existingNotes === "hero"`
  * (tech-006, round 3): `setImageTag` replaces `notes` wholesale and `notes`
- * is the only column the floorplan mark writes, so a last visible image
- * already carrying the hero marker would otherwise have it silently
+ * is the only column the floorplan mark writes, so the floorplan-basename
+ * image already carrying the hero marker would otherwise have it silently
  * destroyed regardless of who wrote it — including by this very script's own
  * prior hero write, which is `taggedBy: "local-vlm"` and so would otherwise
  * pass `isMachineOrAbsent`. `existingNotes` is checked in addition to, not
@@ -218,27 +302,22 @@ async function main() {
     }
 
     // Ordinal order (getPropertyImages() ORDER BY images.ordinal) = document
-    // order — same slot indexing v.imgs (the pass's harvest order) relies on.
+    // order. Does NOT line up with v.imgs (the pass's harvest order) — see
+    // decideImages/heroIndexFor, which decide hero and floorplan from each
+    // image's own sourceUrl rather than a shared position.
     const imgs = await detectTaggedImages(BASE, pid);
 
     // Which slot is Domain's cover? Full basename first, then the
     // <listingId>_<photoIndex>_ prefix (relisted listings carry another id).
     const cover = coverByUrl.get(listingUrl) ?? "";
-    let heroIdx = v.imgs.findIndex((u) => basename(u) === cover);
-    if (heroIdx < 0 && cover) {
-      const pre = cover.split("_").slice(0, 2).join("_") + "_";
-      heroIdx = v.imgs.findIndex((u) => basename(u).startsWith(pre));
-    }
+    const decisions = decideImages(imgs, cover);
+    const untagged = imgs.filter((i) => !i.tagged).length;
+    const heroSlot = decisions.findIndex((d) => d.isHero);
 
-    console.log(
-      `\n${addr} -> ${pid} | imgs ${imgs.length} (untagged ${imgs.filter((i) => !i.tagged).length}) | hero slot ${heroIdx}`,
-    );
+    console.log(`\n${addr} -> ${pid} | imgs ${imgs.length} (untagged ${untagged}) | hero slot ${heroSlot}`);
 
-    for (let i = 0; i < imgs.length; i++) {
-      const im = imgs[i];
-      const isHero = i === heroIdx;
-      const isLast = i === imgs.length - 1;
-      if (!shouldClassify(im.tagged, isHero, isLast, im.taggedBy, im.notes)) {
+    for (const { index: i, image: im, isHero, isFloorplan } of decisions) {
+      if (!shouldClassify(im.tagged, isHero, isFloorplan, im.taggedBy, im.notes)) {
         skipped++;
         continue;
       }
@@ -258,13 +337,10 @@ async function main() {
         if (!file) throw new Error("img 404 for webp/gif/jpg/png");
         const verdict = await classifyRoom(path.resolve(file), MODEL);
         classified++;
-        // Domain puts the floorplan last; notes='floorplan' beats the app's
-        // aspect-ratio heuristic, which misses plans rendered at 4:3 and 3:2.
-        const notes = isHero
-          ? "hero"
-          : verdict.room === "other" && isLast
-            ? "floorplan"
-            : `local:${MODEL}`;
+        // notes='floorplan' beats the app's aspect-ratio heuristic, which
+        // misses plans rendered at 4:3 and 3:2 — see notesFor's doc comment
+        // for why floorplan always outranks hero.
+        const notes = notesFor(isFloorplan, isHero, MODEL);
         tags.push({
           // Not part of TagInput — stripped before the payload is pushed. It is
           // here so the group top-up can pick one representative image per
