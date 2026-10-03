@@ -3,13 +3,13 @@
   {
    "listingUrl": "https://www.domain.com.au/lot-111-daisy-avenue-torquay-vic-3228-2021153677",
    "street": "Lot 111 Daisy Avenue",
-   "price": "From $942,071",
+   "price": "From $942,508",
    "ptype": "New House & Land"
   },
   {
    "listingUrl": "https://www.domain.com.au/lot-111-daisy-avenue-torquay-vic-3228-2021155002",
    "street": "Lot 111, Daisy Avenue",
-   "price": "From $999,274",
+   "price": "From $999,715",
    "ptype": "New House & Land"
   },
   {
@@ -39,7 +39,49 @@
   {
    "listingUrl": "https://www.domain.com.au/lot-146-briody-drive-torquay-vic-3228-2021157067",
    "street": "Lot 146, Briody Drive",
-   "price": "From $932,750",
+   "price": "From $933,201",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/lot-108-eucalypt-way-torquay-vic-3228-2021200761",
+   "street": "Lot 108 Eucalypt Way",
+   "price": "$851,161",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/lot-146-briody-drive-torquay-vic-3228-2021203547",
+   "street": "Lot 146 Briody Drive",
+   "price": "$879,780",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/lot-121-eucalypt-way-torquay-vic-3228-2021203692",
+   "street": "Lot 121 Eucalypt Way",
+   "price": "$861,342k if eligible for FHOG, $871,342",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/144-briody-grove-briody-drive-torquay-vic-3228-2021093970",
+   "street": "144 Briody Grove - Briody Drive",
+   "price": "$862,080",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/turnkey-150-briody-grove-briody-street-torquay-vic-3228-2020989570",
+   "street": "TURNKEY 150 Briody Grove -Briody Street",
+   "price": "$921,341",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/119-briody-grove-eucalypt-way-torquay-vic-3228-2020989582",
+   "street": "119 Briody Grove - Eucalypt Way",
+   "price": "$1,047,689",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989587",
+   "street": "149 Briody Grove - Briody Drive",
+   "price": "$962,049",
    "ptype": "New House & Land"
   },
   {
@@ -49,9 +91,9 @@
    "ptype": "New House & Land"
   },
   {
-   "listingUrl": "https://www.domain.com.au/144-briody-grove-briody-drive-torquay-vic-3228-2021093970",
-   "street": "144 Briody Grove - Briody Drive",
-   "price": "$862,080",
+   "listingUrl": "https://www.domain.com.au/titled-turnkey-421-boardwalk-terrene-terrace-point-cook-vic-3030-2020885918",
+   "street": "TITLED TURNKEY 421 Boardwalk - Terrene Terrace",
+   "price": "$807,297",
    "ptype": "New House & Land"
   },
   {
@@ -76,54 +118,6 @@
    "listingUrl": "https://www.domain.com.au/150-briody-grove-briody-street-torquay-vic-3228-2020989568",
    "street": "150 Briody Grove - Briody Street",
    "price": "$958,400",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/turnkey-150-briody-grove-briody-street-torquay-vic-3228-2020989570",
-   "street": "TURNKEY 150 Briody Grove -Briody Street",
-   "price": "$921,341",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/119-briody-grove-eucalypt-way-torquay-vic-3228-2020989582",
-   "street": "119 Briody Grove - Eucalypt Way",
-   "price": "$1,047,689",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/149-briody-grove-briody-drive-torquay-vic-3228-2020989587",
-   "street": "149 Briody Grove - Briody Drive",
-   "price": "$962,049",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867237",
-   "street": "911 Stretton - Pipit Way",
-   "price": "$996,390",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867246",
-   "street": "911 Stretton Pipit Way",
-   "price": "$993,690",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-way-torquay-vic-3228-2020867264",
-   "street": "CORNER 912 Stretton - Pipit Way",
-   "price": "$1,026,491",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-torquay-vic-3228-2020867283",
-   "street": "CORNER 912 Stretton - Pipit",
-   "price": "$1,025,800",
-   "ptype": "New House & Land"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/titled-turnkey-421-boardwalk-terrene-terrace-point-cook-vic-3030-2020885918",
-   "street": "TITLED TURNKEY 421 Boardwalk - Terrene Terrace",
-   "price": "$807,297",
    "ptype": "New House & Land"
   },
   {
@@ -155,6 +149,36 @@
    "street": "142 Briody Grove - Briody Drive",
    "price": "$986,959",
    "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867237",
+   "street": "911 Stretton - Pipit Way",
+   "price": "$996,390",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/911-stretton-pipit-way-torquay-vic-3228-2020867246",
+   "street": "911 Stretton Pipit Way",
+   "price": "$993,690",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-way-torquay-vic-3228-2020867264",
+   "street": "CORNER 912 Stretton - Pipit Way",
+   "price": "$1,026,491",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/corner-912-stretton-pipit-torquay-vic-3228-2020867283",
+   "street": "CORNER 912 Stretton - Pipit",
+   "price": "$1,025,800",
+   "ptype": "New House & Land"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/torquay-vic-3228-2019219302",
+   "street": "",
+   "price": "$1,030,246",
+   "ptype": "House"
   },
   {
    "listingUrl": "https://www.domain.com.au/point-cook-vic-3030-2020736595",
@@ -209,21 +233,9 @@
    "street": "",
    "price": "$1,026,047",
    "ptype": "House"
-  },
-  {
-   "listingUrl": "https://www.domain.com.au/torquay-vic-3228-2019219302",
-   "street": "",
-   "price": "$1,030,246",
-   "ptype": "House"
   }
  ],
  "soldish": [
-  {
-   "listingUrl": "https://www.domain.com.au/11-snowbush-terrace-point-cook-vic-3030-2021055141",
-   "street": "11 Snowbush Terrace",
-   "price": "SOLD",
-   "tag": "Under offer"
-  },
   {
    "listingUrl": "https://www.domain.com.au/61-pilatus-crescent-point-cook-vic-3030-2020981847",
    "street": "61 Pilatus Crescent",
@@ -231,15 +243,15 @@
    "tag": "Under offer"
   },
   {
-   "listingUrl": "https://www.domain.com.au/62-harlem-circuit-point-cook-vic-3030-2018338643",
-   "street": "62 Harlem Circuit",
-   "price": "SOLD by BOBBY LAKRA & YASH SHAH !!",
-   "tag": "Under offer"
-  },
-  {
    "listingUrl": "https://www.domain.com.au/47-yacht-road-point-cook-vic-3030-2019501372",
    "street": "47 Yacht Road",
    "price": "Sold",
+   "tag": "Under offer"
+  },
+  {
+   "listingUrl": "https://www.domain.com.au/62-harlem-circuit-point-cook-vic-3030-2018338643",
+   "street": "62 Harlem Circuit",
+   "price": "SOLD by BOBBY LAKRA & YASH SHAH !!",
    "tag": "Under offer"
   }
  ]

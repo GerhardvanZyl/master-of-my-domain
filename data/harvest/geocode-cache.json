@@ -456,5 +456,55 @@
     "hit": true,
     "lat": -38.3204209,
     "lng": 144.3237504
+  },
+  "36 squadron road, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-10-02T13:01:09.905Z",
+    "hit": true,
+    "lat": -37.9141362,
+    "lng": 144.7629616
+  },
+  "4 liberator drive, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-10-02T13:01:12.082Z",
+    "hit": true,
+    "lat": -37.9094536,
+    "lng": 144.7625922
+  },
+  "1/59 cowrie road, torquay, vic 3228, australia": {
+    "fetchedAt": "2026-10-02T13:01:13.869Z",
+    "hit": false
+  },
+  "244 haze drive, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-10-02T13:01:16.094Z",
+    "hit": true,
+    "lat": -37.9100124,
+    "lng": 144.7615803
+  },
+  "42 grossmans road, torquay, vic 3228, australia": {
+    "fetchedAt": "2026-10-02T13:01:17.631Z",
+    "hit": true,
+    "lat": -38.3215442,
+    "lng": 144.3138018
+  },
+  "98 signature boulevard, point cook, vic 3030, australia": {
+    "fetchedAt": "2026-10-02T13:01:19.821Z",
+    "hit": true,
+    "lat": -37.8912858,
+    "lng": 144.774827
+  },
+  "111 shane avenue, seabrook, vic 3028, australia": {
+    "fetchedAt": "2026-10-02T13:01:22.234Z",
+    "hit": false
+  },
+  "25 newhaven drive, williams landing, vic 3027, australia": {
+    "fetchedAt": "2026-10-02T13:01:24.430Z",
+    "hit": true,
+    "lat": -37.8605482,
+    "lng": 144.7461659
+  },
+  "16 cottage crescent, torquay, vic 3228, australia": {
+    "fetchedAt": "2026-10-02T13:01:26.347Z",
+    "hit": true,
+    "lat": -38.3034868,
+    "lng": 144.3359907
   }
 }
