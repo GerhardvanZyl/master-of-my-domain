@@ -12,6 +12,7 @@ import {
   isRoomType,
   tagStatus,
   listUntaggedImages,
+  markFloorplanImages,
 } from "@/db/queries/tags";
 import { markSold, markWithdrawn, recordPriceObservations } from "@/db/queries/status";
 import { setDomainShortlist } from "@/db/queries/shortlist";
@@ -56,7 +57,11 @@ export const runtime = "nodejs";
  *                    path"; cleaning it up needs the user's explicit say-so
  *                    as a separate feature, not a side effect of this one.
  *   properties    -> npm run load          (upsert by listing_url, partial)
- *   images        -> npm run load:images   (server downloads; SLOW — chunk it)
+ *   images        -> npm run load:images   (server downloads; SLOW — chunk it;
+ *                    an entry's optional floorplanUrls marks every stored
+ *                    image matching one by URL or basename notes='floorplan',
+ *                    without re-pushing photos for a listing that already has
+ *                    them — see markFloorplanImages in db/queries/tags.ts)
  *   tags          -> npm run tag:set       (notes carries hero/floorplan/master)
  *   groups        -> group:ensure + group:add
  *   sold          -> npm run mark-sold
@@ -90,7 +95,7 @@ interface TagInput {
 interface BatchBody {
   delete?: { listingUrls?: string[]; ids?: string[] };
   properties?: LoadItem[];
-  images?: { listingUrl: string; imageUrls: string[] }[];
+  images?: { listingUrl: string; imageUrls: string[]; floorplanUrls?: string[] }[];
   tags?: TagInput[];
   groups?: { label: string; roomType?: string | null; imageIds?: string[] }[];
   sold?: { listingUrl?: string; externalId?: string; price?: number | null; date?: string }[];
@@ -135,8 +140,9 @@ export async function POST(req: Request) {
 
   if (body.images?.length) {
     let downloaded = 0,
-      failed = 0;
-    const perListing: { listingUrl: string; added: number; failed: number }[] = [];
+      failed = 0,
+      floorplansMarked = 0;
+    const perListing: { listingUrl: string; added: number; failed: number; floorplansMarked: number }[] = [];
     for (const it of body.images) {
       try {
         const prop = db
@@ -148,14 +154,24 @@ export async function POST(req: Request) {
         // Same normalization load-images.ts does: ordinal is the array position.
         const norm = (it.imageUrls ?? []).map((sourceUrl, ordinal) => ({ sourceUrl, ordinal }));
         const res = await syncImages(prop.id, norm, it.listingUrl);
+        // Runs AFTER syncImages, over every stored image of the property (not
+        // just this call's imageUrls) -- Domain re-signs URLs per capture, so a
+        // floorplan already stored under an older URL is matched by basename.
+        const fp = markFloorplanImages(prop.id, it.floorplanUrls ?? []);
         downloaded += res.added;
         failed += res.failed;
-        perListing.push({ listingUrl: it.listingUrl, added: res.added, failed: res.failed });
+        floorplansMarked += fp.marked;
+        perListing.push({
+          listingUrl: it.listingUrl,
+          added: res.added,
+          failed: res.failed,
+          floorplansMarked: fp.marked,
+        });
       } catch (e) {
         fail("images", it.listingUrl, e);
       }
     }
-    result.images = { listings: body.images.length, downloaded, failed, perListing };
+    result.images = { listings: body.images.length, downloaded, failed, floorplansMarked, perListing };
   }
 
   if (body.tags?.length) {

@@ -5,12 +5,14 @@ import { migrate } from "../src/db/migrate";
 import { db } from "../src/db/client";
 import { properties } from "../src/db/schema";
 import { syncImages } from "../src/scrape/images";
+import { markFloorplanImages } from "../src/db/queries/tags";
 
 /**
  * Download listing photos gathered by browsing into data/images/<propertyId>/
  * and insert image rows (via the app's own syncImages — dedupes, sizes, keeps
- * existing tags). Input JSON: [{ listingUrl, imageUrls: [url, ...] }].
- * Idempotent — already-downloaded source URLs are kept.
+ * existing tags). Input JSON: [{ listingUrl, imageUrls: [url, ...], floorplanUrls?: [url, ...] }].
+ * Idempotent — already-downloaded source URLs are kept, and floorplanUrls is
+ * mirrored from POST /api/batch's images section (see markFloorplanImages).
  * Usage: npm run load:images -- <file.json>
  */
 const file = process.argv[2];
@@ -20,7 +22,7 @@ if (!file) {
 }
 migrate();
 
-const items: { listingUrl: string; imageUrls: string[] }[] = JSON.parse(
+const items: { listingUrl: string; imageUrls: string[]; floorplanUrls?: string[] }[] = JSON.parse(
   fs.readFileSync(file, "utf8"),
 );
 
@@ -39,5 +41,6 @@ for (const it of items) {
     ordinal,
   }));
   const res = await syncImages(prop.id, norm, it.listingUrl);
-  console.log(prop.id, it.listingUrl.split("/").pop(), JSON.stringify(res));
+  const fp = markFloorplanImages(prop.id, it.floorplanUrls ?? []);
+  console.log(prop.id, it.listingUrl.split("/").pop(), JSON.stringify({ ...res, floorplansMarked: fp.marked }));
 }

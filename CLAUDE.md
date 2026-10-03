@@ -66,7 +66,7 @@ applied in this order):
 | --- | --- | --- |
 | `delete` | *(none)* | `{ listingUrls?, ids? }`; applies **first**; unmatched ref deletes no row, not an error |
 | `properties` | `npm run load` | `LoadItem[]`, upsert by `listing_url`, partial |
-| `images` | `npm run load:images` | server downloads; SLOW — chunk it |
+| `images` | `npm run load:images` | server downloads; SLOW — chunk it; `floorplanUrls?` marks matches floorplan |
 | `tags` | `npm run tag:set` | `notes` carries `hero`/`floorplan`/`master`; `ifAbsent` never clobbers a hand correction |
 | `groups` | `group:ensure` + `group:add` | reused by label, membership deduped |
 | `sold` / `withdrawn` | `npm run mark-sold` | replaces prior status + `Sold` row in place |
